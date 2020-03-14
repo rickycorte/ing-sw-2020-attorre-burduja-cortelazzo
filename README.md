@@ -1,2 +1,16 @@
 # ing-sw-2020-attorre-burduja-cortelazzo
-Software enginering project AA2019-2020 Politecnico di Milano
+Software engineering project AA2019-2020 Politecnico di Milano
+
+## Group AM44
+
+<mat> - Attorre Francesco (@FrancescoAttorre)
+
+<mail>
+
+<mat> - Burduja Vlad (@Burduja)
+
+<mail>
+
+<mat> - Cortelazzo Riccardo Erminio Filippo (@rickycorte)
+
+<mail>
