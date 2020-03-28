@@ -1,3 +1,8 @@
+![Java CI](https://github.com/rickycorte/ing-sw-2020-attorre-burduja-cortelazzo/workflows/Java%20CI/badge.svg)
+[![codecov](https://codecov.io/gh/rickycorte/ing-sw-2020-attorre-burduja-cortelazzo/branch/master/graph/badge.svg?token=52N59J99Y8)](https://codecov.io/gh/rickycorte/ing-sw-2020-attorre-burduja-cortelazzo)
+
+
+
 # ing-sw-2020-attorre-burduja-cortelazzo
 Software engineering project AA2019-2020 Politecnico di Milano
 
@@ -5,7 +10,7 @@ Software engineering project AA2019-2020 Politecnico di Milano
 
 - ### 10618456 Francesco Attorre ([@FrancescoAttorre](https://github.com/FrancescoAttorre)) <br> francesco.attorre@mail.polimi.it
 
-- ### mat Vlad Burduja ([@Burduja](https://github.com/Burduja)) <br> vlad.burduja@mail.polimi.it
+- ### 10604480 Vlad Burduja ([@Burduja](https://github.com/Burduja)) <br> vladislav.burduja@mail.polimi.it
 
 - ### 10530551 Riccardo Erminio Filippo  Cortelazzo ([@rickycorte](https://github.com/rickycorte)) <br> riccardoerminio.cortelazzo@mail.polimi.it
 
