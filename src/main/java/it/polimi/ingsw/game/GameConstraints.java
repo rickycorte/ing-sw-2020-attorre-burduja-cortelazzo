@@ -33,6 +33,18 @@ public class GameConstraints
 
     int constraints;
 
+    public GameConstraints()
+    {
+        constraints = 0;
+    }
+
+    public GameConstraints(GameConstraints other)
+    {
+        constraints = other.constraints;
+    }
+
+
+
     /**
      *  Add a new constrain
      * @param c constraint to add
@@ -46,16 +58,17 @@ public class GameConstraints
      * @param c constraint to remove
      */
     public void remove(Constraint c) {
-        constraints &= ~(1 << c.toInt());
+        constraints &= ~c.toInt();
     }
 
     /**
      * Checks if a constrain is active or not
+     * Checks for NONE constraints result true only if no constraint is set
      * @param c constraint to check
      * @return true if the constrain is enabled
      */
-    public boolean isActive(Constraint c){
-        return (constraints & (1 << c.toInt())) != 0;
+    public boolean check(Constraint c){
+        return (c == Constraint.NONE) ? constraints == 0 : (constraints & c.toInt()) != 0;
     }
 
     /**
@@ -63,6 +76,16 @@ public class GameConstraints
      */
     public void clear(){
         constraints = 0;
+    }
+
+    /**
+     * Check if constrains are the same in both instances
+     * @param other another constraint
+     * @return true if the have the same constraints set
+     */
+    public boolean equals(GameConstraints other)
+    {
+        return constraints == other.constraints;
     }
 
 }
