@@ -1,0 +1,61 @@
+name: Java CI 
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - uses: actions/cache@v1
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Set up JDK (Java 13)
+      uses: actions/setup-java@v1
+      with:
+        java-version: 13
+
+    - name: Maven Compile, Test, Report
+      run: mvn package
+
+    - name: Upload Coverage Reports
+      run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
+    
+
+    - name: Generate Docs 
+      run: mvn javadoc:javadoc
+    
+    - name: Release Generation
+      run: | 
+        mv target/AM44-1.0-SNAPSHOT.jar deliverables/
+        mkdir apidocs
+        mv target/site/apidocs apidocs
+        tar cvfz apidocs.tar.gz apidocs
+        mv apidocs.tar.gz deliverables/
+        mkdir release
+        mv src release/src
+        mv README.md release/
+        mv deliverables release/deliverables
+        mv pom.xml release/pom.xml
+
+
+    - name: Push Release 
+      uses: s0/git-publish-subdir-action@master
+      env:
+        REPO: self
+        BRANCH: release
+        FOLDER : release
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
