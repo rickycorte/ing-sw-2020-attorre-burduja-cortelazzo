@@ -11,7 +11,7 @@ public class Map
 
     private int[][] map = new int[HEIGHT][LENGTH];
 
-    private ArrayList<Worker> workers;
+    private ArrayList<Worker> workers = new ArrayList<>() ;
 
     /*
      *          00000001 = 1 liv.0
@@ -62,6 +62,7 @@ public class Map
     public void buildDome(Vector2 pos) throws OutOfMapException, CellCompletedException{
         if(isInsideMap(pos)){
             if(!isCellDome(pos)){
+                map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
                 map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + 128;
             }else
                 throw new CellCompletedException();
@@ -99,7 +100,7 @@ public class Map
      */
     private boolean isInsideMap(Vector2 pos) throws OutOfMapException{
 
-        if (pos.getX() > HEIGHT || pos.getX() < 0 || pos.getY() < 0 || pos.getY() > LENGTH)  throw new OutOfMapException();
+        if (pos.getX() >= HEIGHT || pos.getX() < 0 || pos.getY() < 0 || pos.getY() >= LENGTH)  throw new OutOfMapException();
 
         return true;
     }

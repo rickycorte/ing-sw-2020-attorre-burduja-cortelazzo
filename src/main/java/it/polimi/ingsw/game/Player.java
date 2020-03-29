@@ -6,7 +6,7 @@ public class Player
     private int id;
     private String username;
     private Card god;
-    private ArrayList<Worker> workers;
+    private ArrayList<Worker> workers = new ArrayList<>();
 
     public Player (int id, String username){
         this.id = id;
@@ -29,5 +29,9 @@ public class Player
 
     public ArrayList<Worker> getWorkers(){
         return this.workers;
+    }
+
+    public void setWorker(Worker worker) {
+        this.workers.add(worker);
     }
 }
