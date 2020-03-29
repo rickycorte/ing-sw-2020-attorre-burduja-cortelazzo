@@ -69,7 +69,7 @@ class GameConstraintsTest
     }
 
     @Test
-    void clear()
+    void shouldClearConstraints()
     {
         c.clear();
         assertTrue(c.check(GameConstraints.Constraint.NONE));
