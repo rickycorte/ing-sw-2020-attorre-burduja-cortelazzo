@@ -31,10 +31,11 @@ public class BehaviourGraph
     /**
      * Select one of the actions returned by getNextActions using array index
      * @param pos action index used to select the next operation (index obtained from action list)
-     * @throws OutOfBoundException if there is no node with the specified index
+     * @throws OutOfGraphException if there is no node with the specified index
      */
-    public void selectAction(int pos) throws OutOfBoundException {
-        if(pos < 0 || pos >= current_node.getNextActionCount() ) throw new OutOfBoundException();
+    public void selectAction(int pos) throws OutOfGraphException
+    {
+        if(pos < 0 || pos >= current_node.getNextActionCount() ) throw new OutOfGraphException();
 
         current_node = current_node.getNextNode(pos);
         alreadyRun = false;

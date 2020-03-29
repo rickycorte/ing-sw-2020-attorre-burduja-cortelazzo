@@ -77,10 +77,11 @@ public class BehaviourNode
      * Select next action to execute
      * @param pos index of the next action
      * @return next action node
-     * @throws OutOfBoundException if there is no node for the requested position
+     * @throws OutOfGraphException if there is no node for the requested position
      */
-    BehaviourNode getNextNode(int pos) throws OutOfBoundException {
-        if(pos < 0 || pos > child_nodes.size() ) throw new OutOfBoundException();
+    BehaviourNode getNextNode(int pos) throws OutOfGraphException
+    {
+        if(pos < 0 || pos >= child_nodes.size() ) throw new OutOfGraphException();
 
         return  child_nodes.get(pos);
     }
