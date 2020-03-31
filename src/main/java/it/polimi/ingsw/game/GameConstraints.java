@@ -13,7 +13,7 @@ public class GameConstraints
     public enum Constraint{
         NONE(0),
         BLOCK_MOVE_UP(1<<1),
-        BLOCK_NON_LO_SO(1<<2);
+        BLOCK_NON_LO_SO(1<<32);
 
         private int val;
 
@@ -51,6 +51,14 @@ public class GameConstraints
      */
     public void add(Constraint c) {
         constraints |=  c.toInt();
+    }
+
+    /**
+     * Add a group of constrains to the current one
+     * @param c constraint group to add
+     */
+    public void add (GameConstraints c) {
+        constraints |= c.constraints;
     }
 
     /**

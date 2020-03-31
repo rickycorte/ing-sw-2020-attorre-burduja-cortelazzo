@@ -34,6 +34,12 @@ class GameConstraintsTest
         c.add(GameConstraints.Constraint.BLOCK_MOVE_UP); // also check double set
 
         assertTrue(c.check(GameConstraints.Constraint.NONE) == false && c.check(GameConstraints.Constraint.BLOCK_MOVE_UP) );
+
+        //add a group of constrains
+        GameConstraints t2 = new GameConstraints();
+        t2.add(GameConstraints.Constraint.BLOCK_MOVE_UP); // this should be "re-set" causing no error
+        t2.add(c);
+        assertTrue(c.equals(t2));
     }
 
     @Test
@@ -73,5 +79,15 @@ class GameConstraintsTest
     {
         c.clear();
         assertTrue(c.check(GameConstraints.Constraint.NONE));
+    }
+
+    @Test
+    void shouldEquals()
+    {
+        c.add(GameConstraints.Constraint.BLOCK_NON_LO_SO);
+        GameConstraints c2 = new GameConstraints(), c3 = new GameConstraints();
+        c2.add(c);
+        assertTrue(c.equals(c2));
+        assertFalse(c.equals(c3));
     }
 }

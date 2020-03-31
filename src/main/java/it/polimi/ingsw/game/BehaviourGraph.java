@@ -62,7 +62,7 @@ public class BehaviourGraph
      * @return true if execution is ended
      */
     public boolean isExecutionEnded() {
-        return  current_node == null || current_node.getNextActionCount() <= 0;
+        return current_node.getNextActionCount() <= 0;
     }
 
     /**

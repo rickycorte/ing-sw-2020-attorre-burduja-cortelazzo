@@ -36,7 +36,7 @@ class BehaviourGraphTest
     {
         testSeq = BehaviourGraph.makeEmptyGraph().appendSubGraph(
                 BehaviourNode.makeRootNode(new TestAction(GameConstraints.Constraint.BLOCK_MOVE_UP))
-                        .setNext(new BuildAction())
+                        .setNext(new TestAction(GameConstraints.Constraint.BLOCK_MOVE_UP))
                         .getRoot()
         );
     }
@@ -80,6 +80,10 @@ class BehaviourGraphTest
 
             c.clear();
             testSeq.runSelectedAction(null, null, null, c); // double run this should be skipped
+            assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
+
+            testSeq.selectAction(0); // move to graph end
+            testSeq.runSelectedAction(null, null, null, c); // nothing should happen
             assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
 
 
