@@ -96,7 +96,7 @@ class BehaviourNodeTest
     }
 
     @Test
-    void mergeBranches()
+    void shouldMergeBranches()
     {
         BehaviourNode r = BehaviourNode.makeRootNode(null);
         MoveAction m1 = new MoveAction(), m2 = new MoveAction(), end = new MoveAction();
@@ -124,7 +124,7 @@ class BehaviourNodeTest
 
 
     @Test
-    void setNext()
+    void shouldSetNext()
     {
         BehaviourNode n = BehaviourNode.makeRootNode(null);
         MoveAction m1 = new MoveAction(), m2 = new MoveAction();
@@ -149,7 +149,7 @@ class BehaviourNodeTest
 
 
     @Test
-    void getRoot()
+    void shouldGetRoot()
     {
         BehaviourNode r = BehaviourNode.makeRootNode(null);
         assertEquals(r, r.getRoot());

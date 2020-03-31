@@ -78,6 +78,11 @@ class BehaviourGraphTest
             assertTrue(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
             //refer to upper testAction class to understand why this check is made make sure the function is run
 
+            c.clear();
+            testSeq.runSelectedAction(null, null, null, c); // double run this should be skipped
+            assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
+
+
         }catch (Exception e){
             fail("There should be an action for every node if execution is not ended");
         }
@@ -85,7 +90,7 @@ class BehaviourGraphTest
     }
 
     @Test
-    void appendSubGraph()
+    void shouldAppendSubGraph()
     {
         testSeq.resetExecutionStatus();
         assertEquals(1, testSeq.getNextActionNames().length);
@@ -95,6 +100,7 @@ class BehaviourGraphTest
                 .getRoot();
 
         testSeq.appendSubGraph(branch);
+        testSeq.appendSubGraph(null);
 
         assertEquals(2, testSeq.getNextActionNames().length);
         assertEquals(branch.getAction().displayName(), testSeq.getNextActionNames()[1]);

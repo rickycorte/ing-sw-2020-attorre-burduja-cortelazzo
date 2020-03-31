@@ -76,22 +76,6 @@ public class BehaviourGraph
 
 
     /**
-     * TEST ONLY: return formatted action list string
-     * TODO: remove
-     * @return formatted string
-     */
-    public String getNextActionDisplay() {
-        String s = "";
-        for (int i =0; i< getNextActionNames().length; i++)
-        {
-            s += i + " - " + getNextActionNames()[i]+ "\n";
-        }
-        return s;
-
-    }
-
-
-    /**
      * Add a sub-graph to the current one starting from root
      * This function is used to create multiple choice at the beginning of a turn
      * @param node node to add to the graph

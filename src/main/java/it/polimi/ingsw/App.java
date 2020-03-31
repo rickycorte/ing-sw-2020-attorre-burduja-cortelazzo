@@ -18,7 +18,14 @@ public class App
 
         while (!g.isExecutionEnded())
         {
-            System.out.print("\n@ Chose:\n" + g.getNextActionDisplay());
+
+            String s = "";
+            for (int i =0; i< g.getNextActionNames().length; i++)
+            {
+                s += i + " - " + g.getNextActionNames()[i]+ "\n";
+            }
+
+            System.out.print("\n@ Chose:\n" + s);
             System.out.println("What you want to do:");
             n = in.nextInt();
             try
