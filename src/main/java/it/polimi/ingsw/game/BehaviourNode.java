@@ -13,11 +13,11 @@ import java.util.List;
 public class BehaviourNode
 {
 
-    Action action;
+    private Action action;
 
-    BehaviourNode parent;
+    private BehaviourNode parent;
 
-    List<BehaviourNode> child_nodes;
+    private List<BehaviourNode> child_nodes;
 
 
     private BehaviourNode(Action action)

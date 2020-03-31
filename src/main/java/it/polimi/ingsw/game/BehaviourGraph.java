@@ -7,10 +7,10 @@ package it.polimi.ingsw.game;
  */
 public class BehaviourGraph
 {
-    BehaviourNode root_node;
-    BehaviourNode current_node;
-    boolean alreadyRun;
-    boolean endReached;
+    private BehaviourNode root_node;
+    private BehaviourNode current_node;
+    private boolean alreadyRun;
+    private boolean endReached;
 
     public BehaviourGraph()
     {
@@ -35,8 +35,6 @@ public class BehaviourGraph
      */
     public void selectAction(int pos) throws OutOfGraphException
     {
-        if(pos < 0 || pos >= current_node.getNextActionCount() ) throw new OutOfGraphException();
-
         current_node = current_node.getNextNode(pos);
         alreadyRun = false;
     }
@@ -55,7 +53,6 @@ public class BehaviourGraph
         {
             current_node.getAction().run(w,target, m, globalConstrains);
             alreadyRun = true;
-            if(current_node.getNextActionCount() <= 0) endReached = true;
         }
 
     }
@@ -65,7 +62,7 @@ public class BehaviourGraph
      * @return true if execution is ended
      */
     public boolean isExecutionEnded() {
-        return  current_node == null || endReached;
+        return  current_node == null || current_node.getNextActionCount() <= 0;
     }
 
     /**

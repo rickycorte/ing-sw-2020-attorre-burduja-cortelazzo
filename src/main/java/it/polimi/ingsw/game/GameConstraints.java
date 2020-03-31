@@ -31,7 +31,7 @@ public class GameConstraints
     }
 
 
-    int constraints;
+    private int constraints;
 
     public GameConstraints()
     {
