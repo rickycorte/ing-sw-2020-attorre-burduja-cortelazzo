@@ -13,6 +13,7 @@ public class GameConstraints
     public enum Constraint{
         NONE(0),
         BLOCK_MOVE_UP(1<<1),
+        BLOCK_SAME_CELL_BUILD(1<<16),
         BLOCK_NON_LO_SO(1<<32);
 
         private int val;

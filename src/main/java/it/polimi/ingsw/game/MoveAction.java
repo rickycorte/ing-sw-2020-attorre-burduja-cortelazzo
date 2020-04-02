@@ -1,5 +1,7 @@
 package it.polimi.ingsw.game;
 
+import java.util.ArrayList;
+
 /**
  * This action allow players to move workers around the map
  */
@@ -24,6 +26,11 @@ public class MoveAction extends Action
     {
         System.out.println("This was a nice move");
         return 0;
+    }
+
+    @Override
+    public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) throws OutOfMapException{
+        return null;
     }
 
 }
