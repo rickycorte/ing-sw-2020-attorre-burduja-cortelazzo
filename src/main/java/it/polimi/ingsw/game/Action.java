@@ -1,5 +1,7 @@
 package it.polimi.ingsw.game;
 
+import java.util.ArrayList;
+
 /**
  * Abstract class that represents an action executed by a card
  * Actions should be stateless and know nothing about the current game
@@ -33,4 +35,6 @@ public abstract class Action
      * @return action display name
      */
     public String displayName() { return display_name; }
+
+    public abstract ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) throws OutOfMapException;
 }

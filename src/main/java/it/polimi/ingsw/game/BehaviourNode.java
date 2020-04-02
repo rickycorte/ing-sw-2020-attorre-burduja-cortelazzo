@@ -12,10 +12,12 @@ import java.util.List;
  */
 public class BehaviourNode
 {
-
     private Action action;
 
     private BehaviourNode parent;
+
+    public Vector2 pos; //will be my starting position if making a moveAction
+                        // will be the pos I build if making a buildAction
 
     private List<BehaviourNode> child_nodes;
 
