@@ -1,5 +1,7 @@
 package it.polimi.ingsw.game;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.io.*;
 
 /**
  * Game map representation
@@ -98,7 +100,7 @@ public class Map
      * @return true if is valid
      * @throws OutOfMapException selected cell is not in map
      */
-    private boolean isInsideMap(Vector2 pos) throws OutOfMapException{
+    public boolean isInsideMap(Vector2 pos) throws OutOfMapException{
 
         if (pos.getX() >= HEIGHT || pos.getX() < 0 || pos.getY() < 0 || pos.getY() >= LENGTH)  throw new OutOfMapException();
 
@@ -137,6 +139,44 @@ public class Map
         return false; //return value in case of exception OutOfMap
     }
 
+    /**
+     * Write map status on a bin file
+     * @param fileName name of the file (ex "map.bin")
+     * @throws IOException stream file exc
+     */
+    public void writeMapOut(String fileName) throws IOException {
+        try(OutputStream outputStream = new FileOutputStream(".\\src\\test\\java\\it\\polimi\\ingsw\\maps\\"+ fileName)) {
+            for (int i = 0; i < LENGTH; i++) {
+                for (int j = 0; j < HEIGHT; j++) {
+                    outputStream.write(map[i][j]);
+                }
+            }
+        }catch(IOException e){
+                e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * Read and set map status from a bin file
+     * @param fileName name of the file (ex "map.bin")
+     * @throws IOException stream file exc
+     */
+    public void readMapOut(String fileName) throws IOException {
+        try (InputStream inputStream = new FileInputStream(".\\src\\test\\java\\it\\polimi\\ingsw\\maps\\" + fileName)) {
+            int byteRead;
+
+            for(int i = 0; i<LENGTH;i++){
+                for(int j = 0; j<HEIGHT;j++){
+                    if ((byteRead = inputStream.read()) != -1) {
+                        map[i][j] = byteRead;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
 
