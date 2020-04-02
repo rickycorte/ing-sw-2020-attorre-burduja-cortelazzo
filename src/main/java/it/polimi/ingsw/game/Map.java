@@ -142,10 +142,12 @@ public class Map
     /**
      * Write map status on a bin file
      * @param fileName name of the file (ex "map.bin")
-     * @throws IOException stream file exc
      */
-    public void writeMapOut(String fileName) throws IOException {
-        try(OutputStream outputStream = new FileOutputStream(".\\src\\test\\java\\it\\polimi\\ingsw\\maps\\"+ fileName)) {
+    public void writeMapOut(String fileName){
+        String path = "src/test/resources";
+        File file = new File(path);
+        String absolutePath = file.getAbsolutePath();
+        try(OutputStream outputStream = new FileOutputStream(absolutePath + "/" + fileName)) {
             for (int i = 0; i < LENGTH; i++) {
                 for (int j = 0; j < HEIGHT; j++) {
                     outputStream.write(map[i][j]);
@@ -160,10 +162,12 @@ public class Map
     /**
      * Read and set map status from a bin file
      * @param fileName name of the file (ex "map.bin")
-     * @throws IOException stream file exc
      */
-    public void readMapOut(String fileName) throws IOException {
-        try (InputStream inputStream = new FileInputStream(".\\src\\test\\java\\it\\polimi\\ingsw\\maps\\" + fileName)) {
+    public void readMapOut(String fileName){
+        String path = "src/test/resources";
+        File file = new File(path);
+        String absolutePath = file.getAbsolutePath();
+        try (InputStream inputStream = new FileInputStream(absolutePath + "/" + fileName)) {
             int byteRead;
 
             for(int i = 0; i<LENGTH;i++){
