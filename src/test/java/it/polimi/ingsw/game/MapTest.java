@@ -167,7 +167,7 @@ public class MapTest {
             map.readMapOut("map.bin");
             assertEquals(1,map.getLevel(pos));
 
-        } catch (CellCompletedException | OutOfMapException | IOException e) {
+        } catch (CellCompletedException | OutOfMapException e) {
             e.printStackTrace();
         }
     }

@@ -14,65 +14,13 @@ public class CardCollectionTest {
     @Test
     public void constructorTest ()
     {
-
         CardCollection myCollection = new CardCollection();
         assertNotNull(myCollection);
 
-
     }
 
-    @Test
-    public void getRandomTest(){
-        int n = 3;
-        Card card1 = new Card(1, "one", null);
-        Card card2 = new Card(2, "two", null);
-        Card card3 = new Card(3, "thr", null);
-        Card card4 = new Card(4, "fou", null);
-        Card card5 = new Card(5, "fiv", null);
-        CardCollection myCollection = new CardCollection();
-        assertNotNull(myCollection);
-        myCollection.addCard(card1);
-        myCollection.addCard(card2);
-        myCollection.addCard(card3);
-        myCollection.addCard(card4);
-        myCollection.addCard(card5);
 
-        List<Card> my_list = myCollection.getRandom(n);
 
-        assertNotNull(my_list);
-        assertEquals(n, my_list.size());
-    }
-
-    @Test
-    public void selectCardTest() throws CardNotExistsException {
-        Card card1 = new Card(1, "one", null);
-        Card card2 = new Card(2, "two", null);
-        Card card3 = new Card(3, "thr", null);
-
-        Card card4 = new Card(4, "fou", null);
-        Card card5 = new Card(5, "fiv", null);
-        CardCollection myCollection = new CardCollection();
-        assertThrows(CardNotExistsException.class, () -> myCollection.select("fou"));
-
-        myCollection.addCard(card1);
-        myCollection.addCard(card2);
-        myCollection.addCard(card3);
-        myCollection.addCard(card4);
-        myCollection.addCard(card5);
-
-        Card myCard = myCollection.select("fou");
-        assertEquals("fou",myCard.getName());
-
-    }
-
-    @Test
-    public void addCardTest() throws CardNotExistsException {
-        CardCollection myCollection = new CardCollection();
-        Card card1 = new Card(1, "one", null);
-        assertThrows(CardNotExistsException.class, () -> myCollection.select("one"));
-        myCollection.addCard(card1);
-        assertEquals(card1, myCollection.select("one"));
-
-    }
+    //TODO: make card tests again :L
 
 }

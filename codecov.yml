@@ -8,11 +8,11 @@ coverage:
   status:
     project:
       default:
-        target: number
+        target: auto
         threshold: 25%
         branches:
           - master
-    patch: off
+    patch: no
 
 parsers:
   gcov:
