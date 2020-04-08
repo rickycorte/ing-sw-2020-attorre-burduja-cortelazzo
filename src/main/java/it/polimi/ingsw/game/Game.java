@@ -37,6 +37,7 @@ public final class Game
     private IGameUpdateReceiver eventHandler;
     CardCollection cardCollection;
 
+    //TODO: worker placement
 
     public Game(IGameUpdateReceiver eventHandler)
     {
@@ -61,10 +62,11 @@ public final class Game
      */
     public boolean join(Player sender)
     {
+        //TODO: check if already joined
         if(canJoin() && sender != null)
         {
             players.add(sender);
-            eventHandler.onPlayerJoin(players.get(0)); // inform host that someone joined
+            eventHandler.onPlayerJoin(sender); // inform host that someone joined
             return true;
         }
 
@@ -75,7 +77,7 @@ public final class Game
     /**
      * Start a new game with the god selection phase that requires that the host
      * chose 2-3 gods (based on player number)
-     * @return
+     * @return true if started correctly
      */
     public boolean start() {
         if(canStart()){
@@ -88,8 +90,16 @@ public final class Game
     }
 
     /**
+     * Get the current player count in the game
+     * @return number of players in this game
+     */
+    public int playerCount() {
+        return players.size();
+    }
+
+    /**
      * Check if a game is started
-     * @return
+     * @return true if game is started and not waiting for more players
      */
     public boolean isStarted() {
         return gameState != GameState.WAIT;
@@ -97,7 +107,7 @@ public final class Game
 
     /**
      * Check if a game is ended
-     * @return
+     * @return true if game is ended
      */
     public boolean isEnded() {
         return gameState == GameState.END;
@@ -106,19 +116,19 @@ public final class Game
     /**
      * Command Handler that receives host selected gods
      * If selection is done right the game proceed to next phase according to the gamestate struct
-     * @param sender
-     * @param cardIDs
-     * @throws NotAllowedOperationException
+     * If cardIDs is not correct this phase is requested again to the external event handler
+     * @param sender player who issues this command
+     * @param cardIDs allowed cards selected by the host
+     * @throws NotAllowedOperationException if the sender is not in this game or it's not the host or the operation is not allowed at the current game state
      */
     public void selectGameGod(Player sender, int[] cardIDs) throws NotAllowedOperationException
     {
-        throwIfPlayerNotInThisMatch(sender);
-        throwIfNotHost(sender);
-
-        //TODO: check if the phase is correct
+        if(!isPlayerInThisMatch(sender) || !isPlayerHost(sender) || gameState !=GameState.GOD_SELECTION)
+            throw new NotAllowedOperationException("Only the host can chose allowed gods");
 
         try
         {
+            //TODO: check cardIDs has no duplicates
             allowed_cards = Arrays.asList(cardCollection.getCards(cardIDs));
             cardCollection = null; // we don't need it anymore
             current_player = 1;
@@ -140,15 +150,15 @@ public final class Game
      * Command Handler that receives selected gods from a player and goes to the next one
      * The last players must not call this command because it gets the last god
      * After the pick the function moves the game to the next stage
-     * @param sender
-     * @param godID
-     * @throws NotAllowedOperationException
+     * If the godid is not correct this phase is requested again to the external event handler
+     * @param sender player who issues this command
+     * @param godID id of the god to chose
+     * @throws NotAllowedOperationException if sender is not in this game
      */
     public void selectPlayerGod(Player sender, int godID) throws NotAllowedOperationException
     {
-        throwIfPlayerNotInThisMatch(sender);
-
-        //TODO: check correct phase
+        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender) || gameState != GameState.GOD_PICK)
+            throw new NotAllowedOperationException("Wait for your turn to chose a god");
 
         try {
             sender.setGod(pickGod(godID, allowed_cards));
@@ -158,7 +168,7 @@ public final class Game
                 players.get(0).setGod(allowed_cards.get(0));
                 runPreGame();
             } else {
-                eventHandler.onGodSelectionPhase(players.get(0), cardCollection.getCardIDs(), players.size());
+                eventHandler.onGodPickPhase(players.get(current_player), getCardIds(allowed_cards));
             }
 
         }
@@ -172,54 +182,48 @@ public final class Game
 
     /**
      * Command Handler to receive host decided first player for this game
-     * @param sender
-     * @param first_player
+     * If the selected player is not correct this phase is requested again to the external event handler
+     * @param sender player who issues this command
+     * @param first_player first player of the game that has the honor to make the first move
+     * @throws NotAllowedOperationException if the sender is not in this game nor is the host
      */
     public void selectFirstPlayer(Player sender, Player first_player) throws NotAllowedOperationException
     {
-        throwIfPlayerNotInThisMatch(sender);
-        throwIfNotHost(sender);
-        //TODO: check phase
+        if(!isPlayerInThisMatch(sender) || !isPlayerHost(sender) && gameState != GameState.PRE_GAME)
+            throw new NotAllowedOperationException("Only the host can chose the starting player");
 
-        try{
-            throwIfPlayerNotInThisMatch(first_player);
+        if(isPlayerInThisMatch(first_player))
             makeTurn(players.indexOf(first_player));
-        }catch (NotAllowedOperationException e)
-        {
-            //TODO: explicit error?
-            //retry chose
+        else //retry chose
             runPreGame();
-        }
     }
 
     /**
-     * Command hander to select a worker for the current turn
-     * @param sender
-     * @param target
-     * @throws NotAllowedOperationException
+     * Command handler to select a worker for the current turn
+     * @param sender player who issues this command
+     * @param target worker id to select
+     * @throws NotAllowedOperationException if sender is not in this game or is not the current player
      */
     public void selectWorker(Player sender, int target) throws NotAllowedOperationException
     {
-        throwIfPlayerNotInThisMatch(sender);
-        throwIfNotCurrentPlayer(sender);
+        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender) ||  gameState != GameState.GAME)
+            throw  new NotAllowedOperationException("You can't select a worker now");
 
-        //TODO: check game phase
         current_turn.selectWorker(target);
-
     }
 
 
     /**
      * Command handler to execute an action in the current turn
-     * @param sender
-     * @param actionId
-     * @param target
-     * @throws NotAllowedOperationException
+     * @param sender player who issues this command
+     * @param actionId id of the selected action to run
+     * @param target target position where the action should run
+     * @throws NotAllowedOperationException if player is not in this match or it's not his turn
      */
     public void runAction(Player sender, int actionId, Vector2 target) throws NotAllowedOperationException
     {
-        throwIfPlayerNotInThisMatch(sender);
-        throwIfNotCurrentPlayer(sender);
+        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender) ||  gameState != GameState.GAME)
+            throw new NotAllowedOperationException("You can't run an action now");
 
         int res = current_turn.runAction(actionId, target, game_map, globalConstraints);
 
@@ -239,8 +243,8 @@ public final class Game
 
     /**
      * Get the list of next possible actions
-     * @param sender
-     * @return
+     * @param sender player who issues this command
+     * @return list of actions
      */
     String[] getNextActions(Player sender){
         return null;
@@ -249,12 +253,13 @@ public final class Game
 
     /**
      * Left the game
-     * @param sender
-     * @throws NotAllowedOperationException
+     * @param sender player who issues this command
+     * @return true if left, false if player is not part of this game and cannot left
      */
-    public void left(Player sender) throws NotAllowedOperationException
+    public boolean left(Player sender)
     {
-        throwIfPlayerNotInThisMatch(sender);
+        if(players.indexOf(sender) < 0)
+            return false;
 
         players.remove(sender);
         if(players.size() < MIN_PLAYERS)
@@ -262,6 +267,8 @@ public final class Game
             eventHandler.onGameEnd(players.get(0));
             gameState = GameState.END;
         }
+
+        return true;
     }
 
 
@@ -293,36 +300,38 @@ public final class Game
      * Check if a player is in the current game or not
      * This function should be called before processing a player command or action of any kind
      * @param target player to check
-     * @throws NotAllowedOperationException if player is not part of this match
+     * @return true if target is in this game
      */
-    private void throwIfPlayerNotInThisMatch(Player target) throws NotAllowedOperationException
+    private boolean isPlayerInThisMatch(Player target)
     {
-        if(players.indexOf(target) < 0)
-            throw new NotAllowedOperationException("You have not joined this match");
+        return players.indexOf(target) < 0;
     }
 
     /**
      * Checks if the target player is the host of the game or not
      * The game host is the first player that joined the game
-     * @param target
-     * @throws NotAllowedOperationException
+     * @param target player to check
+     * @return true if the player is the host
      */
-    private void throwIfNotHost(Player target) throws NotAllowedOperationException
+    private boolean isPlayerHost(Player target)
     {
-        if(players.indexOf(target) < 0)
-            throw new NotAllowedOperationException("You must be the host to run that command");
+        return players.get(0).equals(target);
     }
 
-    private void throwIfNotCurrentPlayer(Player target) throws NotAllowedOperationException
+    /**
+     * Check if the target player is the current turn owner
+     * @param target player to check
+     * @return true if target is the current player
+     */
+    private boolean isCurrentPlayer(Player target)
     {
-        if(!target.equals(players.get(current_player)))
-            throw new NotAllowedOperationException("Not your turn");
+        return target.equals(players.get(current_player));
     }
 
     /**
      * Generate an array of card ids from a card array
-     * @param cards
-     * @return
+     * @param cards list of cards
+     * @return array of cards ids
      */
     private int[] getCardIds(List<Card> cards)
     {
@@ -335,8 +344,9 @@ public final class Game
 
     /**
      * Pick a god from a list and remove it
-     * @param id
-     * @return
+     * @param id god to pick
+     * @param  gods list of allowed "pick" gods
+     * @return card instance for the selected god id
      * @throws CardNotExistsException if the selected god in not in the list
      */
     private Card pickGod(int id, List<Card> gods) throws CardNotExistsException
@@ -389,9 +399,9 @@ public final class Game
     /**
      * Create and start a turn for the selected player
      * Turn is created only if the game is not in end phase
-     * @param player
+     * @param player player (players index) that ons the new turn
      */
-    public void makeTurn(int player){
+    private void makeTurn(int player){
 
         if(gameState == GameState.END) return;
 
@@ -412,9 +422,9 @@ public final class Game
 
     /**
      * End the current match and inform the winner
-     * @param winner
+     * @param winner player that won the game
      */
-    public void endGame(Player winner)
+    private void endGame(Player winner)
     {
         gameState = GameState.END;
         eventHandler.onGameEnd(winner);
@@ -422,9 +432,9 @@ public final class Game
 
     /**
      * Remove a player that lost the game
-     * @param loser
+     * @param loser player that met a lose condition
      */
-    public void playerLost(Player loser)
+    private void playerLost(Player loser)
     {
         if(players.size() == 2)
         {

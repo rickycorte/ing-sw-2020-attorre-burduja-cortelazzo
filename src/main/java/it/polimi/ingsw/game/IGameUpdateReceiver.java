@@ -5,7 +5,7 @@ package it.polimi.ingsw.game;
  */
 public interface IGameUpdateReceiver
 {
-    void onPlayerJoin(Player host);
+    void onPlayerJoin(Player player);
 
     void onGodSelectionPhase(Player host, int[] cardIDs, int cardCount);
 

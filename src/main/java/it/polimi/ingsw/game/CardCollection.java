@@ -1,9 +1,7 @@
 package it.polimi.ingsw.game;
 
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * This class holds the collection of currently available gods
@@ -21,6 +19,26 @@ public class CardCollection {
     public CardCollection(){
         // create new cards here
         cardCollection = new ArrayList<>();
+
+        // Apollo
+        cardCollection.add(new Card(1, "Apollo", BehaviourGraph.makeEmptyGraph()));
+        // Artemis
+        cardCollection.add(new Card(2, "Artemis", BehaviourGraph.makeEmptyGraph()));
+        // Athena
+        cardCollection.add(new Card(3, "Athena", BehaviourGraph.makeEmptyGraph()));
+        // Atlas
+        cardCollection.add(new Card(4, "Atlas", BehaviourGraph.makeEmptyGraph()));
+        // Demeter
+        cardCollection.add(new Card(5, "Demeter", BehaviourGraph.makeEmptyGraph()));
+        // Hephaestus
+        cardCollection.add(new Card(6, "Hephaestus", BehaviourGraph.makeEmptyGraph()));
+        // Minotaur
+        cardCollection.add(new Card(7, "Minotaur", BehaviourGraph.makeEmptyGraph()));
+        // Pan
+        cardCollection.add(new Card(8, "Pan", BehaviourGraph.makeEmptyGraph()));
+        // Prometheus
+        cardCollection.add(new Card(9, "Prometheus ", BehaviourGraph.makeEmptyGraph()));
+
     }
 
 

@@ -1,5 +1,11 @@
 package it.polimi.ingsw.game;
 
+/**
+ * This class represent a card an holds a name, a id and a graph.
+ * The id of the card is used to identify it in the network messages therefore should be unique for every card
+ * The behaviour graph represents the card actions on the game
+ * it's guarantee that every card has its onw isolated graph (good for multi threading)
+ */
 public class Card {
     private int id;
     private String name;
@@ -12,25 +18,18 @@ public class Card {
         this.graph = graph;
     }
 
-    public int getId(){
+    public int getId()
+    {
         return id;
     }
 
-    public String getName(){
+    public String getName()
+    {
         return name;
     }
 
-    public int runSelectedAction(int id, Worker worker, Vector2 vector2, Map map, GameConstraints constraint){
-        //TODO
-        return 0;
-    }
-
-    public boolean isTurnEnded(){
-        //
-        return false;
-    }
-
-    public String[] getNextActionArray(){
-        return null;
+    public BehaviourGraph getGraph()
+    {
+        return graph;
     }
 }
