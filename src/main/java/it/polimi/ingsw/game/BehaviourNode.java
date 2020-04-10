@@ -65,6 +65,22 @@ public class BehaviourNode
      * Return a list of next actions
      * @return list o next action names
      */
+    ArrayList<NextAction> getNextActions(Worker w, Map m, GameConstraints constraints){
+        ArrayList<NextAction> nodes = new ArrayList<>();
+
+        for(BehaviourNode n : child_nodes)
+        {
+            NextAction nextAction = new NextAction(w,m,constraints,n);
+            nodes.add(nextAction);
+        }
+
+        return nodes;
+    }
+
+    /**
+     * Return a list of next actions
+     * @return list o next action names
+     */
     String[] getNextActionNames(){
         //TODO: optimize
         ArrayList<String> nodes = new ArrayList<>();

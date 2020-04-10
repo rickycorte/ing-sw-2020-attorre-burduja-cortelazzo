@@ -124,4 +124,106 @@ class BehaviourGraphTest
         assertEquals(0, g.getNextActionNames().length);
         assertTrue(g.isExecutionEnded());
     }
+
+    @Test
+    void testNextActions() throws OutOfGraphException {
+        Player p = new Player(0, "first");
+        Worker w1 = new Worker(p);
+        Worker w2 = new Worker(p);
+        Map map = new Map();
+        GameConstraints c = new GameConstraints();
+        Vector2 posw1 = new Vector2(1,1);
+        Vector2 posw2 = new Vector2(1,2);
+
+        map.readMapOut("map.bin");
+
+        w1.setPos(posw1);
+        p.setWorker(w1);
+        w2.setPos(posw2);
+        p.setWorker(w2);
+
+        map.setWorkers(p);
+
+        BehaviourGraph testInitOR = BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction())
+                        .addBranch(new BuildAction())
+                        .addBranch(new MoveAction())
+                        .getRoot()
+        ).appendSubGraph(
+                BehaviourNode.makeRootNode(new BuildAction())
+                        .addBranch(new BuildAgainAction())
+                        .getRoot()
+        );
+        testInitOR.resetExecutionStatus();
+        ArrayList<NextAction> nextActions = new ArrayList<>(testInitOR.getNextActions(w1, map, c)) ;
+
+        assertEquals(2 , nextActions.size());
+        assertEquals("Move",(nextActions.get(0)).getAction_name());
+        assertEquals("Build",(nextActions.get(1)).getAction_name());
+
+        testInitOR.selectAction(0);
+        nextActions.clear();
+        nextActions = testInitOR.getNextActions(w1,map,c);
+        assertEquals(2 , nextActions.size());
+        assertEquals("Build", nextActions.get(0).getAction_name());
+        assertEquals("Move", nextActions.get(1).getAction_name());
+
+        testInitOR.resetExecutionStatus();
+        testInitOR.selectAction(1);
+        nextActions.clear();
+        nextActions = testInitOR.getNextActions(w1,map,c);
+        assertEquals(1, nextActions.size());
+        assertEquals("BuildAgain",nextActions.get(0).getAction_name());
+        //
+
+
+        BehaviourGraph test = BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction())
+                        .addBranch(new BuildAction())
+                        .addBranch(new MoveAction())
+                        .getRoot()
+        );
+        test.resetExecutionStatus();
+        ArrayList<NextAction> nextActions2 = test.getNextActions(w1, map, c);
+
+        assertEquals(1,nextActions2.size());
+        assertEquals("Move",nextActions2.get(0).getAction_name());
+
+        test.selectAction(0);
+        nextActions2.clear();
+        nextActions2 = test.getNextActions(w1,map,c);
+
+        assertEquals(2, nextActions2.size());
+        assertEquals("Build",nextActions2.get(0).getAction_name());
+        assertEquals("Move", nextActions2.get(1).getAction_name());
+
+
+
+        BehaviourGraph testMiddleOr = BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction())
+                        .addBranch(new BuildAction())
+                        .addBranch(new MoveAction())
+                        .mergeBranches(new MoveAction())
+                        .getRoot()
+        );
+
+        nextActions = testMiddleOr.getNextActions(w1,map,c);
+
+        assertEquals(1,nextActions.size());
+        assertEquals("Move",nextActions.get(0).getAction_name());
+
+        nextActions.clear();
+        testMiddleOr.selectAction(0);
+        nextActions = testMiddleOr.getNextActions(w1,map,c);
+        assertEquals(2,nextActions.size());
+        assertEquals("Build", nextActions.get(0).getAction_name());
+        assertEquals("Move",nextActions.get(1).getAction_name());
+
+        nextActions.clear();
+        testMiddleOr.selectAction(0);
+        nextActions = testMiddleOr.getNextActions(w1,map,c);
+        assertEquals(1,nextActions.size());
+        assertEquals("Move",nextActions.get(0).getAction_name());
+
+    }
 }

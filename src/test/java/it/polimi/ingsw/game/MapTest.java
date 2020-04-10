@@ -17,12 +17,7 @@ public class MapTest {
     void setUp() {
         map = new Map();
     }
-/*
-    @BeforeAll
-    void setMap(){
 
-    }
-  */
     @Test
     void testCompleteCell(){
         Vector2 pos = new Vector2(0,0);
@@ -34,8 +29,6 @@ public class MapTest {
             assertThrows(CellCompletedException.class, () -> map.build(pos));
         } catch (CellCompletedException e) {
             fail("Build in a completed cell");
-        } catch (OutOfMapException e) {
-            fail("Build in a not valid cell");
         }
     }
 
@@ -49,23 +42,9 @@ public class MapTest {
             assertThrows(CellCompletedException.class, () -> map.buildDome(pos));
         } catch (CellCompletedException e) {
             fail("Build in a completed cell");
-        } catch (OutOfMapException e) {
-            fail("Build in a not valid cell");
         }
     }
 
-    //test for OutOfMapException and isInsideMap
-    @Test
-    void testInsideOutside(){
-        Vector2 pos = new Vector2(6,6);
-        try{
-            assertFalse(map.isCellDome(pos)); //isInside == true
-            pos.set(7,6);
-            assertThrows(OutOfMapException.class, () -> map.isCellDome(pos)); //isInside == false
-        } catch (OutOfMapException e) {
-            fail("Checking a not valid cell");
-        }
-    }
 
     //Create a player and its 2 workers, add and remove workers in map
     @Test
@@ -83,20 +62,16 @@ public class MapTest {
         p.setWorker(w2);
 
         map.setWorkers(p);
-        try {
-            assertFalse(map.isCellEmpty(pos));
-            assertFalse(map.isCellEmpty(post));
-        } catch (OutOfMapException e) {
-            fail("Checking a not valid cell");
-        }
+
+        assertFalse(map.isCellEmpty(pos));
+        assertFalse(map.isCellEmpty(post));
+
 
         map.removeWorkers(p);
-        try {
-            assertTrue(map.isCellEmpty(pos));
-            assertTrue(map.isCellEmpty(post));
-        } catch (OutOfMapException e) {
-            fail("Checking a not valid cell");
-        }
+
+        assertTrue(map.isCellEmpty(pos));
+        assertTrue(map.isCellEmpty(post));
+
 
     }
 
@@ -167,7 +142,7 @@ public class MapTest {
             map.readMapOut("map.bin");
             assertEquals(1,map.getLevel(pos));
 
-        } catch (CellCompletedException | OutOfMapException e) {
+        } catch (CellCompletedException e) {
             e.printStackTrace();
         }
     }

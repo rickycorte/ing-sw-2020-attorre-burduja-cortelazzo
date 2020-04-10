@@ -1,5 +1,7 @@
 package it.polimi.ingsw.game;
 
+import java.util.ArrayList;
+
 /**
  * Set of actions that describes a god action in the game.
  * You should not reuse a graph for multiple cards because this class stores the current execution progress of the actions.
@@ -28,6 +30,13 @@ public class BehaviourGraph
         endReached = false;
     }
 
+    public BehaviourNode getCurrent_node() {
+        return current_node;
+    }
+
+    public void setCurrent_node(BehaviourNode current_node) {
+        this.current_node = current_node;
+    }
     /**
      * Select one of the actions returned by getNextActions using array index
      * @param pos action index used to select the next operation (index obtained from action list)
@@ -63,6 +72,14 @@ public class BehaviourGraph
      */
     public boolean isExecutionEnded() {
         return current_node.getNextActionCount() <= 0;
+    }
+
+    /**
+     * Returns next actions(name and available cells)
+     * @return ArrayList of NextAction from the current node
+     */
+    public ArrayList<NextAction> getNextActions(Worker w, Map m, GameConstraints constraints) {
+        return current_node.getNextActions(w,m,constraints);
     }
 
     /**

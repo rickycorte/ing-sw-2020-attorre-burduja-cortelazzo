@@ -41,9 +41,8 @@ public class Map
      * Increases level of selected cell, if level = 4 becomes a dome
      * @param pos selected cell
      * @throws CellCompletedException selected cell has already reached dome level
-     * @throws OutOfMapException selected cell is not in map
      */
-    public void build(Vector2 pos) throws CellCompletedException, OutOfMapException {
+    public void build(Vector2 pos) throws CellCompletedException {
 
         if(isInsideMap(pos)) {
             if (isCellDome(pos)) throw new CellCompletedException();
@@ -57,10 +56,9 @@ public class Map
     /**
      * Builds a dome in the selected cell, any level is valid
      * @param pos selected cell
-     * @throws OutOfMapException selected cell is not in map
      * @throws CellCompletedException selected cell was already a dome
      */
-    public void buildDome(Vector2 pos) throws OutOfMapException, CellCompletedException{
+    public void buildDome(Vector2 pos) throws CellCompletedException{
         if(isInsideMap(pos)){
             if(!isCellDome(pos)){
                 map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
@@ -73,37 +71,31 @@ public class Map
     /**
      *
      * @param pos selected cell
-     * @return selected cell height
-     * @throws OutOfMapException selected cell is not in map
+     * @return selected cell height, -1 if it is not in map
      */
-    public int getLevel(Vector2 pos) throws OutOfMapException {
+    public int getLevel(Vector2 pos) {
         if(isInsideMap(pos))
             return Integer.numberOfTrailingZeros(map[pos.getX()][pos.getY()]);
-        return -1; //return value in case of exception OutOfMap
+        return -1;
     }
 
     /**
      * Check if selected cell has a dome, any level is valid
      * @param pos selected cell
-     * @return true if dome
-     * @throws OutOfMapException selected cell is not in map
+     * @return true if dome, false if is not in map or is not dome
      */
-    public boolean isCellDome (Vector2 pos) throws OutOfMapException{
+    public boolean isCellDome (Vector2 pos){
         if(isInsideMap(pos)) return map[pos.getX()][pos.getY()] > 128;
-        return false; //return value in case of exception OutOfMap
+        return false;
     }
 
     /**
      * Check if selected cell is a valid position in the map
      * @param pos selected cell
      * @return true if is valid
-     * @throws OutOfMapException selected cell is not in map
      */
-    public boolean isInsideMap(Vector2 pos) throws OutOfMapException{
-
-        if (pos.getX() >= HEIGHT || pos.getX() < 0 || pos.getY() < 0 || pos.getY() >= LENGTH)  throw new OutOfMapException();
-
-        return true;
+    public boolean isInsideMap(Vector2 pos){
+        return pos.getX() < HEIGHT && pos.getX() >= 0 && pos.getY() >= 0 && pos.getY() < LENGTH;
     }
 
     /**
@@ -129,17 +121,32 @@ public class Map
     /**
      * Check if a worker is in the selected cell
      * @param pos selected cell
-     * @return true if a worker is in the selected cell
-     * @throws OutOfMapException selected cell is not in map
+     * @return true if a worker is in the selected cell, false if pos is not in map
      */
-    public boolean isCellEmpty (Vector2 pos) throws OutOfMapException{
+    public boolean isCellEmpty (Vector2 pos){
         if(isInsideMap(pos)) {
             for (Worker worker : workers) {
                 if (worker.getPos().getX() == pos.getX() && worker.getPos().getY() == pos.getY()) return false;
             }
             return true;
         }
-        return false; //return value in case of exception OutOfMap
+        return false;
+    }
+
+    /**
+     * check every position of the map and return the cell without worker
+     * @return list of all Vector2 element with no Worker on it
+     */
+    public ArrayList<Vector2> cellWithoutWorkers(){
+        ArrayList<Vector2> free =  new ArrayList<>();
+        Vector2 pos;
+        for (int i = 0; i<LENGTH ; i++)
+            for (int j = 0; j<HEIGHT; j++){
+                pos = new Vector2(i,j);
+                if(isCellEmpty(pos)) free.add(pos);
+            }
+
+        return free;
     }
 
     /**
