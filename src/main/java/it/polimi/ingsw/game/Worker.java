@@ -12,6 +12,10 @@ public class Worker
         return pos;
     }
 
+    public Player getOwner() {
+        return owner;
+    }
+
     public void setPos(Vector2 pos){
         this.pos = pos;
     }

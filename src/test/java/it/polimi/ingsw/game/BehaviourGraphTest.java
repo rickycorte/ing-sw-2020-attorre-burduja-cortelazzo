@@ -23,7 +23,7 @@ class BehaviourGraphTest
         }
 
         @Override
-        public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException
+        public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode node) throws NotAllowedMoveException
         {
             globalConstrains.add(local_constr);
             return 0;
@@ -79,16 +79,16 @@ class BehaviourGraphTest
         {
             GameConstraints c = new GameConstraints();
             testSeq.selectAction(0); // select text action
-            testSeq.runSelectedAction(null, null, null, c);
+            testSeq.runSelectedAction(null, null, null, c, null);
             assertTrue(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
             //refer to upper testAction class to understand why this check is made make sure the function is run
 
             c.clear();
-            testSeq.runSelectedAction(null, null, null, c); // double run this should be skipped
+            testSeq.runSelectedAction(null, null, null, c, null); // double run this should be skipped
             assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
 
             testSeq.selectAction(0); // move to graph end
-            testSeq.runSelectedAction(null, null, null, c); // nothing should happen
+            testSeq.runSelectedAction(null, null, null, c, null); // nothing should happen
             assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
 
 

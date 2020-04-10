@@ -26,7 +26,7 @@ public abstract class Action
      * @return action status report [TBD]
      * @throws NotAllowedMoveException if action is not possible with the current parameters
      */
-    public abstract int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException;
+    public abstract int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode node) throws NotAllowedMoveException;
 
     /**
      * Return the display name for an action

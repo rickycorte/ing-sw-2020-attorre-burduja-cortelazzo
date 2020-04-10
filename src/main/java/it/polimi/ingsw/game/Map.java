@@ -1,5 +1,4 @@
 package it.polimi.ingsw.game;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.io.*;
 
@@ -113,6 +112,10 @@ public class Map
      */
     public void setWorkers(Player player){
         workers.addAll(player.getWorkers());
+    }
+
+    public ArrayList<Worker> getWorkers(){
+        return workers;
     }
 
     /**

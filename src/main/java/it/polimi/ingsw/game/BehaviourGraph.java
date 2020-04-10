@@ -47,11 +47,11 @@ public class BehaviourGraph
      * @param globalConstrains global game constrains that should be applied before action execution
      * @throws NotAllowedMoveException if and illegal move is detected
      */
-    public void runSelectedAction(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException
+    public void runSelectedAction(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode current_node) throws NotAllowedMoveException
     {
         if(!isExecutionEnded() && !alreadyRun)
         {
-            current_node.getAction().run(w,target, m, globalConstrains);
+            current_node.getAction().run(w,target, m, globalConstrains, current_node);
             alreadyRun = true;
         }
 
