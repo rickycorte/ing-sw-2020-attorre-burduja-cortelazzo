@@ -29,7 +29,7 @@ class BehaviourGraphTest
             return 0;
         }
 
-        public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) throws OutOfMapException{
+        public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
             return null;
         }
     }
@@ -79,21 +79,21 @@ class BehaviourGraphTest
         {
             GameConstraints c = new GameConstraints();
             testSeq.selectAction(0); // select text action
-            testSeq.runSelectedAction(null, null, null, c, null);
+            testSeq.runSelectedAction(null, null, null, c);
             assertTrue(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
             //refer to upper testAction class to understand why this check is made make sure the function is run
 
             c.clear();
-            testSeq.runSelectedAction(null, null, null, c, null); // double run this should be skipped
+            testSeq.runSelectedAction(null, null, null, c); // double run this should be skipped
             assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
 
             testSeq.selectAction(0); // move to graph end
-            testSeq.runSelectedAction(null, null, null, c, null); // nothing should happen
+            testSeq.runSelectedAction(null, null, null, c); // nothing should happen
             assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
 
 
         }catch (Exception e){
-            fail("There should be an action for every node if execution is not ended");
+             fail("There should be an action for every node if execution is not ended");
         }
 
     }
@@ -158,22 +158,22 @@ class BehaviourGraphTest
         ArrayList<NextAction> nextActions = new ArrayList<>(testInitOR.getNextActions(w1, map, c)) ;
 
         assertEquals(2 , nextActions.size());
-        assertEquals("Move",(nextActions.get(0)).getAction_name());
-        assertEquals("Build",(nextActions.get(1)).getAction_name());
+        assertEquals("MoveNONE",(nextActions.get(0)).getAction_name());
+        assertEquals("BuildNONE",(nextActions.get(1)).getAction_name());
 
         testInitOR.selectAction(0);
         nextActions.clear();
         nextActions = testInitOR.getNextActions(w1,map,c);
         assertEquals(2 , nextActions.size());
-        assertEquals("Build", nextActions.get(0).getAction_name());
-        assertEquals("Move", nextActions.get(1).getAction_name());
+        assertEquals("BuildNONE", nextActions.get(0).getAction_name());
+        assertEquals("MoveNONE", nextActions.get(1).getAction_name());
 
         testInitOR.resetExecutionStatus();
         testInitOR.selectAction(1);
         nextActions.clear();
         nextActions = testInitOR.getNextActions(w1,map,c);
         assertEquals(1, nextActions.size());
-        assertEquals("BuildAgain",nextActions.get(0).getAction_name());
+        assertEquals("BuildAgainNONE",nextActions.get(0).getAction_name());
         //
 
 
@@ -187,15 +187,15 @@ class BehaviourGraphTest
         ArrayList<NextAction> nextActions2 = test.getNextActions(w1, map, c);
 
         assertEquals(1,nextActions2.size());
-        assertEquals("Move",nextActions2.get(0).getAction_name());
+        assertEquals("MoveNONE",nextActions2.get(0).getAction_name());
 
         test.selectAction(0);
         nextActions2.clear();
         nextActions2 = test.getNextActions(w1,map,c);
 
         assertEquals(2, nextActions2.size());
-        assertEquals("Build",nextActions2.get(0).getAction_name());
-        assertEquals("Move", nextActions2.get(1).getAction_name());
+        assertEquals("BuildNONE",nextActions2.get(0).getAction_name());
+        assertEquals("MoveNONE", nextActions2.get(1).getAction_name());
 
 
 
@@ -210,20 +210,20 @@ class BehaviourGraphTest
         nextActions = testMiddleOr.getNextActions(w1,map,c);
 
         assertEquals(1,nextActions.size());
-        assertEquals("Move",nextActions.get(0).getAction_name());
+        assertEquals("MoveNONE",nextActions.get(0).getAction_name());
 
         nextActions.clear();
         testMiddleOr.selectAction(0);
         nextActions = testMiddleOr.getNextActions(w1,map,c);
         assertEquals(2,nextActions.size());
-        assertEquals("Build", nextActions.get(0).getAction_name());
-        assertEquals("Move",nextActions.get(1).getAction_name());
+        assertEquals("BuildNONE", nextActions.get(0).getAction_name());
+        assertEquals("MoveNONE",nextActions.get(1).getAction_name());
 
         nextActions.clear();
         testMiddleOr.selectAction(0);
         nextActions = testMiddleOr.getNextActions(w1,map,c);
         assertEquals(1,nextActions.size());
-        assertEquals("Move",nextActions.get(0).getAction_name());
+        assertEquals("MoveNONE",nextActions.get(0).getAction_name());
 
     }
 }

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 /**
  * Abstract class that represents an action executed by a card
  * Actions should be stateless and know nothing about the current game
- * Every parameter need to execute the action is passed with run function
+ * Every parameter needed to execute the action is passed with run function
  *
  * Action should only store data about behaviour customizations passed only as Constructor parameters
  * Every Action subclass must also set its display name and return it with display_name()
@@ -13,17 +13,17 @@ import java.util.ArrayList;
 public abstract class Action
 {
 
-    protected static int net_id;
-    protected static String display_name;
+    protected int net_id;
+    protected  String display_name;
 
     /**
-     * This function execute the action behaviour on the parameters passed
-     * You should pass a reference to the original object actually execute actions on your game
+     * This function executes the action behaviour on the parameters passed
+     * You should pass a reference to the original object actually executing actions on your game
      * @param w target worker used in this action
      * @param target target position where the action should take place
      * @param m map where the action is executed
      * @param globalConstrains global game constrains that should be applied before action execution
-     * @return action status report [TBD]
+     * @return 1 = I won, 0 = continue, -1 = I lost
      * @throws NotAllowedMoveException if action is not possible with the current parameters
      */
     public abstract int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode node) throws NotAllowedMoveException;
@@ -36,5 +36,12 @@ public abstract class Action
      */
     public String displayName() { return display_name; }
 
-    public abstract ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) throws OutOfMapException;
+    /**
+     * @param w worker doing the job
+     * @param m current map
+     * @param gc list of constraints
+     * @param node will be used in case it's an "again" action
+     * @return an ArrayList of Vector2 objects, representing all the possible cells i can run the action from the w.getpos() cell
+     */
+    public abstract ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node);
 }

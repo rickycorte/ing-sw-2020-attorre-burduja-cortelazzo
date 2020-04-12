@@ -16,16 +16,16 @@ public class GameConstraints
         BLOCK_MOVE_UP(1<<1),
         CAN_SWAP_CONSTRAINT(1<<2),
         CAN_PUSH_CONSTRAINT(1<<3),
+        BLOCK_DOME_BUILD (1<<6),
 
         BLOCK_SAME_CELL_MOVE (1<<4), //if active, can't return to the same cell     (used in MoveAgainAction)
 
 
-        BLOCK_DOME_BUILD (1<<6),
-        ALLOW_DOME_ANYWHERE(1<<7),
-        BLOCK_SAME_CELL_BUILD(1<<8),  //if active, can't build on the same cell     (used in BuildAgainAction)
-        BLOCK_DIFF_CELL_BUILD(1<<16), //if active, can only build on the same cell (used in BuildAgainAction)
 
-        WIN_BY_GOING_DOWN(1<<17),    //if active, the player wins if goes down by 2 levels
+        BLOCK_SAME_CELL_BUILD(1<<8),  //if active, can't build on the same cell     (used in BuildAgainAction)
+        BLOCK_DIFF_CELL_BUILD(1<<16), //if active, can only build on the same cell  (used in BuildAgainAction)
+
+        WIN_BY_GOING_DOWN(1<<17),    //if active, the player wins by going down 2 lvls
 
         BLOCK_NON_LO_SO(1<<32);
 

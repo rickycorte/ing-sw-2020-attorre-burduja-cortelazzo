@@ -31,7 +31,7 @@ public class App
             try
             {
                 g.selectAction(n);
-                g.runSelectedAction(null, null, null, null, null);
+                g.runSelectedAction(null, null, null, null);
             }catch (Exception e) {
                 System.out.println("Ops something went wrong: " + e.getClass().toString());
             }

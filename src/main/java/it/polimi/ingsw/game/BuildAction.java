@@ -11,11 +11,15 @@ public class BuildAction extends Action
 {
     GameConstraints localConstrains;
 
+
+    private NotAllowedMoveException NotAllowedMoveException;
+
     BuildAction(GameConstraints.Constraint localConstrains)
     {
+        this.net_id = 20;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
-        display_name = "Build";
+        display_name = "Build" + localConstrains.toString();
     }
 
     public BuildAction() {
@@ -28,55 +32,47 @@ public class BuildAction extends Action
      * @param target target position where the action should take place
      * @param m map where the action is executed
      * @param gc collection of Constraints
-     * @param node where the action is waking place
-     * @return 1 if i won, 0 to continue, -1 if i cant build anywhere, -2 if i cant build in target pos
-     * @throws NotAllowedMoveException
+     * @param current_node where the action is waking place
+     * @return 1 = I won, 0 = continue, -1 = I lost (i have no possibleCells options)
+     * @throws NotAllowedMoveException ex. target is not valid
      */
     @Override
-    public int run(Worker w, Vector2 target, Map m, GameConstraints gc, BehaviourNode node) throws NotAllowedMoveException
-    {
+    public int run(Worker w, Vector2 target, Map m, GameConstraints gc, BehaviourNode current_node) throws NotAllowedMoveException {
         try {
-            ArrayList<Vector2> cells = node.getAction().possibleCells(w,m,gc,node);
-            if(cells.size() != 0) {
+            ArrayList<Vector2> cells = current_node.getAction().possibleCells(w, m, gc, current_node);
+            if (cells.size() != 0) {
                 if (cells.contains(target)) {
                     m.build(target);
-                    node.setPos(target); //will be used in case of a second build
-                } else return -2;
-
-            }else return -1;
-        }catch (CellCompletedException e){
-            e.printStackTrace();
-        }catch (OutOfMapException e1){
-            e1.printStackTrace();
+                    current_node.setPos(target); //will be used in case of a second build
+                } else {
+                    throw new NotAllowedMoveException();
+                }
+            } else
+                return -1;
+        } catch (CellCompletedException e) {
+            throw new NotAllowedMoveException();
         }
-
         return 0;
     }
 
     /**
-     *
      * @param w worker doing the job
      * @param m current map
      * @param gc list of constraints
      * @param node won't be used for now (getting a null is ok)
      * @return an ArrayList of Vector2 objects, representing all the possible cells i can run the action
-     * @throws OutOfMapException if the cell i'm checking is outside the map
      */
     @Override
-    public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) throws OutOfMapException{
+    public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
         ArrayList<Vector2> cells = new ArrayList<>();
-        int x = w.getPos().getX();
-        int y = w.getPos().getY();
-        for( int i = (x-1); i <= (x+1); i++){
-            for( int j = (y-1); j <= (y+1); j++) {
+        int my_x = w.getPos().getX();
+        int my_y = w.getPos().getY();
+        for (int i = (my_x - 1); i <= (my_x + 1); i++) {
+            for (int j = (my_y - 1); j <= (my_y + 1); j++) {
                 Vector2 temp = new Vector2(i, j);
-                if (i != x || j != y) {
-                    try {
-                        if (m.isInsideMap(temp) && !(m.isCellDome(temp)) && (m.isCellEmpty(temp))) {
-                            cells.add(temp);
-                        }
-                    }catch (OutOfMapException e){
-                        System.out.println("i've thrown an exception");
+                if (i != my_x || j != my_y) {
+                    if (m.isInsideMap(temp) && !(m.isCellDome(temp)) && (m.isCellEmpty(temp))) {
+                        cells.add(temp);
                     }
                 }
             }
