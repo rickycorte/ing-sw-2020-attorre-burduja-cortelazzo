@@ -66,7 +66,7 @@ public class MoveAgainActionTest {
         Worker w = new Worker(player);
         w.setPos(pos1);
         player.setGod(new Card(4,"Athena", null));
-        player.setWorker(w);
+        player.addWorker(w);
         m.setWorkers(player);
 
         BehaviourNode move = BehaviourNode.makeRootNode(new MoveAction());

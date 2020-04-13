@@ -138,9 +138,9 @@ class BehaviourGraphTest
         map.readMapOut("map.bin");
 
         w1.setPos(posw1);
-        p.setWorker(w1);
+        p.addWorker(w1);
         w2.setPos(posw2);
-        p.setWorker(w2);
+        p.addWorker(w2);
 
         map.setWorkers(p);
 

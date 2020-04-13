@@ -1,11 +1,7 @@
 package it.polimi.ingsw.game;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,8 +54,8 @@ public class MapTest {
         w1.setPos(pos);
         w2.setPos(post);
 
-        p.setWorker(w1);
-        p.setWorker(w2);
+        p.addWorker(w1);
+        p.addWorker(w2);
 
         map.setWorkers(p);
 

@@ -1,5 +1,6 @@
 package it.polimi.ingsw.game;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Player
 {
@@ -31,7 +32,25 @@ public class Player
         return this.workers;
     }
 
-    public void setWorker(Worker worker) {
+    public void addWorker(Worker worker) {
         this.workers.add(worker);
+    }
+
+    /**
+     * Remove player god and workers, should be called when player joins a game
+     */
+    public void clear()
+    {
+        god = null;
+        workers = null;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Player player = (Player) o;
+        return id == player.id && Objects.equals(username, player.username);
     }
 }

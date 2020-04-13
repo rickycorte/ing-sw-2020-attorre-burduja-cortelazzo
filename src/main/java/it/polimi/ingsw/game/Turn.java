@@ -10,10 +10,10 @@ public class Turn
 
     /**
      * Execute an action and get result
-     * == 0 continue
-     * > 0 current player met a win condition
-     * < 0 current player can't complete action and met a lose condition
-     * @param w
+     * equals 0 continue
+     * greater then 0 current player met a win condition
+     * lesser than 0 current player can't complete action and met a lose condition
+     * @param id
      * @param target
      * @param m
      * @param globalConstrains

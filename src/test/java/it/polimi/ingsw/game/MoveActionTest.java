@@ -36,14 +36,14 @@ public class MoveActionTest {
         Worker w1 = new Worker(player1);
         Vector2 p1 = new Vector2(3,3);
         w1.setPos(p1);
-        player1.setWorker(w1);
+        player1.addWorker(w1);
 
         assertEquals(p1, w1.getPos());
 
         Worker w2 = new Worker(player2);
         Vector2 p2 = new Vector2(2,2);
         w2.setPos(p2);
-        player2.setWorker(w2);
+        player2.addWorker(w2);
 
         Map m = new Map();
         m.setWorkers(player1);
@@ -69,14 +69,14 @@ public class MoveActionTest {
         Worker w1 = new Worker(player1);
         Vector2 p1 = new Vector2(3,3);
         w1.setPos(p1);
-        player1.setWorker(w1);
+        player1.addWorker(w1);
 
         assertEquals(p1, w1.getPos());
 
         Worker w2 = new Worker(player2);
         Vector2 p2 = new Vector2(2,2);
         w2.setPos(p2);
-        player2.setWorker(w2);
+        player2.addWorker(w2);
 
         Map m = new Map();
         m.setWorkers(player1);
@@ -103,14 +103,14 @@ public class MoveActionTest {
         Worker w1 = new Worker(player1);
         Vector2 p1 = new Vector2(3,3);
         w1.setPos(p1);
-        player1.setWorker(w1);
+        player1.addWorker(w1);
 
         assertEquals(p1, w1.getPos());
 
         Worker w2 = new Worker(player2);
         Vector2 p2 = new Vector2(2,3);
         w2.setPos(p2);
-        player2.setWorker(w2);
+        player2.addWorker(w2);
 
         Map m = new Map();
         m.setWorkers(player1);
@@ -136,7 +136,7 @@ public class MoveActionTest {
         player1.setGod(new Card(3,"Athena", null));
         Worker w1 = new Worker(player1);
         w1.setPos(new Vector2(3,3));
-        player1.setWorker(w1);
+        player1.addWorker(w1);
         m.setWorkers(player1);
 
         assertEquals(1, m.getWorkers().size());     // there should be one worker on the map
@@ -167,8 +167,8 @@ public class MoveActionTest {
         w1.setPos(pos1);
         Vector2 pos2 = new Vector2(2,3);
         w2.setPos(pos2);
-        player1.setWorker(w1);
-        player2.setWorker(w2);
+        player1.addWorker(w1);
+        player2.addWorker(w2);
         GameConstraints gc = new GameConstraints();
         m.setWorkers(player2);
         m.setWorkers(player1);
@@ -210,7 +210,7 @@ public class MoveActionTest {
         Vector2 pos1 = new Vector2(3,3);
         w1.setPos(pos1);
         Vector2 pos2 = new Vector2(2,3);
-        player1.setWorker(w1);
+        player1.addWorker(w1);
         GameConstraints gc = new GameConstraints();
         m.setWorkers(player1);
         int outcome;

@@ -61,7 +61,7 @@ public class BuildActionTest {
         assertTrue(b_pos.equals(t_pos));
         Worker w = new Worker(player);
         w.setPos(w_pos);
-        player.setWorker(w);
+        player.addWorker(w);
         m.setWorkers(player);
 
         BehaviourNode bn = BehaviourNode.makeRootNode(new BuildAction());
