@@ -54,16 +54,18 @@ public class BehaviourGraph
      * @param target target position where the action should take place
      * @param m map where the action is executed
      * @param globalConstrains global game constrains that should be applied before action execution
+     * @return int value : 0 if player can continue, >0 if player met a win condition, <0 if player met a lose condition
      * @throws NotAllowedMoveException if and illegal move is detected
      */
-    public void runSelectedAction(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException
+    public int runSelectedAction(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException
     {
         if(!isExecutionEnded() && !alreadyRun)
         {
-            current_node.getAction().run(w,target, m, globalConstrains, current_node);
+            int res = current_node.getAction().run(w,target, m, globalConstrains, current_node);
             alreadyRun = true;
+            return res;
         }
-
+        return -1; //TODO: fix this return value
     }
 
     /**

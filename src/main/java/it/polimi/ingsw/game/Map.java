@@ -112,12 +112,13 @@ public class Map
 
     /**
      * Remove from map's workers list all the element of the player's workers list
+     * Remove also from player its workers
      * @param player selected player
      */
     public void removeWorkers (Player player){
         workers.removeAll(player.getWorkers());
+        player.getWorkers().removeAll(player.getWorkers());
     }
-
     /**
      * Check if a worker is in the selected cell
      * @param pos selected cell

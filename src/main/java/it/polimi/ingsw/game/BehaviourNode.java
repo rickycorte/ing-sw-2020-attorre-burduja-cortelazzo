@@ -35,6 +35,10 @@ public class BehaviourNode
         this.pos = null;
     }
 
+    public List<BehaviourNode> getChild_nodes() {
+        return child_nodes;
+    }
+
     /**
      * Get the parent node
      * @return parent node
@@ -82,11 +86,10 @@ public class BehaviourNode
      * @return list o next action names
      */
     String[] getNextActionNames(){
-        //TODO: optimize
         ArrayList<String> nodes = new ArrayList<>();
         for(BehaviourNode n : child_nodes)
         {
-            nodes.add(n.getAction().displayName()); //TODO: use display name
+            nodes.add(n.getAction().displayName()); //use display name
         }
 
         return nodes.toArray(new String[0]);
