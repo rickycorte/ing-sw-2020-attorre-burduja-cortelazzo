@@ -1,8 +1,6 @@
 package it.polimi.ingsw.game;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Main Game and Model class that represents a complete match and serves as the model interface with the outside world
@@ -29,7 +27,7 @@ public final class Game
      *   GAME - normal game
      *   END - game ended due to finish of game or insufficient player
      */
-    public enum GameState{WAIT, GOD_SELECTION, GOD_PICK, FIRST_PLAYER_PICK, WORKER_PLACE, GAME, END}
+    public enum GameState{WAIT, GOD_FILTER, GOD_PICK, FIRST_PLAYER_PICK, WORKER_PLACE, GAME, END}
 
     private List<Player> players;
     private List<Card> allowed_cards;
@@ -51,8 +49,8 @@ public final class Game
         game_map = new Map(); // TODO: load prev state
         last_turn = null;
         current_turn = null;
-        current_player = -1;
-        first_player = -1;
+        current_player = 0;
+        first_player = 0;
         state_progress = 0;
         gameState = GameState.WAIT;
         cardCollection = new CardCollection();
@@ -127,17 +125,19 @@ public final class Game
 
 
     /**
-     * Generate an array of card ids from a card array
-     * @param cards list of cards
-     * @return array of cards ids
+     * @return list of available god cards by id
      */
-    public int[] getCardIds(List<Card> cards)
+    public int[] getCardIds()
     {
-        int[] res = new int[cards.size()];
-        for (int i =0; i< cards.size(); i++)
-            res[i] = cards.get(i).getId();
+        return cardCollection.getCardIDs();
+    }
 
-        return res;
+
+    /**
+     * @return current pickable cards for this match
+     */
+    public int[] getAllowedCardIDs(){
+        return getCardIds(allowed_cards);
     }
 
     // **********************************************************************************************
@@ -170,7 +170,7 @@ public final class Game
      */
     public boolean start(Player sender) {
         if(canStart() && isPlayerHost(sender)){
-            gameState = GameState.GOD_SELECTION;
+            gameState = GameState.GOD_FILTER;
             state_progress = 0;
             return true;
         }
@@ -189,14 +189,15 @@ public final class Game
      */
     public boolean applyGodFilter(Player sender, int[] filter) throws NotAllowedOperationException
     {
-        if(!isPlayerInThisMatch(sender) || !isPlayerHost(sender) || gameState !=GameState.GOD_SELECTION)
+        if(!isPlayerInThisMatch(sender) || !isPlayerHost(sender) || filter == null)
             throw new NotAllowedOperationException("Only the host can chose allowed gods");
 
         try
         {
-            //TODO: check cardIDs has no duplicates
-            allowed_cards = Arrays.asList(cardCollection.getCards(filter));
-            cardCollection = null; // we don't need it anymore
+            if(filter.length != playerCount() || hasDuplicates(filter)) // 20 cards should be fine for base gods ids
+                return false;
+
+            allowed_cards = new ArrayList<Card>(Arrays.asList(cardCollection.getCards(filter)));
             current_player = 1;
             state_progress = 1;
             gameState = GameState.GOD_PICK;
@@ -220,7 +221,7 @@ public final class Game
      */
     public boolean selectGod(Player sender, int godID) throws NotAllowedOperationException
     {
-        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender) || gameState != GameState.GOD_PICK)
+        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender))
             throw new NotAllowedOperationException("Wait for your turn to chose a god");
 
         try {
@@ -230,6 +231,7 @@ public final class Game
             if(state_progress == playerCount() && current_player == 0)
             {
                 players.get(0).setGod(allowed_cards.get(0)); // autopick god for last player
+                allowed_cards.clear();
                 if(playerCount() == MIN_PLAYERS)
                 {
                     first_player = 1;
@@ -256,14 +258,15 @@ public final class Game
      * If the selected player is not correct this phase is requested again to the external event handler
      * @param sender player who issues this command
      * @param first_player first player of the game that has the honor to make the first move
+     * @return true if first player is selected correctly, false otherwise
      * @throws NotAllowedOperationException if the sender is not in this game nor is the host
      */
     public boolean selectFirstPlayer(Player sender, Player first_player) throws NotAllowedOperationException
     {
-        if(!isPlayerInThisMatch(sender) || !isPlayerHost(sender) && gameState != GameState.FIRST_PLAYER_PICK)
+        if(!isPlayerInThisMatch(sender) || !isPlayerHost(sender))
             throw new NotAllowedOperationException("Only the host can chose the starting player");
 
-        if(isPlayerInThisMatch(first_player))
+        if(isPlayerInThisMatch(first_player) && !isPlayerHost(first_player))
         {
             this.first_player = players.indexOf(first_player);
             state_progress = 1;
@@ -277,20 +280,22 @@ public final class Game
 
 
     /**
-     * Place two workers for a player
-     * @param sender
-     * @param positions
-     * @return
-     * @throws NotAllowedOperationException
+     * Place two workers for a player, this function also checks that the positions are valid and free from other workers
+     * @param sender player who issues this command
+     * @param positions 2 position where the player wants to place it's workers
+     * @return true if workers are placed correctly, false otherwise
+     * @throws NotAllowedOperationException if sender is not in the game or is not current player
      */
     public boolean placeWorkers(Player sender, Vector2[] positions) throws NotAllowedOperationException
     {
-        if(!isPlayerInThisMatch(sender) || !isPlayerHost(sender) && gameState != GameState.WORKER_PLACE)
+        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender))
             throw new NotAllowedOperationException("You can't place a worker now");
+
+        //TODO: check for null god or provide isolation?
 
         List<Vector2> validPos = game_map.cellWithoutWorkers();
 
-        if(positions.length == 2 && !positions[0].equals(positions[1]) && validPos.contains(positions[0]) && validPos.contains(positions[1]) )
+        if(positions != null && positions.length == 2 && !positions[0].equals(positions[1]) && validPos.contains(positions[0]) && validPos.contains(positions[1]) )
         {
             sender.addWorker(new Worker(sender, positions[0]));
             sender.addWorker(new Worker(sender, positions[1]));
@@ -317,7 +322,7 @@ public final class Game
      */
     public void selectWorker(Player sender, int target) throws NotAllowedOperationException
     {
-        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender) ||  gameState != GameState.GAME)
+        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender))
             throw  new NotAllowedOperationException("You can't select a worker now");
 
         current_turn.selectWorker(target);
@@ -330,24 +335,38 @@ public final class Game
      * @param actionId id of the selected action to run
      * @param target target position where the action should run
      * @throws NotAllowedOperationException if player is not in this match or it's not his turn
+     * @return -1 if error because wrong parameters where passed, 0 if action is run and the turn is not changed, 1 if action is run and turn is ended
      */
     public int runAction(Player sender, int actionId, Vector2 target) throws NotAllowedOperationException
     {
-        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender) ||  gameState != GameState.GAME)
+        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender))
             throw new NotAllowedOperationException("You can't run an action now");
 
-        int res = current_turn.runAction(actionId, target, game_map, globalConstraints);
-
-        if(res > 0)
-            endGame(players.get(current_player));
-        else if (res < 0)
-            playerLost(players.get(current_player));
-
-        if(current_turn.isEnded())
+        try
         {
-            nextPlayer();
-            makeTurn(current_player);
-            return 1;
+            int res = current_turn.runAction(actionId, target, game_map, globalConstraints);
+
+            if (res > 0)
+                endGame(players.get(current_player));
+            else if (res < 0)
+                playerLost(players.get(current_player));
+
+            if (current_turn.isEnded())
+            {
+                nextPlayer();
+                makeTurn(current_player);
+                return 1;
+            }
+        }
+        catch (NotAllowedMoveException e)
+        {
+            return -1;
+        }
+        catch (OutOfGraphException e)
+        {
+            //TODO: this should never be called
+            System.out.println("Out of graph exception received in game: "+ e.getMessage());
+            return -1;
         }
 
         return 0;
@@ -358,9 +377,9 @@ public final class Game
      * @param sender player who issues this command
      * @return list of actions
      */
-    String[] getNextActions(Player sender){
+    List<NextAction> getNextActions(Player sender){
         //TODO: calc all possibile operations for every worker if not selected or limit action to a single worker
-        return null;
+        return current_turn.getNextAction(game_map, globalConstraints);
     }
 
 
@@ -371,14 +390,11 @@ public final class Game
      */
     public boolean left(Player sender)
     {
-        if(players.indexOf(sender) < 0)
+        if(!isPlayerInThisMatch(sender))
             return false;
 
         players.remove(sender);
-        if(players.size() < MIN_PLAYERS)
-        {
-            gameState = GameState.END;
-        }
+        playerLost(sender);
 
         return true;
     }
@@ -417,7 +433,10 @@ public final class Game
      */
     private boolean isPlayerInThisMatch(Player target)
     {
-        return players.indexOf(target) < 0;
+        if(players.size() <= 0)
+            return false;
+        else
+             return players.indexOf(target) >= 0;
     }
 
     /**
@@ -428,7 +447,10 @@ public final class Game
      */
     private boolean isPlayerHost(Player target)
     {
-        return players.get(0).equals(target);
+        if(players.size() <= 0)
+            return false;
+        else
+            return players.get(0).equals(target);
     }
 
     /**
@@ -438,7 +460,24 @@ public final class Game
      */
     private boolean isCurrentPlayer(Player target)
     {
-        return target.equals(players.get(current_player));
+        if(players.size() <= 0)
+            return false;
+        else
+            return target.equals(players.get(current_player));
+    }
+
+    /**
+     * Generate an array of card ids from a card array
+     * @param cards list of cards
+     * @return array of cards ids
+     */
+    private int[] getCardIds(List<Card> cards)
+    {
+        int[] res = new int[cards.size()];
+        for (int i =0; i< cards.size(); i++)
+            res[i] = cards.get(i).getId();
+
+        return res;
     }
 
     /**
@@ -450,15 +489,21 @@ public final class Game
      */
     private Card pickGod(int id, List<Card> gods) throws CardNotExistsException
     {
-        Card ret;
+        int res = -1;
         for(int  i =0; i < gods.size(); i++)
         {
             if(gods.get(i).getId() == id)
             {
-                ret = gods.get(i);
-                gods.remove(i);
-                return  ret;
+                res = i;
+                break;
             }
+        }
+
+        if(res >= 0)
+        {
+            Card t = gods.get(res);
+            gods.remove(res);
+            return t;
         }
 
         throw new CardNotExistsException();
@@ -470,12 +515,9 @@ public final class Game
     private void nextPlayer(){
         current_player ++;
         state_progress++;
-        if(current_player > players.size())
+        if(current_player >= players.size())
             current_player = 0;
     }
-
-
-
 
     /**
      * Create and start a turn for the selected player
@@ -491,7 +533,7 @@ public final class Game
         last_turn = current_turn;
         current_turn = new Turn(players.get(player));
 
-        if(!current_turn.canStillMove())
+        if(!current_turn.canStillMove(game_map, globalConstraints))
         {
             playerLost(players.get(current_player));
             nextPlayer();
@@ -522,6 +564,24 @@ public final class Game
         else{
             game_map.removeWorkers(loser);
         }
+    }
+
+    /**
+     * Check if an array has duplicates
+     * @param arr array to check
+     * @return true if a duplicate is found
+     */
+    private boolean hasDuplicates(final int[] arr)
+    {
+        Set<Integer> ck = new HashSet<>();
+        for (int i : arr)
+        {
+            if (ck.contains(i))
+                return true;
+            else
+                ck.add(i);
+        }
+        return false;
     }
 
 }

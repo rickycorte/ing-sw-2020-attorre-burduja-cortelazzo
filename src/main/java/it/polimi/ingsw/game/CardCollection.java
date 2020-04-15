@@ -41,6 +41,13 @@ public class CardCollection {
 
     }
 
+    /**
+     * @return number of cards in this collection
+     */
+    public int size()
+    {
+        return cardCollection.size();
+    }
 
     /**
      * Get an array of card ids that are unique for every card

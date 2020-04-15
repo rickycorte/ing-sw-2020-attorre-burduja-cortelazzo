@@ -54,7 +54,7 @@ public class BehaviourGraph
      * @param target target position where the action should take place
      * @param m map where the action is executed
      * @param globalConstrains global game constrains that should be applied before action execution
-     * @return int value : 0 if player can continue, >0 if player met a win condition, <0 if player met a lose condition
+     * @return int value : 0 if player can continue, greater 0 if player met a win condition, lower 0 if player met a lose condition
      * @throws NotAllowedMoveException if and illegal move is detected
      */
     public int runSelectedAction(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException

@@ -54,8 +54,8 @@ class TurnTest {
 
         map.readMapOut("map00closed.bin");
         p.setGod(card);
-        p.setWorker(w);
-        p.setWorker(w2);
+        p.addWorker(w);
+        p.addWorker(w2);
         map.setWorkers(p);
         w.setPos(pos);
         w2.setPos(pos2);
@@ -98,8 +98,8 @@ class TurnTest {
 
         map.readMapOut("map00closed.bin");
         p.setGod(card);
-        p.setWorker(w);
-        p.setWorker(w2);
+        p.addWorker(w);
+        p.addWorker(w2);
         map.setWorkers(p);
         w.setPos(pos);
         w2.setPos(pos2);

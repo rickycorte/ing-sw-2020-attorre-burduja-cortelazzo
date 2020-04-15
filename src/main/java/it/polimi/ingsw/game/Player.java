@@ -7,11 +7,13 @@ public class Player
     private int id;
     private String username;
     private Card god;
-    private ArrayList<Worker> workers = new ArrayList<>();
+    private ArrayList<Worker> workers;
 
     public Player (int id, String username){
         this.id = id;
         this.username = username;
+        workers = new ArrayList<>();
+        god = null;
     }
 
     public int getId() { return id; }
@@ -42,7 +44,7 @@ public class Player
     public void clear()
     {
         god = null;
-        workers = null;
+        workers = new ArrayList<>();
     }
 
     @Override

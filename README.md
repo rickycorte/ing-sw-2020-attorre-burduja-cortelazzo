@@ -17,8 +17,8 @@ Software engineering project AA2019-2020 Politecnico di Milano
 
 | Functionality | State |
 |:-----------------------|:------------------------------------:|
-| Basic rules | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |
-| Complete rules | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |
+| Basic rules | [![YELLOW](https://placehold.it/15/ffdd00/ffdd00)](#) |
+| Complete rules | [![YELLOW](https://placehold.it/15/ffdd00/ffdd00)](#) |
 | Socket | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |
 | GUI | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |
 | CLI | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |

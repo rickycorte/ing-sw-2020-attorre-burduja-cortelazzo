@@ -23,6 +23,7 @@ public abstract class Action
      * @param target target position where the action should take place
      * @param m map where the action is executed
      * @param globalConstrains global game constrains that should be applied before action execution
+     * @param node
      * @return 1 = I won, 0 = continue, -1 = I lost
      * @throws NotAllowedMoveException if action is not possible with the current parameters
      */

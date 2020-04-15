@@ -33,7 +33,7 @@ public class Turn
      * @param target position selected for Action
      * @param m game's map
      * @param globalConstrains global constraints in turn
-     * @return int value : 0 if player can continue, >0 if player met a win condition, <0 if player met a lose condition
+     * @return int value : 0 if player can continue, greater then 0 if player met a win condition, lower than 0 if player met a lose condition
      */
     public int runAction(int id, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException, OutOfGraphException {
         graph.selectAction(id);
