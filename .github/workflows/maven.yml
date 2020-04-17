@@ -27,6 +27,9 @@ jobs:
       with:
         java-version: 13
 
+    - name: Delete Target (if present)
+      run: rm -rf target
+
     - name: Maven Compile, Test, Report
       run: mvn package
 
@@ -42,7 +45,10 @@ jobs:
         mv target/AM44-1.0-SNAPSHOT.jar deliverables/
         mkdir apidocs
         mv target/site/apidocs apidocs
-        tar cvfz apidocs.tar.gz apidocs
+        mv target/site/jacoco coverage
+        rm coverage/jacoco.xml
+        rm coverage/jacoco.csv
+        tar cvfz apidocs.tar.gz apidocs coverage
         mv apidocs.tar.gz deliverables/
         mkdir release
         mv src release/src

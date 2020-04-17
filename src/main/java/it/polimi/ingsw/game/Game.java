@@ -266,7 +266,7 @@ public final class Game
         if(!isPlayerInThisMatch(sender) || !isPlayerHost(sender))
             throw new NotAllowedOperationException("Only the host can chose the starting player");
 
-        if(isPlayerInThisMatch(first_player) && !isPlayerHost(first_player))
+        if(isPlayerInThisMatch(first_player))
         {
             this.first_player = players.indexOf(first_player);
             state_progress = 1;

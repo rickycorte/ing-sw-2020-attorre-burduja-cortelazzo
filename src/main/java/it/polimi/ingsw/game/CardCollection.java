@@ -92,4 +92,17 @@ public class CardCollection {
             cards[i] = getCard(ids[i]);
         return cards;
     }
+
+
+    /**
+     * @return the default god game turn behaviour without any god
+     */
+    public Card getNoGodCard()
+    {
+        return new Card(40000, "No God",
+                BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                        BehaviourNode.makeRootNode(new MoveAction()).setNext(new BuildAction()).getRoot()
+                ));
+    }
+
 }

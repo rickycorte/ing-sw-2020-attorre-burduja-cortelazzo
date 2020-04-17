@@ -315,8 +315,14 @@ class GameTest
 
         try
         {
+            // random player
             assertTrue(game.selectFirstPlayer(p1, p3));
             assertEquals(p3, game.getCurrentPlayer());
+            assertEquals(Game.GameState.WORKER_PLACE, game.getCurrentState());
+
+            //first player as host
+            assertTrue(game.selectFirstPlayer(game.getHost(), game.getHost()));
+            assertEquals(game.getHost(), game.getCurrentPlayer());
             assertEquals(Game.GameState.WORKER_PLACE, game.getCurrentState());
 
         }catch (NotAllowedOperationException e)
@@ -341,8 +347,6 @@ class GameTest
             assertFalse(game.selectFirstPlayer(game.getHost(), null));
             //player not in game
             assertFalse(game.selectFirstPlayer(game.getHost(), p4));
-            //first player as host
-            assertFalse(game.selectFirstPlayer(game.getHost(), game.getHost()));
 
         } catch (NotAllowedOperationException e)
         {
