@@ -11,6 +11,7 @@ public class BehaviourGraph
 {
     private BehaviourNode root_node;
     private BehaviourNode current_node;
+    private BehaviourNode previous_node;
     private boolean alreadyRun;
     private boolean endReached;
 
@@ -26,6 +27,7 @@ public class BehaviourGraph
      */
     public void resetExecutionStatus() {
         current_node = root_node;
+        previous_node = root_node;
         alreadyRun = true; // root node has no action
         endReached = false;
     }
@@ -59,13 +61,21 @@ public class BehaviourGraph
      */
     public int runSelectedAction(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException
     {
-        if(!isExecutionEnded() && !alreadyRun)
+        try
         {
-            int res = current_node.getAction().run(w,target, m, globalConstrains, current_node);
-            alreadyRun = true;
-            return res;
+            if (!alreadyRun && current_node.getAction() != null)
+            {
+                int res = current_node.getAction().run(w, target, m, globalConstrains, current_node);
+                alreadyRun = true;
+                previous_node = current_node;
+                return res;
+            }
+            return -1; //TODO: fix this return value
+
+        }catch (NotAllowedMoveException e){
+            current_node = previous_node; // move back in case of a wrong move
+            throw e; // notify caller of the error
         }
-        return -1; //TODO: fix this return value
     }
 
     /**

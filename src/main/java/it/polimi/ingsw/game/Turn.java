@@ -28,6 +28,11 @@ public class Turn
     public void selectWorker(int target) { this.worker = player.getWorkers().get(target);}
 
     /**
+     * Remove selected worker
+     */
+    public void resetSelectedWorker() { this.worker = null; }
+
+    /**
      * Getter of turn's worker
      * @return worker, null if a worker is not been selected for turn
      */
@@ -41,7 +46,7 @@ public class Turn
      * @param target position selected for Action
      * @param m game's map
      * @param globalConstrains global constraints in turn
-     * @return int value : 0 if player can continue, >0 if player met a win condition, <0 if player met a lose condition
+     * @return int value : 0 if player can continue, greater 0 if player met a win condition, lower 0 if player met a lose condition
      */
     public int runAction(int id, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException, OutOfGraphException {
         graph.selectAction(id);

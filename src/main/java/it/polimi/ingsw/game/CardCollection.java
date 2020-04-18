@@ -99,7 +99,7 @@ public class CardCollection {
      */
     public Card getNoGodCard()
     {
-        return new Card(40000, "No God",
+        return new Card(177013, "No God",
                 BehaviourGraph.makeEmptyGraph().appendSubGraph(
                         BehaviourNode.makeRootNode(new MoveAction()).setNext(new BuildAction()).getRoot()
                 ));

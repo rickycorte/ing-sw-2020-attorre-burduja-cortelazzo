@@ -16,6 +16,7 @@ public final class Game
 {
     private static final int MAX_PLAYERS = 3;
     private static final int MIN_PLAYERS = 2;
+    private static final int WORKERS_PER_PLAYER = 2;
 
     /**
      * Enum that represent all the possible phases of a game:
@@ -197,7 +198,7 @@ public final class Game
             if(filter.length != playerCount() || hasDuplicates(filter)) // 20 cards should be fine for base gods ids
                 return false;
 
-            allowed_cards = new ArrayList<Card>(Arrays.asList(cardCollection.getCards(filter)));
+            allowed_cards = new ArrayList<>(Arrays.asList(cardCollection.getCards(filter))); // force a mutable list generation
             current_player = 1;
             state_progress = 1;
             gameState = GameState.GOD_PICK;
@@ -281,6 +282,9 @@ public final class Game
 
     /**
      * Place two workers for a player, this function also checks that the positions are valid and free from other workers
+     * When all the players have placed thier workers the first turn i created and GameState is changed to GAME
+     * This function is the only way to actually start turn execution.
+     * This design choice is done to force players to select workers before starting a new turn
      * @param sender player who issues this command
      * @param positions 2 position where the player wants to place it's workers
      * @return true if workers are placed correctly, false otherwise
@@ -291,14 +295,11 @@ public final class Game
         if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender))
             throw new NotAllowedOperationException("You can't place a worker now");
 
-        //TODO: check for null god or provide isolation?
-
-        List<Vector2> validPos = game_map.cellWithoutWorkers();
-
-        if(positions != null && positions.length == 2 && !positions[0].equals(positions[1]) && validPos.contains(positions[0]) && validPos.contains(positions[1]) )
+        if(areValidWorkerPlacements(positions))
         {
-            sender.addWorker(new Worker(sender, positions[0]));
-            sender.addWorker(new Worker(sender, positions[1]));
+            //workers id are relative for the player
+            sender.addWorker(new Worker(0, sender, positions[0]));
+            sender.addWorker(new Worker(1, sender, positions[1]));
             game_map.setWorkers(sender);
 
             nextPlayer();
@@ -314,62 +315,71 @@ public final class Game
         return false;
     }
 
-    /**
-     * Command handler to select a worker for the current turn
-     * @param sender player who issues this command
-     * @param target worker id to select
-     * @throws NotAllowedOperationException if sender is not in this game or is not the current player
-     */
-    public void selectWorker(Player sender, int target) throws NotAllowedOperationException
-    {
-        if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender))
-            throw  new NotAllowedOperationException("You can't select a worker now");
-
-        current_turn.selectWorker(target);
-    }
-
 
     /**
      * Command handler to execute an action in the current turn
+     * When a turn finishes, a new one is created for the next player
+     * If a player loses
      * @param sender player who issues this command
+     * @param worker worker id to select
      * @param actionId id of the selected action to run
      * @param target target position where the action should run
      * @throws NotAllowedOperationException if player is not in this match or it's not his turn
-     * @return -1 if error because wrong parameters where passed, 0 if action is run and the turn is not changed, 1 if action is run and turn is ended
+     * @return false on error and the request should be repeated, true if action is run correctly
      */
-    public int runAction(Player sender, int actionId, Vector2 target) throws NotAllowedOperationException
+    public boolean runAction(Player sender, int worker, int actionId, Vector2 target) throws NotAllowedOperationException
     {
         if(!isPlayerInThisMatch(sender) || !isCurrentPlayer(sender))
             throw new NotAllowedOperationException("You can't run an action now");
 
+        if(worker < 0 || worker >= WORKERS_PER_PLAYER) // invalid id
+            return false;
+
+        // save if  worker is already selected of not
+        boolean shouldResetWorker = current_turn.getWorker() == null;
+
+        // a worker is selected, we need to force the same worker
+        // so action is rejected
+        if(!shouldResetWorker && current_turn.getWorker().getId() != worker)
+            return false;
+
+
         try
         {
-            int res = current_turn.runAction(actionId, target, game_map, globalConstraints);
+            //select worker when the first action run succeed
+            if(current_turn.getWorker() == null)
+                current_turn.selectWorker(worker);
 
-            if (res > 0)
-                endGame(players.get(current_player));
-            else if (res < 0)
-                playerLost(players.get(current_player));
+            int actionRes = current_turn.runAction(actionId, target, game_map, globalConstraints);
 
-            if (current_turn.isEnded())
+            if (actionRes > 0) // player won
             {
-                nextPlayer();
-                makeTurn(current_player);
-                return 1;
+                endGame(players.get(current_player));
             }
+            else if (actionRes < 0) // player lost
+            {
+                playerLost(players.get(current_player));
+            }
+            else {
+                // turn continue
+
+                if (current_turn.isEnded())
+                {
+                    nextPlayer();
+                    makeTurn(current_player);
+                }
+            }
+
         }
-        catch (NotAllowedMoveException e)
+        catch (NotAllowedMoveException | OutOfGraphException e )
         {
-            return -1;
-        }
-        catch (OutOfGraphException e)
-        {
-            //TODO: this should never be called
-            System.out.println("Out of graph exception received in game: "+ e.getMessage());
-            return -1;
+            // first action failed, reset worker to let the player chose again
+            if(shouldResetWorker)
+                current_turn.resetSelectedWorker();
+            return false;
         }
 
-        return 0;
+        return true;
     }
 
     /**
@@ -377,7 +387,7 @@ public final class Game
      * @param sender player who issues this command
      * @return list of actions
      */
-    List<NextAction> getNextActions(Player sender){
+    public List<NextAction> getNextActions(Player sender){
         //TODO: calc all possibile operations for every worker if not selected or limit action to a single worker
         return current_turn.getNextAction(game_map, globalConstraints);
     }
@@ -531,7 +541,11 @@ public final class Game
         gameState = GameState.GAME;
 
         last_turn = current_turn;
-        current_turn = new Turn(players.get(player));
+        Player p = players.get(player);
+        if(p.getGod() == null)
+            p.setGod(cardCollection.getNoGodCard());
+
+        current_turn = new Turn(p);
 
         if(!current_turn.canStillMove(game_map, globalConstraints))
         {
@@ -567,6 +581,31 @@ public final class Game
     }
 
     /**
+     * Check if the position passed are valid and thus we can place a worker there
+     * Valid positions are free from other workers, are not the same and have only WORKERS_PER_PLAYER size
+     * @param positions positions to check
+     * @return true if positions are valid
+     */
+    private boolean areValidWorkerPlacements(Vector2[] positions)
+    {
+        //easy check for invalid size
+        if(positions == null || positions.length != WORKERS_PER_PLAYER)
+            return false;
+
+        // block same positions
+        if(positions[0].equals(positions[1]))
+            return false;
+
+        //check that the two position are available in the map
+        List<Vector2> validPos = game_map.cellWithoutWorkers();
+
+        if(!validPos.contains(positions[0]) ||  !validPos.contains(positions[1]))
+            return false;
+
+        return true;
+    }
+
+    /**
      * Check if an array has duplicates
      * @param arr array to check
      * @return true if a duplicate is found
@@ -583,5 +622,6 @@ public final class Game
         }
         return false;
     }
+
 
 }

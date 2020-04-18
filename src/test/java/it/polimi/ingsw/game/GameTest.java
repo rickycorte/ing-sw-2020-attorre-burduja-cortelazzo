@@ -361,14 +361,29 @@ class GameTest
         game.join(p2);
         try{
 
+            // p1 place
             Vector2[] pos = new Vector2[]{new Vector2(0,0), new Vector2(1,1)};
             assertTrue(game.placeWorkers(p1, pos));
             assertEquals(2, p1.getWorkers().size());
             assertEquals(pos[0], p1.getWorkers().get(0).getPos());
             assertEquals(pos[1], p1.getWorkers().get(1).getPos());
+            assertEquals(p2, game.getCurrentPlayer());
 
-            //TODO: check that p2 selection triggers the creation of a new turn
-            // this requires at least one god and now there is none :L rip me
+            // check if map has placed workers
+            assertFalse(game.getCurrentMap().isCellEmpty(pos[0]));
+            assertFalse(game.getCurrentMap().isCellEmpty(pos[1]));
+
+            //p2 place (all the checks are done above)
+            pos = new Vector2[]{new Vector2(2,2), new Vector2(3,3)};
+            assertTrue(game.placeWorkers(p2, pos));
+
+            // check if map has placed workers
+            assertFalse(game.getCurrentMap().isCellEmpty(pos[0]));
+            assertFalse(game.getCurrentMap().isCellEmpty(pos[1]));
+
+            //check turn start with p1
+            assertEquals(Game.GameState.GAME, game.getCurrentState());
+            assertEquals(p1, game.getCurrentPlayer());
 
         }catch (NotAllowedOperationException e)
         {
@@ -430,6 +445,92 @@ class GameTest
             fail("Unexpected exception");
         }
 
+    }
+
+
+    void prepareGameForAction()
+    {
+        game.join(p1);
+        game.join(p2);
+
+        try
+        {
+            game.placeWorkers(p1, new Vector2[]{new Vector2(0,0), new Vector2(1,1)});
+            game.placeWorkers(p2, new Vector2[]{new Vector2(2,2), new Vector2(3,3)});
+        }catch (NotAllowedOperationException ignored)
+        {
+
+        }
+
+    }
+
+    @Test
+    void shouldRunAction()
+    {
+        // we assume the default turn (move - build) is used
+        prepareGameForAction();
+        try{
+            // move action (we don't test actions here, just the turn flow)
+            assertTrue(game.runAction(p1,0, 0, new Vector2(0,1)));
+            assertEquals(Game.GameState.GAME,game.getCurrentState());
+            assertEquals(p1, game.getCurrentPlayer());
+
+            //build action (same worker)
+            assertTrue(game.runAction(p1,0, 0, new Vector2(0,0)));
+            assertEquals(Game.GameState.GAME, game.getCurrentState());
+            //new turn
+            assertNotEquals(p1, game.getCurrentPlayer());
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
+
+
+    @Test
+    void shouldNotRunAction()
+    {
+        // we assume the default turn (move - build) is used
+        prepareGameForAction();
+
+        // not current player
+        assertThrows(NotAllowedOperationException.class, ()->{game.runAction(p2, 0,0, null);});
+
+        // not in game
+        assertThrows(NotAllowedOperationException.class, ()->{game.runAction(p3, 0,0, null);});
+
+        try{
+
+            // wrong worker id (neg)
+            assertFalse(game.runAction(p1,-1, 6, null));
+            assertEquals(p1, game.getCurrentPlayer());
+
+            // wrong worker id (sep)
+            assertFalse(game.runAction(p1,2, 6, null));
+            assertEquals(p1, game.getCurrentPlayer());
+
+            // out of range action
+            assertFalse(game.runAction(p1,0, 10, null));
+            assertFalse(game.runAction(p1,0, -1, null));
+
+            // null position
+            assertFalse(game.runAction(p1,0, 0, null));
+
+            // wrong position
+            assertFalse(game.runAction(p1,0, 0, new Vector2(-1,-1)));
+
+            // wrong worker after first action
+            assertTrue(game.runAction(p1,0, 0, new Vector2(0,1)));
+
+            assertFalse(game.runAction(p1,1, 0, new Vector2(0,0)));
+            assertEquals(Game.GameState.GAME, game.getCurrentState());
+            assertEquals(p1, game.getCurrentPlayer());
+
+        }catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
     }
 
 }

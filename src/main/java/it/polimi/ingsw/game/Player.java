@@ -47,6 +47,7 @@ public class Player
         workers = new ArrayList<>();
     }
 
+
     @Override
     public boolean equals(Object o)
     {

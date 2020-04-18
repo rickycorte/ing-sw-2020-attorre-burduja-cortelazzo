@@ -11,10 +11,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BehaviourGraphTest
 {
+    // class to test correct action behaviour on graph
     private class TestAction extends Action {
 
         GameConstraints.Constraint local_constr;
 
+        public TestAction()
+        {
+            this.local_constr = GameConstraints.Constraint.NONE;
+        }
 
         public TestAction(GameConstraints.Constraint local_constr)
         {
@@ -25,8 +30,23 @@ class BehaviourGraphTest
         @Override
         public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode node) throws NotAllowedMoveException
         {
-            globalConstrains.add(local_constr);
-            return 0;
+            if(globalConstrains != null) globalConstrains.add(local_constr);
+            return 309217;
+        }
+
+        public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
+            return null;
+        }
+    }
+
+    // class to test wrong moves on graph behaviour
+    private class TestActionThrow extends Action {
+
+
+        @Override
+        public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode node) throws NotAllowedMoveException
+        {
+            throw new NotAllowedMoveException();
         }
 
         public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
@@ -88,8 +108,8 @@ class BehaviourGraphTest
             assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
 
             testSeq.selectAction(0); // move to graph end
-            testSeq.runSelectedAction(null, null, null, c); // nothing should happen
-            assertFalse(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
+            testSeq.runSelectedAction(null, null, null, c);
+            assertTrue(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
 
 
         }catch (Exception e){
@@ -225,5 +245,53 @@ class BehaviourGraphTest
         assertEquals(1,nextActions.size());
         assertEquals("MoveNONE",nextActions.get(0).getAction_name());
 
+    }
+
+
+    @Test
+    void shouldNotMoveForwardOnActionError()
+    {
+        BehaviourGraph graph = BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new TestActionThrow()).setNext(new TestAction()).getRoot());
+
+        BehaviourNode prevAction = graph.getCurrent_node();
+
+        try{
+            graph.selectAction(0);
+            graph.runSelectedAction(null, null, null, null);
+        }catch (OutOfGraphException e)
+        {
+            fail("Unexpected exception");
+        }
+        catch (NotAllowedMoveException ignored)
+        {
+            // 100% sure we go here because TestActionThrow always trows this exception
+        }
+
+        assertEquals(prevAction, graph.getCurrent_node());
+
+    }
+
+    @Test
+    void shouldRunEveryAction()
+    {
+        BehaviourGraph graph = BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new TestAction()).setNext(new TestAction()).getRoot());
+        try{
+            graph.selectAction(0);
+            // we check 309217 because run of TestAction returns that fixed and unusual number
+            assertEquals(309217, graph.runSelectedAction(null, null, null, null));
+
+            graph.selectAction(0);
+            assertEquals(309217, graph.runSelectedAction(null, null, null, null));
+
+        }catch (OutOfGraphException e)
+        {
+            fail("Unexpected out of graph");
+        }
+        catch (NotAllowedMoveException e)
+        {
+            fail("Unexpected not allowed move");
+        }
     }
 }
