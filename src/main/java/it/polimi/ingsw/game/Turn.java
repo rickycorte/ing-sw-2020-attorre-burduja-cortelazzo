@@ -16,6 +16,7 @@ public class Turn
     public Turn(Player p) {
         this.player = p;
         this.graph = p.getGod().getGraph();
+        this.worker = null;
 
         graph.resetExecutionStatus();
     }
@@ -26,6 +27,13 @@ public class Turn
      */
     public void selectWorker(int target) { this.worker = player.getWorkers().get(target);}
 
+    /**
+     * Getter of turn's worker
+     * @return worker, null if a worker is not been selected for turn
+     */
+    public Worker getWorker(){
+        return worker;
+    }
 
     /**
      * Execute an action and get a result
@@ -33,7 +41,7 @@ public class Turn
      * @param target position selected for Action
      * @param m game's map
      * @param globalConstrains global constraints in turn
-     * @return int value : 0 if player can continue, greater then 0 if player met a win condition, lower than 0 if player met a lose condition
+     * @return int value : 0 if player can continue, >0 if player met a win condition, <0 if player met a lose condition
      */
     public int runAction(int id, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException, OutOfGraphException {
         graph.selectAction(id);
@@ -42,13 +50,25 @@ public class Turn
 
     /**
      * Get next actions from the last executed
-     * information are action's names and list of available cell for that action
+     * get action's names and list of available cell for that action
      * @param m game's map
      * @param constraints game's constraints
      * @return ArrayList of NextAction from the graph's current node
      */
     public ArrayList<NextAction> getNextAction (Map m, GameConstraints constraints){
         return graph.getNextActions(worker,m,constraints);
+    }
+
+    /**
+     * Get next actions from the last executed
+     * get action's names and list of available cell for that action
+     * @param w selected worker
+     * @param m games'map
+     * @param constraints game's constraints
+     * @return ArrayList of NextAction from the graph's current node
+     */
+    public ArrayList<NextAction> getNextAction (Worker w, Map m, GameConstraints constraints){
+        return graph.getNextActions(w,m,constraints);
     }
 
     /**
