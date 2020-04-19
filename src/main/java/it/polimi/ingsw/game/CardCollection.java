@@ -21,23 +21,85 @@ public class CardCollection {
         cardCollection = new ArrayList<>();
 
         // Apollo
-        cardCollection.add(new Card(1, "Apollo", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(1, "Apollo", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT))
+                        .setNext(new BuildAction())
+                        .setNext(new EndTurnAction())
+                        .getRoot()
+        )));
         // Artemis
-        cardCollection.add(new Card(2, "Artemis", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(2, "Artemis", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction())
+                        .addBranch(BehaviourNode.makeRootNode(new BuildAction())
+                                .setNext(new EndTurnAction())
+                                .getRoot())
+                        .addBranch(BehaviourNode.makeRootNode(new MoveAgainAction(GameConstraints.Constraint.BLOCK_SAME_CELL_MOVE))
+                                .setNext(new BuildAction())
+                                .setNext(new EndTurnAction())
+                                .getRoot())
+        )));
         // Athena
-        cardCollection.add(new Card(3, "Athena", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(3, "Athena", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction())
+                        .setNext(new BuildAction())
+                        .setNext(new EndTurnAction())
+                        .getRoot()
+        )));
         // Atlas
-        cardCollection.add(new Card(4, "Atlas", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(4, "Atlas", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction())
+                        .addBranch(BehaviourNode.makeRootNode(new BuildAction())
+                                .setNext(new EndTurnAction())
+                                .getRoot())
+                        .addBranch(BehaviourNode.makeRootNode(new BuildDomeAction())
+                                .setNext(new EndTurnAction())
+                                .getRoot())
+        )));
         // Demeter
-        cardCollection.add(new Card(5, "Demeter", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(5, "Demeter", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction()).setNext(new BuildAction())
+                        .addBranch(new EndTurnAction())
+                        .addBranch(BehaviourNode.makeRootNode(new BuildAgainAction(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD))
+                                .setNext(new EndTurnAction())
+                                .getRoot())
+                        .getRoot()
+        )));
         // Hephaestus
-        cardCollection.add(new Card(6, "Hephaestus", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(6, "Hephaestus", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction()).setNext(new BuildAction())
+                        .addBranch(new EndTurnAction())
+                        .addBranch(BehaviourNode.makeRootNode(new BuildAgainAction(GameConstraints.Constraint.BLOCK_DIFF_CELL_BUILD, GameConstraints.Constraint.BLOCK_DOME_BUILD))
+                                .setNext(new EndTurnAction())
+                                .getRoot())
+                        .getRoot()
+        )));
         // Minotaur
-        cardCollection.add(new Card(7, "Minotaur", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(7, "Minotaur", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT))
+                        .setNext(new BuildAction())
+                        .setNext(new EndTurnAction())
+                        .getRoot()
+        )));
         // Pan
-        cardCollection.add(new Card(8, "Pan", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(8, "Pan", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.WIN_BY_GOING_DOWN))
+                        .setNext(new BuildAction())
+                        .setNext(new EndTurnAction())
+                        .getRoot()
+        )));
         // Prometheus
-        cardCollection.add(new Card(9, "Prometheus ", BehaviourGraph.makeEmptyGraph()));
+        cardCollection.add(new Card(9, "Prometheus ", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+                BehaviourNode.makeRootNode(new MoveAction())
+                        .setNext(new BuildAction())
+                        .setNext(new EndTurnAction())
+                        .getRoot()
+        ).appendSubGraph(
+                BehaviourNode.makeRootNode(new BuildAction())
+                        .setNext(new MoveAction(GameConstraints.Constraint.BLOCK_MOVE_UP))
+                        .setNext(new BuildAgainAction())
+                        .setNext(new EndTurnAction())
+                        .getRoot()
+        )));
 
     }
 

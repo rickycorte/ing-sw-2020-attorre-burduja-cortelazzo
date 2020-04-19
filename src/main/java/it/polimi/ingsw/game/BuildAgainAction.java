@@ -16,6 +16,14 @@ public class BuildAgainAction extends Action {
         display_name = "BuildAgain"+ localConstrains.toString();
     }
 
+    BuildAgainAction(GameConstraints.Constraint constraint1, GameConstraints.Constraint constraint2){
+        this.net_id = 21;
+        this.localConstrains = new GameConstraints();
+        this.localConstrains.add(constraint1);
+        this.localConstrains.add(constraint2);
+        display_name = "BuildAgain"+ localConstrains.toString();
+    }
+
     public BuildAgainAction() {
         this(GameConstraints.Constraint.NONE);
     }
