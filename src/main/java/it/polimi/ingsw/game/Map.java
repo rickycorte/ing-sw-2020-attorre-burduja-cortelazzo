@@ -32,9 +32,22 @@ public class Map
      * Initialize the map to level zero
      */
     public Map(){
+        workers = new ArrayList<>();
         for (int i = 0; i<LENGTH ; i++)
             for (int j = 0; j<HEIGHT; j++)
                 map[i][j] = 1;
+    }
+
+    /**
+     * Copy constructor
+     * @param other copied map
+     */
+    public Map(Map other){
+        workers = new ArrayList<>();
+        workers.addAll(other.workers);
+        for (int i = 0; i<LENGTH ; i++)
+            for (int j = 0; j<HEIGHT; j++)
+                map[i][j] = other.map[i][j];
     }
 
     /**

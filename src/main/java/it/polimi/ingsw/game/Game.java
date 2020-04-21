@@ -1,6 +1,8 @@
 package it.polimi.ingsw.game;
 
 import java.util.*;
+import com.google.gson.Gson;
+import java.io.*;
 
 /**
  * Main Game and Model class that represents a complete match and serves as the model interface with the outside world
@@ -31,14 +33,14 @@ public final class Game
     public enum GameState{WAIT, GOD_FILTER, GOD_PICK, FIRST_PLAYER_PICK, WORKER_PLACE, GAME, END}
 
     private List<Player> players;
-    private List<Card> allowed_cards;
+    private transient List<Card> allowed_cards;
     private GameConstraints globalConstraints;
     private Map game_map;
-    private Turn current_turn, last_turn;
+    private transient Turn current_turn, last_turn;
     private int current_player, first_player;
     private int state_progress;
     private GameState gameState;
-    private CardCollection cardCollection;
+    private transient CardCollection cardCollection;
 
     //TODO: worker placement
 
@@ -407,6 +409,77 @@ public final class Game
         playerLost(sender);
 
         return true;
+    }
+
+    /**
+     * Save Game to json file
+     * @param fileName name of json file
+     */
+    public void gameJsonToFile(String fileName) {
+        Gson gson = new Gson();
+        String json = gson.toJson(this);
+        String path = "src/test/resources";
+        File file = new File(path);
+        String absolutePath = file.getAbsolutePath();
+        try (OutputStream outputStream = new FileOutputStream(absolutePath + "/" + fileName)) {
+            outputStream.write(json.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Load Game from json file
+     * players must have same order as before saving
+     * can't be called before initial phases of game set, only in game phase
+     * create turn for current player
+     * @param fileName name of json file
+     * @return Game or null if can't load
+     */
+    public Game gameJsonFromFile(String fileName){
+        //allowed_car and cardCollection not saved - saving after starting phase of game
+
+        Game newGame; //TODO: fix con this ?
+        String path = "src/test/resources";
+        File file = new File(path);
+        String absolutePath = file.getAbsolutePath();
+
+        try (InputStreamReader inputStream = new InputStreamReader(new FileInputStream(absolutePath + "/" + fileName))) {
+            BufferedReader bufferedReader = new BufferedReader(inputStream);
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+
+            while((line = bufferedReader.readLine()) != null){
+                stringBuilder.append(line);
+            }
+
+            String json = stringBuilder.toString();
+            Gson gson = new Gson();
+            newGame = gson.fromJson(json,Game.class);
+        } catch (IOException e) {
+            return null;
+        }
+
+        for (Player player : newGame.getPlayers()) {
+            player.playerAfterSave();
+            for (Worker w : newGame.getCurrentMap().getWorkers()) {
+                if (w.getOwner().getId() == player.getId()) {
+                    player.addWorker(w);
+                    w.setOwner(player);
+                }
+            }
+
+            try {
+                // graph is assigned by god'player identifier
+                player.getGod().setGraph(cardCollection.getCard(player.getGod().getId()).getGraph());
+            } catch (CardNotExistsException e) {
+                return null;
+            }
+        }
+
+        newGame.makeTurn(current_player);
+
+        return newGame;
     }
 
 

@@ -142,4 +142,25 @@ public class MapTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    void copyConstructorTest(){
+
+        map.readMapOut("map00closed.bin");
+        Vector2 pos = new Vector2(0,0);
+        Player p = new Player(1, "FirstPlayer");
+        Worker w1 = new Worker(p);
+        w1.setPos(pos);
+        p.addWorker(w1);
+        map.setWorkers(p);
+
+        Map newMap = new Map(map);
+
+        assertEquals(map.getWorkers().get(0),newMap.getWorkers().get(0));
+
+        for (int i = 0; i<7 ; i++)
+            for (int j = 0; j<7; j++)
+                assertEquals(map.getLevel(new Vector2(i,j)),newMap.getLevel(new Vector2(i,j)));
+
+    }
 }

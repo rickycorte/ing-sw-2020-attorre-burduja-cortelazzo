@@ -34,6 +34,8 @@ public class Worker
         return id;
     }
 
+    public void setOwner(Player owner) { this.owner = owner; }
+
     @Override
     public boolean equals(Object o)
     {

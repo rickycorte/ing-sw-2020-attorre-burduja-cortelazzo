@@ -7,13 +7,17 @@ public class Player
     private int id;
     private String username;
     private Card god;
-    private ArrayList<Worker> workers;
+    private transient ArrayList<Worker> workers;
 
     public Player (int id, String username){
         this.id = id;
         this.username = username;
         workers = new ArrayList<>();
         god = null;
+    }
+
+    public void playerAfterSave (){
+        this.workers = new ArrayList<>();
     }
 
     public int getId() { return id; }

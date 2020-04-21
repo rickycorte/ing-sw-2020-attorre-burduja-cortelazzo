@@ -9,7 +9,7 @@ package it.polimi.ingsw.game;
 public class Card {
     private int id;
     private String name;
-    private BehaviourGraph graph;
+    private transient BehaviourGraph graph;
 
 
     public Card(int id, String name, BehaviourGraph graph) {
@@ -32,4 +32,6 @@ public class Card {
     {
         return graph;
     }
+
+    public void setGraph(BehaviourGraph graph) { this.graph = graph; }
 }
