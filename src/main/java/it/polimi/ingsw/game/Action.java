@@ -48,4 +48,17 @@ public abstract class Action
      * @return an ArrayList of Vector2 objects, representing all the possible cells i can run the action from the w.getpos() cell
      */
     public abstract ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node);
+
+    /**
+     * Merge constrains and return a copy leaving the original ones untouched
+     * @param localConstraints local constraints
+     * @param globalConstraints global constraints
+     * @return merged constraints
+     */
+    protected GameConstraints mergeConstraints(final GameConstraints localConstraints, final GameConstraints globalConstraints)
+    {
+        GameConstraints gc = new GameConstraints(localConstraints);
+        gc.add(globalConstraints);
+        return gc;
+    }
 }

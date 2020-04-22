@@ -1,10 +1,8 @@
 package it.polimi.ingsw.game;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.awt.*;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -157,9 +155,9 @@ class BehaviourGraphTest
 
         map.readMapOut("map.bin");
 
-        w1.setPos(posw1);
+        w1.setPosition(posw1);
         p.addWorker(w1);
-        w2.setPos(posw2);
+        w2.setPosition(posw2);
         p.addWorker(w2);
 
         map.setWorkers(p);

@@ -58,6 +58,6 @@ public class Player
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Player player = (Player) o;
-        return id == player.id && Objects.equals(username, player.username);
+        return username.equals(player.username);
     }
 }

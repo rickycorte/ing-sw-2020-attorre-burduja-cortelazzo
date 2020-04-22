@@ -15,8 +15,8 @@ public class BuildActionTest {
         Worker w = new Worker(null);
         Map m = new Map();
         Vector2 w_pos = new Vector2(0, 0);
-        w.setPos(w_pos);
-        assertEquals(w_pos, w.getPos());
+        w.setPosition(w_pos);
+        assertEquals(w_pos, w.getPosition());
         BuildAction a = new BuildAction();
 
         ArrayList<Vector2> cells = a.possibleCells(w, m, null, null);
@@ -28,8 +28,8 @@ public class BuildActionTest {
         Worker w = new Worker(null);
         Map m = new Map();
         Vector2 p1 = new Vector2(0, 3);
-        w.setPos(p1);
-        assertEquals(p1, w.getPos());
+        w.setPosition(p1);
+        assertEquals(p1, w.getPosition());
         BuildAction a = new BuildAction();
 
         ArrayList<Vector2> cells = a.possibleCells(w, m, null, null);
@@ -41,8 +41,8 @@ public class BuildActionTest {
         Map m = new Map();
         Vector2 p1 = new Vector2(3, 3);
 
-        w.setPos(p1);
-        assertEquals(p1, w.getPos());
+        w.setPosition(p1);
+        assertEquals(p1, w.getPosition());
         BuildAction a = new BuildAction();
 
         ArrayList<Vector2> cells = a.possibleCells(w, m, null, null);
@@ -60,7 +60,7 @@ public class BuildActionTest {
         Vector2 t_pos = new Vector2(3,4);
         assertTrue(b_pos.equals(t_pos));
         Worker w = new Worker(player);
-        w.setPos(w_pos);
+        w.setPosition(w_pos);
         player.addWorker(w);
         m.setWorkers(player);
 

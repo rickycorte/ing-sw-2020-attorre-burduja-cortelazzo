@@ -1,8 +1,6 @@
 package it.polimi.ingsw.game;
 
-import java.sql.SQLOutput;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This action allows players to build structures around the map
@@ -65,8 +63,8 @@ public class BuildAction extends Action
     @Override
     public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
         ArrayList<Vector2> cells = new ArrayList<>();
-        int my_x = w.getPos().getX();
-        int my_y = w.getPos().getY();
+        int my_x = w.getPosition().getX();
+        int my_y = w.getPosition().getY();
         for (int i = (my_x - 1); i <= (my_x + 1); i++) {
             for (int j = (my_y - 1); j <= (my_y + 1); j++) {
                 Vector2 temp = new Vector2(i, j);

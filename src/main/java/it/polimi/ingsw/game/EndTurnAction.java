@@ -20,7 +20,10 @@ public class EndTurnAction extends Action {
     }
     @Override
     public ArrayList<Vector2> possibleCells(Worker w, Map m ,GameConstraints gc, BehaviourNode node){
-        return null;
+
+        var arr = new ArrayList<Vector2>();
+        arr.add(new Vector2(0,0));
+        return arr; // random valid data to make this element "selectable"
     }
 
 }

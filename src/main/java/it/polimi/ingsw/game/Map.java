@@ -124,6 +124,21 @@ public class Map
     }
 
     /**
+     * Return a worker in a specified position, null if none is found
+     * No check on position is performed, a wrong position will always return null
+     * @param position position to search
+     * @return worker found or null if not found
+     */
+    public Worker getWorker(Vector2 position)
+    {
+        for (Worker worker : workers) {
+            if (worker.getPosition().equals(position))
+                return worker;
+        }
+        return null;
+    }
+
+    /**
      * Remove from map's workers list all the element of the player's workers list
      * Remove also from player its workers
      * @param player selected player
@@ -140,7 +155,7 @@ public class Map
     public boolean isCellEmpty (Vector2 pos){
         if(isInsideMap(pos)) {
             for (Worker worker : workers) {
-                if (worker.getPos().getX() == pos.getX() && worker.getPos().getY() == pos.getY()) return false;
+                if (worker.getPosition().getX() == pos.getX() && worker.getPosition().getY() == pos.getY()) return false;
             }
             return true;
         }

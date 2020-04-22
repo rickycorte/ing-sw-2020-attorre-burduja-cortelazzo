@@ -3,8 +3,6 @@ package it.polimi.ingsw.game;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -365,8 +363,8 @@ class GameTest
             Vector2[] pos = new Vector2[]{new Vector2(0,0), new Vector2(1,1)};
             assertTrue(game.placeWorkers(p1, pos));
             assertEquals(2, p1.getWorkers().size());
-            assertEquals(pos[0], p1.getWorkers().get(0).getPos());
-            assertEquals(pos[1], p1.getWorkers().get(1).getPos());
+            assertEquals(pos[0], p1.getWorkers().get(0).getPosition());
+            assertEquals(pos[1], p1.getWorkers().get(1).getPosition());
             assertEquals(p2, game.getCurrentPlayer());
 
             // check if map has placed workers
@@ -545,14 +543,14 @@ class GameTest
         //player1 has a worker
         Vector2 pos = new Vector2(0,0);
         Worker w = new Worker(player1);
-        w.setPos(pos);
+        w.setPosition(pos);
 
         player1.addWorker(w);
 
         //player2 has a worker
         Vector2 pos1 = new Vector2(1,1);
         Worker w1 = new Worker(player2);
-        w1.setPos(pos1);
+        w1.setPosition(pos1);
 
         player2.addWorker(w1);
 

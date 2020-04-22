@@ -17,7 +17,7 @@ public class BuildAgainActionTest {
         Map m = new Map();
         Worker w = new Worker(null);
         Vector2 p1 = new Vector2(3,3);
-        w.setPos(p1);
+        w.setPosition(p1);
 
         BuildAction ba = new BuildAction();
         BuildAgainAction baa = new BuildAgainAction();
@@ -45,7 +45,7 @@ public class BuildAgainActionTest {
         Map m = new Map();
         Worker w = new Worker(null);
         Vector2 p1 = new Vector2(3,3);
-        w.setPos(p1);
+        w.setPosition(p1);
 
         BehaviourNode n = BehaviourNode.makeRootNode(null);
         BuildAction ba = new BuildAction();
@@ -69,7 +69,7 @@ public class BuildAgainActionTest {
         Map m = new Map();
         Worker w = new Worker(null);
         Vector2 p1 = new Vector2(3, 3);
-        w.setPos(p1);
+        w.setPosition(p1);
 
         BehaviourNode n = BehaviourNode.makeRootNode(null);
         BuildAction ba = new BuildAction();
@@ -95,7 +95,7 @@ public class BuildAgainActionTest {
         Vector2 p1 = new Vector2(3, 3);
         Vector2 p2 = new Vector2(2,3);
         Vector2 p3 = new Vector2(4,3);
-        w.setPos(p1);
+        w.setPosition(p1);
         m.setWorkers(player);
 
         BehaviourNode bn = BehaviourNode.makeRootNode(new BuildAction());

@@ -13,11 +13,12 @@ public class GameConstraints
     public enum Constraint{
         NONE(0),
 
+
         BLOCK_MOVE_UP(1<<1),
+        SET_BLOCK_MOVE_UP(1<<5),
         CAN_SWAP_CONSTRAINT(1<<2),
         CAN_PUSH_CONSTRAINT(1<<3),
         BLOCK_DOME_BUILD (1<<6),
-
         BLOCK_SAME_CELL_MOVE (1<<4), //if active, can't return to the same cell     (used in MoveAgainAction)
 
 

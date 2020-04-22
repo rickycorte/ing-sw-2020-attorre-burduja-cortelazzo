@@ -36,8 +36,8 @@ public class BuildDomeAction extends Action{
 
     public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
         ArrayList<Vector2> cells = new ArrayList<>();
-        int x = w.getPos().getX();
-        int y = w.getPos().getY();
+        int x = w.getPosition().getX();
+        int y = w.getPosition().getY();
         for (int i = (x - 1); i <= (x + 1); i++) {
             for (int j = (y - 1); j <= (y + 1); j++) {
                 Vector2 temp = new Vector2(i, j);

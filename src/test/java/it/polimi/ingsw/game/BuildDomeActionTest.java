@@ -20,7 +20,7 @@ public class BuildDomeActionTest {
         Map m = new Map();
         GameConstraints gc = new GameConstraints();
         Worker w = new Worker(player);
-        w.setPos(p1);
+        w.setPosition(p1);
         int outcome  = 3;
         try {
             ArrayList<Vector2> cells = bda.possibleCells(w,m,gc,bm);

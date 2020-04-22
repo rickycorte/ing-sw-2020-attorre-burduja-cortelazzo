@@ -1,6 +1,5 @@
 package it.polimi.ingsw.game;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,8 +56,8 @@ class TurnTest {
         p.addWorker(w);
         p.addWorker(w2);
         map.setWorkers(p);
-        w.setPos(pos);
-        w2.setPos(pos2);
+        w.setPosition(pos);
+        w2.setPosition(pos2);
         Turn turn = new Turn(p);
 
         //worker settend to be one in the closed point one free to move, turn have movement possibility
@@ -101,8 +100,8 @@ class TurnTest {
         p.addWorker(w);
         p.addWorker(w2);
         map.setWorkers(p);
-        w.setPos(pos);
-        w2.setPos(pos2);
+        w.setPosition(pos);
+        w2.setPosition(pos2);
         Turn turn = new Turn(p);
 
         //worker settend to be one in the closed point one free to move, turn have movement possibility

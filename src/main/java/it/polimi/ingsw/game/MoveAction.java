@@ -1,6 +1,5 @@
 package it.polimi.ingsw.game;
 
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 
 /**
@@ -9,7 +8,7 @@ import java.util.ArrayList;
  */
 public class MoveAction extends Action {
 
-    GameConstraints localConstrains;
+    protected GameConstraints localConstrains;
 
 
     MoveAction(GameConstraints.Constraint localConstrains) {
@@ -25,6 +24,149 @@ public class MoveAction extends Action {
 
 
     /**
+     * Check if this worker can swap with another worker
+     * @param gc global constraints
+     * @return return true if can swap position with another worker
+     */
+    protected boolean canSwap(GameConstraints gc)
+    {
+        return gc.check(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT);
+    }
+
+    /**
+     * Check if this worker can push another worker
+     * @param gc global constraints
+     * @return return true if can push position with another worker
+     */
+    protected boolean canPush(GameConstraints gc)
+    {
+        return gc.check(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
+    }
+
+    /**
+     * Check if this worker can move up or not
+     * @param gc global constraints
+     * @return true if can move up
+     */
+    protected boolean canMoveUp(GameConstraints gc)
+    {
+        return !gc.check(GameConstraints.Constraint.BLOCK_MOVE_UP);
+    }
+
+    /**
+     * Check if a worker in a position is mine or not
+     * @param me owner to check
+     * @param target position of the worker to check
+     * @param m current map
+     * @return true is the worker is mine
+     */
+    protected boolean isWorkerMine(Player me, Vector2 target, Map m)
+    {
+        return m.getWorker(target).getOwner().equals(me);
+    }
+
+
+    /**
+     * Calculate the new position of the target worker if a push action is done
+     * @param w my worker that pushes the other
+     * @param target other worker position to push
+     * @return new position for target worker
+     */
+    protected Vector2 calculatePushPos(Worker w, Vector2 target)
+    {
+        int x = target.getX() + (target.getX() - w.getPosition().getX());
+        int y = target.getY() + (target.getY() - w.getPosition().getX());
+        return new Vector2(x, y);
+    }
+
+    /**
+     * Check if a move is valid or not
+     * @param w worker to use for the check
+     * @param target target position to check
+     * @param m current map
+     * @param gc constrains to apply
+     * @return true if the move is valid, false if not
+     */
+    protected boolean isValidMove(Worker w, Vector2 target, Map m, GameConstraints gc)
+    {
+        // target outside map
+        if(!m.isInsideMap(target))
+            return false;
+
+        // same cell or distance grater than 1
+        if(target.equals(w.getPosition()) || target.distance(w.getPosition()) != 1)
+            return false;
+
+        int hDiff = m.getLevel(target) - m.getLevel(w.getPosition());
+
+        // can t move to a cell that has a high difference grater than 1 (or 0 if athena skill is enabled)
+        // or its a dome
+        int maxDiff = (canMoveUp(gc) ? 1 : 0);
+        if(hDiff > maxDiff  || m.isCellDome(target))
+            return  false;
+
+        // block move to the same cell
+        if(gc.check(GameConstraints.Constraint.BLOCK_SAME_CELL_MOVE) && target.equals(w.getLastLocation()))
+        {
+            return false;
+        }
+
+        if(m.isCellEmpty(target))
+        {
+            return true;
+        }
+        else
+        {
+            if(isWorkerMine(w.getOwner(), target, m))
+            {
+                return false; // no action can operate on my workers
+            }
+            else
+            {
+                //push must check if the "push dest" is inside map
+                if(canPush(gc))
+                {
+                    return m.isInsideMap(calculatePushPos(w, target));
+                }
+                return canSwap(gc);
+            }
+        }
+
+    }
+
+
+    /**
+     * Execute a move action
+     * @param w worker to move
+     * @param target target position
+     * @param m current map
+     * @param gc constraints to apply
+     */
+    protected void move(Worker w, Vector2 target, Map m, GameConstraints gc)
+    {
+        if ((m.isCellEmpty(target)))
+        {
+            w.setPosition(target);
+        }
+        else
+        {
+            Worker other = m.getWorker(target);
+            if(canSwap(gc))
+            {
+                Vector2 swp = w.getPosition().copy();
+                w.setPosition(other.getPosition());
+                other.setPosition(swp);
+
+            }
+            if (canPush(gc))
+            {
+                other.setPosition(calculatePushPos(w, target));
+                w.setPosition(target);
+            }
+        }
+    }
+
+    /**
      * @param w target worker used in this action
      * @param target target position where the action should take place
      * @param m map where the action is executed
@@ -34,46 +176,36 @@ public class MoveAction extends Action {
      * @throws NotAllowedMoveException if for some reason i can't move in target pos
      */
     @Override
-    public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode current_node) throws NotAllowedMoveException {
-        current_node.setPos(w.getPos()); // will be used in case of a second move
-        int outcome = 0;
-        Worker target_worker = new Worker(null);  // will be used in case there is a worker in target pos
+    public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode current_node) throws NotAllowedMoveException
+    {
+        // athena should disable her lock at the beginning of the turn
+        // and reset it later if moves up
+        if(globalConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP))
+            globalConstrains.remove(GameConstraints.Constraint.BLOCK_MOVE_UP);
 
-        if (w.getOwner().getGod().getId() == 3) { //if i'm playing as Athena
-            if (globalConstrains.check(GameConstraints.Constraint.BLOCK_MOVE_UP))
-                globalConstrains.remove(GameConstraints.Constraint.BLOCK_MOVE_UP);
+        //merge local and global constrains to avoid multiple checks
+        GameConstraints gc = mergeConstraints(localConstrains, globalConstrains);
+
+        ArrayList<Vector2> allowed_cells = possibleCells(w, m, globalConstrains, current_node);
+
+        if (allowed_cells.size() == 0)
+            return  -1;  // if i have nowhere to go -> i lost
+
+        if (allowed_cells.contains(target))
+        {
+            w.setLastLocation(w.getPosition().copy()); // update last position for next possible moves
+            move(w, target, m, gc);
         }
-        ArrayList<Vector2> cells = (current_node.getAction()).possibleCells(w, m, globalConstrains, current_node);
-        if (cells.size() == 0)
-            return outcome = -1;  // if i have nowhere to go -> i lost
-        if (cells.contains(target)) {
-            if ((m.isCellEmpty(target)))
-                w.setPos(target);
-            else {
-                ArrayList<Worker> workers = m.getWorkers();
-                for (Worker worker : workers) {
-                    if (worker.getPos().getY() == target.getY() && worker.getPos().getX() == target.getX())
-                        target_worker = worker;
-                }
-                if (globalConstrains.check(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT)) {
-                    target_worker.setPos(w.getPos());
-                    w.setPos(target);
-                }
-                if (globalConstrains.check(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT)) {
-                    int push_pos_x = target_worker.getPos().getX() + (target_worker.getPos().getX() - w.getPos().getX());
-                    int push_pos_y = target_worker.getPos().getY() + (target_worker.getPos().getY() - w.getPos().getY());
-                    Vector2 push_pos = new Vector2(push_pos_x, push_pos_y);
-                    w.setPos(target_worker.getPos());
-                    target_worker.setPos(push_pos);
-                }
-            }
-        } else {
+        else
+        {
             throw new NotAllowedMoveException();
         }
-        if ((w.getOwner().getGod().getId() == 3) && (m.getLevel(w.getPos()) > m.getLevel(current_node.getPos()))) // if i'm athena and moved up -> others cant
+
+        // and reset it later if moves up
+        if(globalConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP) && m.getLevel(w.getPosition()) > m.getLevel(w.getLastLocation()))
             globalConstrains.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
-        outcome = win_check(w, m, globalConstrains, current_node.getPos());
-        return outcome;
+
+        return winCheck(w, m, globalConstrains, w.getLastLocation());
     }
 
 
@@ -85,10 +217,10 @@ public class MoveAction extends Action {
      * @param prev_pos the pos i started the turn in, used to check for "WIN_BY_GOING_DOWN" constraint
      * @return 1 if i won, 0 else
      */
-    public int win_check(Worker w, Map m, GameConstraints gc, Vector2 prev_pos){
-            if(m.getLevel(w.getPos()) == 3)
+    public int winCheck(Worker w, Map m, GameConstraints gc, Vector2 prev_pos){
+            if(m.getLevel(w.getPosition()) == 3)
                 return 1;
-            int difference =  m.getLevel(prev_pos) - m.getLevel(w.getPos());
+            int difference =  m.getLevel(prev_pos) - m.getLevel(w.getPosition());
             if((difference > 1) && (gc.check(GameConstraints.Constraint.WIN_BY_GOING_DOWN)))
                 return 1;
         return 0;
@@ -105,51 +237,25 @@ public class MoveAction extends Action {
 
     @Override
     public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
+
+        GameConstraints gmc = mergeConstraints(localConstrains, gc);
+
         ArrayList<Vector2> cells = new ArrayList<>();
 
-        int x = w.getPos().getX();
-        int y = w.getPos().getY();
-        int max_difference = 1;
-
-        ArrayList<Worker> my_workers = w.getOwner().getWorkers();
-        boolean is_mine = false;
+        int x = w.getPosition().getX();
+        int y = w.getPosition().getY();
 
         for (int i = (x - 1); i <= (x + 1); i++) {
             for (int j = (y - 1); j <= (y + 1); j++) {
                 Vector2 temp = new Vector2(i, j);
 
-                int difference = ((m.getLevel(temp)) - (m.getLevel(w.getPos())));
-                if ((m.isInsideMap(temp)) && !(m.isCellDome(temp)) && (i != x || j != y)) { // checking if temp is inside the map, is not a dome and is not my pos
-                    if (gc.check(GameConstraints.Constraint.BLOCK_MOVE_UP)) {               // checking if i can go up
-                        max_difference = 0;
-                    }
-                    if (difference <= max_difference) {
-                        if (m.isCellEmpty(temp)) {
-                            cells.add(temp);
-                        } else {
-                            for (Worker worker : my_workers) {
-                                if (worker.getPos().getX() == i && worker.getPos().getY() == j)
-                                    is_mine = true;
-                            }
-                            if (!is_mine)
-                                if (gc.check(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT)) {
-                                    cells.add(temp);
-                                }
-                            if (gc.check(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT)) {
-                                int push_pos_x = i + (i - w.getPos().getX());
-                                int push_pos_y = j + (j - w.getPos().getY());
-                                Vector2 push_pos = new Vector2(push_pos_x, push_pos_y);
-                                if ((m.isInsideMap(push_pos)) && (m.isCellEmpty(push_pos)))
-                                    cells.add(temp);
-                            }
-                        }
-                    }
+                if(isValidMove(w, temp, m, gmc))
+                {
+                    cells.add(temp);
                 }
-
             }
         }
         return cells;
     }
-
 
 }

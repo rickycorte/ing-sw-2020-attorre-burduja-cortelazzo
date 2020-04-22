@@ -4,7 +4,7 @@ package it.polimi.ingsw.game;
  * This class represents a position in the map
  */
 public class Vector2 {
-    int x, y;
+    protected int x, y;
 
     public Vector2(int x, int y) {
         set(x, y);
@@ -33,5 +33,24 @@ public class Vector2 {
         }
         Vector2 test_pos = (Vector2) obj;
         return Integer.compare(x, test_pos.x) == 0 && Integer.compare(y, test_pos.y) == 0;
+    }
+
+    /**
+     * @return a copy of the current vector
+     */
+    public Vector2 copy(){
+        return new Vector2(x, y);
+    }
+
+    /**
+     * Calculate the approximate distance in cells, this is not a super accurate calculation but is good enough to check adjacent cells
+     * @param other position to use in distance calculation
+     * @return distance
+     */
+    public int distance(Vector2 other)
+    {
+        int dx = Math.abs(x- other.x);
+        int dy = Math.abs(y - other.y);
+        return (int)Math.sqrt(dx * dx + dy *dy);
     }
 }

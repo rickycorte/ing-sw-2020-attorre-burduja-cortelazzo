@@ -51,8 +51,8 @@ public class MapTest {
         Worker w1 = new Worker(p);
         Worker w2 = new Worker(p);
 
-        w1.setPos(pos);
-        w2.setPos(post);
+        w1.setPosition(pos);
+        w2.setPosition(post);
 
         p.addWorker(w1);
         p.addWorker(w2);
@@ -150,7 +150,7 @@ public class MapTest {
         Vector2 pos = new Vector2(0,0);
         Player p = new Player(1, "FirstPlayer");
         Worker w1 = new Worker(p);
-        w1.setPos(pos);
+        w1.setPosition(pos);
         p.addWorker(w1);
         map.setWorkers(p);
 
