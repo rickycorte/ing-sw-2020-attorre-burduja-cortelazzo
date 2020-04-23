@@ -21,6 +21,7 @@ class GameConstraintsTest
 
         GameConstraints temp = new GameConstraints(c);
         c.add(GameConstraints.Constraint.NONE);
+        c.add((GameConstraints) null);
 
         assertTrue(c.equals(temp));
     }

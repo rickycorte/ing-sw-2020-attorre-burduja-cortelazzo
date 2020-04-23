@@ -21,7 +21,7 @@ public class MoveActionTest {
         MoveAction ma = new MoveAction();
         GameConstraints gc = new GameConstraints();
 
-            ArrayList<Vector2> cells = ma.possibleCells(w,m,gc,null);
+            ArrayList<Vector2> cells = ma.possibleCells(w,m,gc);
             assertEquals(8, cells.size());
             assertTrue(cells.contains(pos2));
 
@@ -56,7 +56,7 @@ public class MoveActionTest {
         MoveAction ma = new MoveAction();
 
 
-            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc, null);
+            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc);
             assertEquals(7, cells.size());
 
     }
@@ -90,7 +90,7 @@ public class MoveActionTest {
         MoveAction ma = new MoveAction();
 
 
-            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc, null);
+            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc);
             assertEquals(8, cells.size());
 
     }
@@ -124,7 +124,7 @@ public class MoveActionTest {
         MoveAction ma = new MoveAction();
 
 
-            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc, null);
+            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc);
             assertEquals(8, cells.size());
 
     }
@@ -147,7 +147,7 @@ public class MoveActionTest {
         BehaviourNode bn = BehaviourNode.makeRootNode(new MoveAction());
         try {
 
-            int outcome = (bn.getAction()).run(w1, p2, m, gc, bn);
+            int outcome = (bn.getAction()).run(w1, p2, m, gc);
             assertEquals(0, outcome);
             assertEquals(p2, w1.getPosition());
             assertTrue(m.isCellEmpty(new Vector2(3,3)));
@@ -177,7 +177,7 @@ public class MoveActionTest {
         gc.add(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT);
         try{
             assertNotEquals(pos2, w1.getPosition());
-            outcome = bn.getAction().run(w1,pos2,m,gc,bn);
+            outcome = bn.getAction().run(w1,pos2,m,gc);
             assertEquals(0,outcome);
             assertEquals(pos2, w1.getPosition());
             assertEquals(pos1, w2.getPosition());
@@ -192,7 +192,7 @@ public class MoveActionTest {
         try{
             assertNotEquals(pos2, w1.getPosition());
             assertEquals(pos2, w2.getPosition());
-            outcome = bn.getAction().run(w1,pos2,m,gc,bn);
+            outcome = bn.getAction().run(w1,pos2,m,gc);
             assertEquals(0,outcome);
             assertEquals(pos2, w1.getPosition());
             assertEquals(push_pos, w2.getPosition());
@@ -217,15 +217,13 @@ public class MoveActionTest {
         BehaviourNode bn = BehaviourNode.makeRootNode(new MoveAction());
         try{
             m.build(pos2);
-            outcome = bn.getAction().run(w1,pos2,m,gc,bn);
+            outcome = bn.getAction().run(w1,pos2,m,gc);
             assertEquals(0, outcome);
             assertEquals(pos2, w1.getPosition());
             w1.setPosition(pos1);
             gc.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
-            outcome = bn.getAction().run(w1,pos2,m,gc,bn);
+            outcome = bn.getAction().run(w1,pos2,m,gc);
 
-        }catch (CellCompletedException e){
-            System.out.println("cell is complete");
         }catch (NotAllowedMoveException e){
             System.out.println("move is not allowed");
         }
@@ -245,7 +243,7 @@ public class MoveActionTest {
 
         Action mvb = new MoveAgainAction();
 
-        assertThrows(NotAllowedMoveException.class, () -> { mvb.run(w1, new Vector2(2,2), m, new GameConstraints(), null); } );
+        assertThrows(NotAllowedMoveException.class, () -> { mvb.run(w1, new Vector2(2,2), m, new GameConstraints()); } );
 
     }
 

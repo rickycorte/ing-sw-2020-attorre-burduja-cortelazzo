@@ -17,28 +17,22 @@ public class MapTest {
     @Test
     void testCompleteCell(){
         Vector2 pos = new Vector2(0,0);
-        try {
-            for(int i = 0; i < 4 ; i++)
-                map.build(pos);
-            assertEquals(4,map.getLevel(pos));
-            assertTrue(map.isCellDome(pos));
-            assertThrows(CellCompletedException.class, () -> map.build(pos));
-        } catch (CellCompletedException e) {
-            fail("Build in a completed cell");
-        }
+
+        for(int i = 0; i < 4 ; i++)
+            assertTrue(map.build(pos));
+        assertEquals(4,map.getLevel(pos));
+        assertTrue(map.isCellDome(pos));
+        assertFalse(map.build(pos));
     }
 
     @Test
     void testBuildDome(){
         Vector2 pos = new Vector2(0,0);
-        try {
-            map.buildDome(pos);
-            assertEquals(1,map.getLevel(pos));
-            assertTrue(map.isCellDome(pos));
-            assertThrows(CellCompletedException.class, () -> map.buildDome(pos));
-        } catch (CellCompletedException e) {
-            fail("Build in a completed cell");
-        }
+
+        assertTrue(map.buildDome(pos));
+        assertEquals(1,map.getLevel(pos));
+        assertTrue(map.isCellDome(pos));
+        assertFalse(map.buildDome(pos));
     }
 
 
@@ -75,72 +69,67 @@ public class MapTest {
     void testMapToFile(){
         Vector2 pos = new Vector2(0,0);
 
-        try {
-            //setting
-            map.build(pos);
-            map.build(pos);
-            map.build(pos);
-            pos.set(6,6);
-            map.buildDome(pos);
-            pos.set(3,4);
-            map.build(pos);
-            map.buildDome(pos);
+        //setting
+        map.build(pos);
+        map.build(pos);
+        map.build(pos);
+        pos.set(6,6);
+        map.buildDome(pos);
+        pos.set(3,4);
+        map.build(pos);
+        map.buildDome(pos);
 
-            //save and re-setting
-            map.writeMapOut("map.bin");
-            pos.set(0, 0);
-            map.build(pos);
-            pos.set(1, 1);
-            map.build(pos);
-            pos.set(1, 2);
-            map.build(pos);
+        //save and re-setting
+        map.writeMapOut("map.bin");
+        pos.set(0, 0);
+        map.build(pos);
+        pos.set(1, 1);
+        map.build(pos);
+        pos.set(1, 2);
+        map.build(pos);
 
-            pos.set(0, 0);
-            assertEquals(4,map.getLevel(pos));
-            assertTrue(map.isCellDome(pos));
-            pos.set(1, 1);
-            assertEquals(1,map.getLevel(pos));
-            pos.set(1, 2);
-            assertEquals(1,map.getLevel(pos));
-            pos.set(3, 4);
-            assertEquals(2,map.getLevel(pos));
-            assertTrue(map.isCellDome(pos));
-            pos.set(6, 6);
-            assertEquals(1,map.getLevel(pos));
-            assertTrue(map.isCellDome(pos));
-            //loading
-            map.readMapOut("map.bin");
-            pos.set(0,0);
-            assertEquals(3,map.getLevel(pos));
-            assertFalse(map.isCellDome(pos));
-            pos.set(1, 1);
-            assertEquals(0,map.getLevel(pos));
-            pos.set(1, 2);
-            assertEquals(0,map.getLevel(pos));
-            pos.set(3,4);
-            assertEquals(2,map.getLevel(pos));
-            assertTrue(map.isCellDome(pos));
-            pos.set(6,6);
-            assertEquals(1, map.getLevel(pos));
-            assertTrue(map.isCellDome(pos));
-            //sovrascrittura
-            //re-setting
-            pos.set(1, 1);
-            map.build(pos);
-            assertEquals(1,map.getLevel(pos));
-            //save re-setted
-            map.writeMapOut("map.bin");
+        pos.set(0, 0);
+        assertEquals(4,map.getLevel(pos));
+        assertTrue(map.isCellDome(pos));
+        pos.set(1, 1);
+        assertEquals(1,map.getLevel(pos));
+        pos.set(1, 2);
+        assertEquals(1,map.getLevel(pos));
+        pos.set(3, 4);
+        assertEquals(2,map.getLevel(pos));
+        assertTrue(map.isCellDome(pos));
+        pos.set(6, 6);
+        assertEquals(1,map.getLevel(pos));
+        assertTrue(map.isCellDome(pos));
+        //loading
+        map.readMapOut("map.bin");
+        pos.set(0,0);
+        assertEquals(3,map.getLevel(pos));
+        assertFalse(map.isCellDome(pos));
+        pos.set(1, 1);
+        assertEquals(0,map.getLevel(pos));
+        pos.set(1, 2);
+        assertEquals(0,map.getLevel(pos));
+        pos.set(3,4);
+        assertEquals(2,map.getLevel(pos));
+        assertTrue(map.isCellDome(pos));
+        pos.set(6,6);
+        assertEquals(1, map.getLevel(pos));
+        assertTrue(map.isCellDome(pos));
+        //sovrascrittura
+        //re-setting
+        pos.set(1, 1);
+        map.build(pos);
+        assertEquals(1,map.getLevel(pos));
+        //save re-setted
+        map.writeMapOut("map.bin");
 
-            pos.set(1,1);
-            map.build(pos);
-            assertEquals(2,map.getLevel(pos));
+        pos.set(1,1);
+        map.build(pos);
+        assertEquals(2,map.getLevel(pos));
 
-            map.readMapOut("map.bin");
-            assertEquals(1,map.getLevel(pos));
-
-        } catch (CellCompletedException e) {
-            e.printStackTrace();
-        }
+        map.readMapOut("map.bin");
+        assertEquals(1,map.getLevel(pos));
     }
 
     @Test

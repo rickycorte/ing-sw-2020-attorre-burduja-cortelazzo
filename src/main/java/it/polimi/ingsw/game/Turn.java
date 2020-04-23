@@ -47,6 +47,8 @@ public class Turn
      * @param m game's map
      * @param globalConstrains global constraints in turn
      * @return int value : 0 if player can continue, greater 0 if player met a win condition, lower 0 if player met a lose condition
+     * @throws NotAllowedMoveException if the action cannot be run due to wrong parameters
+     * @throws OutOfGraphException if the actions id is wrong and no action exist for that id
      */
     public int runAction(int id, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException, OutOfGraphException {
         graph.selectAction(id);
@@ -103,7 +105,7 @@ public class Turn
         if(node.getChild_nodes().isEmpty()) possible_move++;
 
         for(BehaviourNode next : node.getChild_nodes()){
-            if(next.getAction().possibleCells(w,map,gc,next).size() > 0) canStillMoveNextAction(next,w,map,gc);
+            if(next.getAction().possibleCells(w,map,gc).size() > 0) canStillMoveNextAction(next,w,map,gc);
         }
     }
 

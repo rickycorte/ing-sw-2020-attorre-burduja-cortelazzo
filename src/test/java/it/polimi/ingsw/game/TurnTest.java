@@ -16,19 +16,15 @@ class TurnTest {
         map = new Map();
         Vector2 pos = new Vector2(0,0);
         //the closed point is 0,0 so are dome (0,1)(1,0)(1,1)
-        try {
-            map.build(pos);
-            pos.set(0,1);
-            map.buildDome(pos);
-            pos.set(1,0);
-            map.buildDome(pos);
-            pos.set(1,1);
-            map.buildDome(pos);
-            map.writeMapOut("map00closed.bin");
-            //map with (0,0) closed point saved
-        }catch(CellCompletedException e){
-            fail("Should never arrive");
-        }
+        assertTrue(map.build(pos));
+        pos.set(0,1);
+        assertTrue(map.buildDome(pos));
+        pos.set(1,0);
+        assertTrue(map.buildDome(pos));
+        pos.set(1,1);
+        assertTrue(map.buildDome(pos));
+        map.writeMapOut("map00closed.bin");
+        //map with (0,0) closed point saved
     }
 
     @Test

@@ -15,11 +15,11 @@ public class EndTurnAction extends Action {
 
 
     @Override
-    public int run(Worker w, Vector2 target, Map m, GameConstraints gc, BehaviourNode node){
+    public int run(Worker w, Vector2 target, Map m, GameConstraints gc){
         return 0;
     }
     @Override
-    public ArrayList<Vector2> possibleCells(Worker w, Map m ,GameConstraints gc, BehaviourNode node){
+    public ArrayList<Vector2> possibleCells(Worker w, Map m ,GameConstraints gc){
 
         var arr = new ArrayList<Vector2>();
         arr.add(new Vector2(0,0));

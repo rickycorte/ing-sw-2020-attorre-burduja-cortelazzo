@@ -23,13 +23,13 @@ public class BuildDomeActionTest {
         w.setPosition(p1);
         int outcome  = 3;
         try {
-            ArrayList<Vector2> cells = bda.possibleCells(w,m,gc,bm);
+            ArrayList<Vector2> cells = bda.possibleCells(w,m,gc);
             assertEquals(8, cells.size());
             assertTrue(cells.contains(p2));
 
             assertFalse(m.isCellDome(p2));
 
-            outcome = bda.run(w,p2,m,gc,bm);
+            outcome = bda.run(w,p2,m,gc);
             assertEquals(0, outcome);
 
             assertTrue(m.isCellDome(p2));

@@ -26,11 +26,10 @@ public abstract class Action
      * @param target target position where the action should take place
      * @param m map where the action is executed
      * @param globalConstrains global game constrains that should be applied before action execution
-     * @param node
      * @return 1 = I won, 0 = continue, -1 = I lost
      * @throws NotAllowedMoveException if action is not possible with the current parameters
      */
-    public abstract int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode node) throws NotAllowedMoveException;
+    public abstract int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException;
 
     /**
      * Return the display name for an action
@@ -44,10 +43,9 @@ public abstract class Action
      * @param w worker doing the job
      * @param m current map
      * @param gc list of constraints
-     * @param node will be used in case it's an "again" action
      * @return an ArrayList of Vector2 objects, representing all the possible cells i can run the action from the w.getpos() cell
      */
-    public abstract ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node);
+    public abstract ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc);
 
     /**
      * Merge constrains and return a copy leaving the original ones untouched

@@ -19,7 +19,7 @@ public class BuildActionTest {
         assertEquals(w_pos, w.getPosition());
         BuildAction a = new BuildAction();
 
-        ArrayList<Vector2> cells = a.possibleCells(w, m, null, null);
+        ArrayList<Vector2> cells = a.possibleCells(w, m, null);
         assertEquals(3, cells.size());
 
     }
@@ -32,7 +32,7 @@ public class BuildActionTest {
         assertEquals(p1, w.getPosition());
         BuildAction a = new BuildAction();
 
-        ArrayList<Vector2> cells = a.possibleCells(w, m, null, null);
+        ArrayList<Vector2> cells = a.possibleCells(w, m, null);
         assertEquals(5, cells.size());
     }
     @Test
@@ -45,7 +45,7 @@ public class BuildActionTest {
         assertEquals(p1, w.getPosition());
         BuildAction a = new BuildAction();
 
-        ArrayList<Vector2> cells = a.possibleCells(w, m, null, null);
+        ArrayList<Vector2> cells = a.possibleCells(w, m, null);
         assertEquals(8, cells.size());
 
     }
@@ -68,7 +68,7 @@ public class BuildActionTest {
         assertEquals("BuildNONE", bn.getAction().display_name);
 
         GameConstraints gc = new GameConstraints();
-        ArrayList<Vector2> cells = bn.getAction().possibleCells(w,m,gc,bn);
+        ArrayList<Vector2> cells = bn.getAction().possibleCells(w,m,gc);
         System.out.println(cells.size());
         /*
         for( Vector2 cell : cells ){
@@ -81,12 +81,12 @@ public class BuildActionTest {
         assertTrue(cells.contains(b_pos));
 
         try {
-            int outcome = bn.getAction().run(w,b_pos,m,gc,bn);
+            int outcome = bn.getAction().run(w,b_pos,m,gc);
             assertEquals(0, outcome);
             assertEquals(1, m.getLevel(b_pos));
-            outcome = bn.getAction().run(w,b_pos,m,gc,bn);
-            outcome = bn.getAction().run(w,b_pos,m,gc,bn);
-            outcome = bn.getAction().run(w,b_pos,m,gc,bn);
+            outcome = bn.getAction().run(w,b_pos,m,gc);
+            outcome = bn.getAction().run(w,b_pos,m,gc);
+            outcome = bn.getAction().run(w,b_pos,m,gc);
             assertEquals(4, m.getLevel(b_pos));
 
 

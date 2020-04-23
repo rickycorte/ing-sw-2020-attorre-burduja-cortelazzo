@@ -167,16 +167,16 @@ public class MoveAction extends Action {
     }
 
     /**
+     * Execute the move action
      * @param w target worker used in this action
      * @param target target position where the action should take place
      * @param m map where the action is executed
      * @param globalConstrains global game constrains that should be applied before action execution
-     * @param current_node the node of the action
      * @return 1 if won, 0 = to continue, -1 if i can't move anywhere
      * @throws NotAllowedMoveException if for some reason i can't move in target pos
      */
     @Override
-    public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode current_node) throws NotAllowedMoveException
+    public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException
     {
         // athena should disable her lock at the beginning of the turn
         // and reset it later if moves up
@@ -186,7 +186,7 @@ public class MoveAction extends Action {
         //merge local and global constrains to avoid multiple checks
         GameConstraints gc = mergeConstraints(localConstrains, globalConstrains);
 
-        ArrayList<Vector2> allowed_cells = possibleCells(w, m, globalConstrains, current_node);
+        ArrayList<Vector2> allowed_cells = possibleCells(w, m, globalConstrains);
 
         if (allowed_cells.size() == 0)
             return  -1;  // if i have nowhere to go -> i lost
@@ -210,14 +210,14 @@ public class MoveAction extends Action {
 
 
     /**
-     *
+     * Check if a win condition is met
      * @param w worker i just moved
      * @param m map where action is taking place
      * @param gc collection of constraints
      * @param prev_pos the pos i started the turn in, used to check for "WIN_BY_GOING_DOWN" constraint
      * @return 1 if i won, 0 else
      */
-    public int winCheck(Worker w, Map m, GameConstraints gc, Vector2 prev_pos){
+    protected int winCheck(Worker w, Map m, GameConstraints gc, Vector2 prev_pos){
             if(m.getLevel(w.getPosition()) == 3)
                 return 1;
             int difference =  m.getLevel(prev_pos) - m.getLevel(w.getPosition());
@@ -227,16 +227,15 @@ public class MoveAction extends Action {
     }
 
     /**
-     *
+     * Return a list of all valid cells for a move
      * @param w target worker
      * @param m map where action is taking place
      * @param gc Collection of various constraints
-     * @param node current node, used to find the pos i started the turn in
      * @return an arrayList of vector2 objects representing all the possible cells i can move to
      */
 
     @Override
-    public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
+    public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc) {
 
         GameConstraints gmc = mergeConstraints(localConstrains, gc);
 

@@ -73,6 +73,7 @@ public class GameConstraints
      * @param c constraint group to add
      */
     public void add (GameConstraints c) {
+        if(c == null) return;
         constraints |= c.constraints;
     }
 

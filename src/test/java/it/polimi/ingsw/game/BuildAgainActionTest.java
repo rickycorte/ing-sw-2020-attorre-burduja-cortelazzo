@@ -18,46 +18,30 @@ public class BuildAgainActionTest {
         Worker w = new Worker(null);
         Vector2 p1 = new Vector2(3,3);
         w.setPosition(p1);
+        w.setLastBuildLocation(new Vector2(2,2));
 
-        BuildAction ba = new BuildAction();
         BuildAgainAction baa = new BuildAgainAction();
 
         BehaviourGraph bh = BehaviourGraph.makeEmptyGraph();
 
-
-
-        BehaviourNode n = BehaviourNode.makeRootNode(null);
-        BehaviourNode c1 = n.setNext(ba);
-        c1.setPos(new Vector2(2,2));
-        BehaviourNode c2 = c1.setNext(baa);
-
-            ArrayList cells = baa.possibleCells(w,m,gc,c2);
-            assertEquals(1, cells.size());
+        ArrayList cells = baa.possibleCells(w,m,gc);
+        assertEquals(1, cells.size());
 
     }
 
     @Test
     void should_find_7_cells_different_space(){
-        GameConstraints gc = new GameConstraints();
-        gc.add(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD); //testing the scenario when you can only build on diff cells
-        gc.add(GameConstraints.Constraint.BLOCK_DOME_BUILD);  // you now can't build domes
 
         Map m = new Map();
         Worker w = new Worker(null);
         Vector2 p1 = new Vector2(3,3);
         w.setPosition(p1);
+        w.setLastBuildLocation(new Vector2(2,3));
 
-        BehaviourNode n = BehaviourNode.makeRootNode(null);
-        BuildAction ba = new BuildAction();
-        BuildAgainAction baa = new BuildAgainAction();
+        BuildAgainAction baa = new BuildAgainAction(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD);  //testing the scenario when you can only build on diff cells
 
-        BehaviourNode c1 = n.setNext(ba);
-        Vector2 p2 = new Vector2(2,3);
-        c1.setPos(p2);
-        BehaviourNode c2 = c1.setNext(baa);
-        assertEquals(p2, c2.getParent().getPos());
-            ArrayList cells = baa.possibleCells(w,m,gc,c2);
-            assertEquals(7, cells.size());
+        ArrayList cells = baa.possibleCells(w,m,null);
+        assertEquals(7, cells.size());
 
     }
 
@@ -71,17 +55,9 @@ public class BuildAgainActionTest {
         Vector2 p1 = new Vector2(3, 3);
         w.setPosition(p1);
 
-        BehaviourNode n = BehaviourNode.makeRootNode(null);
-        BuildAction ba = new BuildAction();
         BuildAgainAction baa = new BuildAgainAction();
 
-        BehaviourNode c1 = n.setNext(ba);
-        Vector2 p2 = new Vector2(0, 0);
-        c1.setPos(p2);
-        BehaviourNode c2 = c1.setNext(baa);
-        assertEquals(p2, c2.getParent().getPos());
-
-        ArrayList cells = baa.possibleCells(w, m, gc, c2);
+        ArrayList cells = baa.possibleCells(w, m, gc);
         assertEquals(8, cells.size());
 
 
@@ -92,34 +68,39 @@ public class BuildAgainActionTest {
         Map m = new Map();
         Player player = new Player(1,"uno");
         Worker w = new Worker(player);
+        //pos
         Vector2 p1 = new Vector2(3, 3);
         Vector2 p2 = new Vector2(2,3);
         Vector2 p3 = new Vector2(4,3);
+
+        //prepare map
         w.setPosition(p1);
         m.setWorkers(player);
 
-        BehaviourNode bn = BehaviourNode.makeRootNode(new BuildAction());
-        bn.setPos(p2);
-        BehaviourNode bm = bn.setNext(new BuildAgainAction());
+        BehaviourNode bn = BehaviourNode.makeRootNode(new BuildAction()).setNext(new BuildAgainAction()).getRoot();
 
         GameConstraints gc = new GameConstraints();
-        gc.add(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD);
-        //gc.add(GameConstraints.Constraint.BLOCK_DIFF_CELL_BUILD);
-        ArrayList<Vector2> cells = bm.getAction().possibleCells(w,m,gc,bm);
-        assertEquals(7,cells.size());
-        int outcome = 3;
-        try {
-             outcome = bm.getAction().run(w,p3,m,gc,bm);
-            assertEquals(0, outcome);
-        }catch (NotAllowedMoveException e){
-            System.out.println("cant do this action");
+
+        try
+        {
+            gc.add(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD);
+            //first normal build
+            bn.getAction().run(w,p2,m,gc);
+            bn = bn.getNextNode(0);
+
+            var cells = bn.getAction().possibleCells(w,m,gc);
+            assertEquals(7, cells.size());
+            assertFalse(cells.contains(p2));
+            assertEquals(0, bn.getAction().run(w,p3,m,gc));
+
+        }catch (OutOfGraphException e)
+        {
+            fail("Out of graph should not be thrown here");
         }
-        System.out.println(outcome);
-
-
-
-
-
+        catch (NotAllowedMoveException e)
+        {
+            fail("cant do this action");
+        }
 
     }
 

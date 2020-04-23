@@ -16,9 +16,6 @@ public class BehaviourNode
 
     private BehaviourNode parent;
 
-    private Vector2 pos; //will be my starting position if making a moveAction
-                        // will be the pos I build if making a buildAction
-
     private List<BehaviourNode> child_nodes;
 
 
@@ -32,7 +29,6 @@ public class BehaviourNode
         this.action = action;
         child_nodes = new ArrayList<>();
         this.parent = parent;
-        this.pos = null;
     }
 
     public List<BehaviourNode> getChild_nodes() {
@@ -114,14 +110,6 @@ public class BehaviourNode
      */
     public int getNextActionCount(){
         return child_nodes.size();
-    }
-
-    public Vector2 getPos(){
-        return pos;
-    }
-
-    public void setPos(Vector2 pos){
-        this.pos = pos;
     }
 
 

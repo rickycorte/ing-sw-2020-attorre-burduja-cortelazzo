@@ -53,32 +53,39 @@ public class Map
     /**
      * Increases level of selected cell, if level = 4 becomes a dome
      * @param pos selected cell
-     * @throws CellCompletedException selected cell has already reached dome level
+     * @return if build is successful
      */
-    public void build(Vector2 pos) throws CellCompletedException {
+    public boolean build(Vector2 pos)
+    {
 
-        if(isInsideMap(pos)) {
-            if (isCellDome(pos)) throw new CellCompletedException();
-
+        if(isInsideMap(pos) && !isCellDome(pos))
+        {
             map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
 
-            if (getLevel(pos) == 4) map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + 128;
+            if (getLevel(pos) == 4)
+                map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + 128;
+
+            return true;
         }
+
+        return false;
     }
 
     /**
      * Builds a dome in the selected cell, any level is valid
      * @param pos selected cell
-     * @throws CellCompletedException selected cell was already a dome
+     * @return true if build is successful
      */
-    public void buildDome(Vector2 pos) throws CellCompletedException{
-        if(isInsideMap(pos)){
-            if(!isCellDome(pos)){
-                map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
-                map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + 128;
-            }else
-                throw new CellCompletedException();
+    public boolean buildDome(Vector2 pos)
+    {
+        if(isInsideMap(pos) && !isCellDome(pos))
+        {
+            map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
+            map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + 128;
+            return true;
         }
+
+        return false;
     }
 
     /**

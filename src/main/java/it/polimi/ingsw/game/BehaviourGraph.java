@@ -65,12 +65,12 @@ public class BehaviourGraph
         {
             if (!alreadyRun && current_node.getAction() != null)
             {
-                int res = current_node.getAction().run(w, target, m, globalConstrains, current_node);
+                int res = current_node.getAction().run(w, target, m, globalConstrains);
                 alreadyRun = true;
                 previous_node = current_node;
                 return res;
             }
-            return -1; //TODO: fix this return value
+            return -1; //break the game if errors happens here
 
         }catch (NotAllowedMoveException e){
             current_node = previous_node; // move back in case of a wrong move
@@ -88,6 +88,9 @@ public class BehaviourGraph
 
     /**
      * Returns next actions(name and available cells)
+     * @param w target worker to use to calculate next valid action
+     * @param m current game map
+     * @param constraints constraints to apply
      * @return ArrayList of NextAction from the current node
      */
     public ArrayList<NextAction> getNextActions(Worker w, Map m, GameConstraints constraints) {

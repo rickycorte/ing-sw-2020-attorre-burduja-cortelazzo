@@ -26,13 +26,13 @@ class BehaviourGraphTest
         }
 
         @Override
-        public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode node) throws NotAllowedMoveException
+        public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException
         {
             if(globalConstrains != null) globalConstrains.add(local_constr);
             return 309217;
         }
 
-        public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
+        public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc) {
             return null;
         }
     }
@@ -42,12 +42,12 @@ class BehaviourGraphTest
 
 
         @Override
-        public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains, BehaviourNode node) throws NotAllowedMoveException
+        public int run(Worker w, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException
         {
             throw new NotAllowedMoveException();
         }
 
-        public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc, BehaviourNode node) {
+        public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc) {
             return null;
         }
     }
