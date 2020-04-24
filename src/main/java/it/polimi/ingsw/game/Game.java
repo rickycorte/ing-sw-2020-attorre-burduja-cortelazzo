@@ -385,15 +385,22 @@ public final class Game
     }
 
     /**
-     * Get the list of next possible actions
+     * Get the list of next possible actions for all worker
+     * if a worker is selected for current turn, get possible action to continue turn with that worker
      * @param sender player who issues this command
-     * @return list of actions
+     * @return list of actions (workerID,actionName,possibleVector2)
      */
-    public List<NextAction> getNextActions(Player sender){
-        //TODO: calc all possibile operations for every worker if not selected or limit action to a single worker
-        return current_turn.getNextAction(game_map, globalConstraints);
+    public List<NextAction> getNextActions(Player sender) {
+        if (current_turn.getWorker() == null){
+            ArrayList<NextAction> nextActions = new ArrayList<>();
+            for (Worker worker : sender.getWorkers()) {
+                nextActions.addAll(current_turn.getNextAction(worker, game_map, globalConstraints));
+             }
+            return nextActions;
+        }else{
+            return current_turn.getNextAction(game_map, globalConstraints);
+        }
     }
-
 
     /**
      * Left the game

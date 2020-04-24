@@ -3,10 +3,12 @@ package it.polimi.ingsw.game;
 import java.util.ArrayList;
 
 public class NextAction {
+    private int worker;
     private String action_name;
     private ArrayList<Vector2> available_position;
 
     public NextAction(Worker w, Map m, GameConstraints constraints,BehaviourNode node) {
+        this.worker = w.getId();
         this.action_name = node.getAction().displayName();
         this.available_position = new ArrayList<>();
         this.available_position.addAll(node.getAction().possibleCells(w,m,constraints));
