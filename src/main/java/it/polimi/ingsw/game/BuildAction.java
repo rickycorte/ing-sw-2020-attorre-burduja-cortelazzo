@@ -9,15 +9,12 @@ public class BuildAction extends Action
 {
     GameConstraints localConstrains;
 
-
-    private NotAllowedMoveException NotAllowedMoveException;
-
     BuildAction(GameConstraints.Constraint localConstrains)
     {
-        this.net_id = 20;
+        this.netId = 20;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
-        display_name = "Build" + localConstrains.toString();
+        displayName = "Build" + localConstrains.toString();
     }
 
     public BuildAction() {

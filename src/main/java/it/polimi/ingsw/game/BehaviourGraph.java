@@ -9,15 +9,14 @@ import java.util.ArrayList;
  */
 public class BehaviourGraph
 {
-    private BehaviourNode root_node;
-    private BehaviourNode current_node;
-    private BehaviourNode previous_node;
+    private BehaviourNode rootNode;
+    private BehaviourNode behaviourNode;
+    private BehaviourNode previousNode;
     private boolean alreadyRun;
-    private boolean endReached;
 
     public BehaviourGraph()
     {
-        root_node = BehaviourNode.makeRootNode(null);
+        rootNode = BehaviourNode.makeRootNode(null);
         resetExecutionStatus();
     }
 
@@ -26,18 +25,17 @@ public class BehaviourGraph
      * Should be called every turn start
      */
     public void resetExecutionStatus() {
-        current_node = root_node;
-        previous_node = root_node;
+        behaviourNode = rootNode;
+        previousNode = rootNode;
         alreadyRun = true; // root node has no action
-        endReached = false;
     }
 
-    public BehaviourNode getCurrent_node() {
-        return current_node;
+    public BehaviourNode getBehaviourNode() {
+        return behaviourNode;
     }
 
-    public void setCurrent_node(BehaviourNode current_node) {
-        this.current_node = current_node;
+    public void setBehaviourNode(BehaviourNode behaviourNode) {
+        this.behaviourNode = behaviourNode;
     }
     /**
      * Select one of the actions returned by getNextActions using array index
@@ -46,7 +44,7 @@ public class BehaviourGraph
      */
     public void selectAction(int pos) throws OutOfGraphException
     {
-        current_node = current_node.getNextNode(pos);
+        behaviourNode = behaviourNode.getNextNode(pos);
         alreadyRun = false;
     }
 
@@ -63,17 +61,17 @@ public class BehaviourGraph
     {
         try
         {
-            if (!alreadyRun && current_node.getAction() != null)
+            if (!alreadyRun && behaviourNode.getAction() != null)
             {
-                int res = current_node.getAction().run(w, target, m, globalConstrains);
+                int res = behaviourNode.getAction().run(w, target, m, globalConstrains);
                 alreadyRun = true;
-                previous_node = current_node;
+                previousNode = behaviourNode;
                 return res;
             }
             return -1; //break the game if errors happens here
 
         }catch (NotAllowedMoveException e){
-            current_node = previous_node; // move back in case of a wrong move
+            behaviourNode = previousNode; // move back in case of a wrong move
             throw e; // notify caller of the error
         }
     }
@@ -83,7 +81,7 @@ public class BehaviourGraph
      * @return true if execution is ended
      */
     public boolean isExecutionEnded() {
-        return current_node.getNextActionCount() <= 0;
+        return behaviourNode.getNextActionCount() <= 0;
     }
 
     /**
@@ -94,7 +92,7 @@ public class BehaviourGraph
      * @return ArrayList of NextAction from the current node
      */
     public ArrayList<NextAction> getNextActions(Worker w, Map m, GameConstraints constraints) {
-        return current_node.getNextActions(w,m,constraints);
+        return behaviourNode.getNextActions(w,m,constraints);
     }
 
     /**
@@ -103,7 +101,7 @@ public class BehaviourGraph
      * @return and array of action names
      */
     public String[] getNextActionNames() {
-        return current_node.getNextActionNames();
+        return behaviourNode.getNextActionNames();
     }
 
 
@@ -115,7 +113,7 @@ public class BehaviourGraph
      */
     public BehaviourGraph appendSubGraph(BehaviourNode node) {
         if(node != null){
-            root_node.addBranch(node);
+            rootNode.addBranch(node);
         }
 
         return this;

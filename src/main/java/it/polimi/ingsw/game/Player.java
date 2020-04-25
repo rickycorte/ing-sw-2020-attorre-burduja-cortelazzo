@@ -2,6 +2,10 @@ package it.polimi.ingsw.game;
 import java.util.ArrayList;
 import java.util.Objects;
 
+/**
+ * This class represents a player logged into a game and holds all the data needed to run game actions
+ * and network operations
+ */
 public class Player
 {
     private int id;

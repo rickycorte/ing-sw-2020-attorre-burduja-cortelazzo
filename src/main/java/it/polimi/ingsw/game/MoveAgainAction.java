@@ -1,7 +1,5 @@
 package it.polimi.ingsw.game;
 
-import java.util.ArrayList;
-
 
 /**
  * Class used if the god can move for a second time but not back on the same call where it was
@@ -11,11 +9,11 @@ import java.util.ArrayList;
 public class MoveAgainAction extends MoveAction {
 
     MoveAgainAction(GameConstraints.Constraint localConstrains) {
-        this.net_id = 11;
+        this.netId = 11;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
         this.localConstrains.add(GameConstraints.Constraint.BLOCK_SAME_CELL_MOVE);
-        display_name = "Move Again"+ localConstrains.toString();
+        displayName = "Move Again"+ localConstrains.toString();
     }
 
     public MoveAgainAction() {

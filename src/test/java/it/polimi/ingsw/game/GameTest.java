@@ -469,12 +469,12 @@ class GameTest
         prepareGameForAction();
         try{
             // move action (we don't test actions here, just the turn flow)
-            assertTrue(game.runAction(p1,0, 0, new Vector2(0,1)));
+            assertTrue(game.executeAction(p1,0, 0, new Vector2(0,1)) > 0);
             assertEquals(Game.GameState.GAME,game.getCurrentState());
             assertEquals(p1, game.getCurrentPlayer());
 
             //build action (same worker)
-            assertTrue(game.runAction(p1,0, 0, new Vector2(0,0)));
+            assertTrue(game.executeAction(p1,0, 0, new Vector2(0,0)) > 0);
             assertEquals(Game.GameState.GAME, game.getCurrentState());
             //new turn
             assertNotEquals(p1, game.getCurrentPlayer());
@@ -493,35 +493,34 @@ class GameTest
         prepareGameForAction();
 
         // not current player
-        assertThrows(NotAllowedOperationException.class, ()->{game.runAction(p2, 0,0, null);});
+        assertThrows(NotAllowedOperationException.class, ()->{game.executeAction(p2, 0,0, null);});
 
         // not in game
-        assertThrows(NotAllowedOperationException.class, ()->{game.runAction(p3, 0,0, null);});
+        assertThrows(NotAllowedOperationException.class, ()->{game.executeAction(p3, 0,0, null);});
 
         try{
 
             // wrong worker id (neg)
-            assertFalse(game.runAction(p1,-1, 6, null));
+            assertTrue(game.executeAction(p1,-1, 6, null) < 0);
             assertEquals(p1, game.getCurrentPlayer());
 
             // wrong worker id (sep)
-            assertFalse(game.runAction(p1,2, 6, null));
+            assertTrue(game.executeAction(p1,2, 6, null) < 0);
             assertEquals(p1, game.getCurrentPlayer());
 
             // out of range action
-            assertFalse(game.runAction(p1,0, 10, null));
-            assertFalse(game.runAction(p1,0, -1, null));
+            assertTrue(game.executeAction(p1,0, 10, null) < 0);
+            assertTrue(game.executeAction(p1,0, -1, null) < 0);
 
             // null position
-            assertFalse(game.runAction(p1,0, 0, null));
+            assertTrue(game.executeAction(p1,0, 0, null) < 0);
 
             // wrong position
-            assertFalse(game.runAction(p1,0, 0, new Vector2(-1,-1)));
+            assertTrue(game.executeAction(p1,0, 0, new Vector2(-1,-1)) < 0);
 
             // wrong worker after first action
-            assertTrue(game.runAction(p1,0, 0, new Vector2(0,1)));
-
-            assertFalse(game.runAction(p1,1, 0, new Vector2(0,0)));
+            assertTrue(game.executeAction(p1,1, 0, new Vector2(0,1)) > 0);
+            assertTrue(game.executeAction(p1,1, 0, new Vector2(0,0)) < 0);
             assertEquals(Game.GameState.GAME, game.getCurrentState());
             assertEquals(p1, game.getCurrentPlayer());
 

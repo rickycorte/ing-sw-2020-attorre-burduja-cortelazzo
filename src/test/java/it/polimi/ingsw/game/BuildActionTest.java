@@ -8,10 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BuildActionTest {
 
-
-
     @Test
-    void should_find_3_cells() {
+    void shouldFind3Cells() {
         Worker w = new Worker(null);
         Map m = new Map();
         Vector2 w_pos = new Vector2(0, 0);
@@ -24,7 +22,7 @@ public class BuildActionTest {
 
     }
     @Test
-    void should_find_5_cells() {
+    void shouldFind5Cells() {
         Worker w = new Worker(null);
         Map m = new Map();
         Vector2 p1 = new Vector2(0, 3);
@@ -36,7 +34,7 @@ public class BuildActionTest {
         assertEquals(5, cells.size());
     }
     @Test
-    void should_find_8_cells() {
+    void shouldFind8Cells() {
         Worker w = new Worker(null);
         Map m = new Map();
         Vector2 p1 = new Vector2(3, 3);
@@ -52,7 +50,7 @@ public class BuildActionTest {
 
 
     @Test
-    void simplebuild_test(){
+    void shouldBuild(){
         Player player = new Player(1,"uno");
         Map m = new Map();
         Vector2 w_pos = new Vector2(3,3);
@@ -65,19 +63,11 @@ public class BuildActionTest {
         m.setWorkers(player);
 
         BehaviourNode bn = BehaviourNode.makeRootNode(new BuildAction());
-        assertEquals("BuildNONE", bn.getAction().display_name);
+        assertEquals("BuildNONE", bn.getAction().displayName);
 
         GameConstraints gc = new GameConstraints();
         ArrayList<Vector2> cells = bn.getAction().possibleCells(w,m,gc);
-        System.out.println(cells.size());
-        /*
-        for( Vector2 cell : cells ){
-            System.out.println(cell.getX());
-            System.out.println(cell.getY());
-            System.out.println("\n");
-        }
 
-         */
         assertTrue(cells.contains(b_pos));
 
         try {
@@ -94,9 +84,6 @@ public class BuildActionTest {
             System.out.println("This move is not allowed");
         }
     }
-
-
-
 
 
 }

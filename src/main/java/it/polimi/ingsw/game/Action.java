@@ -16,8 +16,8 @@ import java.util.ArrayList;
 public abstract class Action
 {
 
-    protected int net_id;
-    protected  String display_name;
+    protected int netId;
+    protected  String displayName;
 
     /**
      * This function executes the action behaviour on the parameters passed
@@ -37,7 +37,7 @@ public abstract class Action
      * Example: Move - Horizontal Only
      * @return action display name
      */
-    public String displayName() { return display_name; }
+    public String displayName() { return displayName; }
 
     /**
      * @param w worker doing the job

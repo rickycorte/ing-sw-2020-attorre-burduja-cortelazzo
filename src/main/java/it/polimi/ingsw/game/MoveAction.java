@@ -12,10 +12,10 @@ public class MoveAction extends Action {
 
 
     MoveAction(GameConstraints.Constraint localConstrains) {
-        this.net_id = 10;
+        this.netId = 10;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
-        display_name = "Move"+ localConstrains.toString();
+        displayName = "Move"+ localConstrains.toString();
     }
 
     public MoveAction() {
@@ -180,7 +180,7 @@ public class MoveAction extends Action {
     {
         // athena should disable her lock at the beginning of the turn
         // and reset it later if moves up
-        if(globalConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP))
+        if(localConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP))
             globalConstrains.remove(GameConstraints.Constraint.BLOCK_MOVE_UP);
 
         //merge local and global constrains to avoid multiple checks
@@ -202,10 +202,10 @@ public class MoveAction extends Action {
         }
 
         // and reset it later if moves up
-        if(globalConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP) && m.getLevel(w.getPosition()) > m.getLevel(w.getLastLocation()))
+        if(localConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP) && m.getLevel(w.getPosition()) > m.getLevel(w.getLastLocation()))
             globalConstrains.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
 
-        return winCheck(w, m, globalConstrains, w.getLastLocation());
+        return winCheck(w, m, gc, w.getLastLocation());
     }
 
 
@@ -256,5 +256,6 @@ public class MoveAction extends Action {
         }
         return cells;
     }
+
 
 }

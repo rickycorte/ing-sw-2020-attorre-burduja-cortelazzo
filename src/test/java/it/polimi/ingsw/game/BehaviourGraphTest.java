@@ -21,7 +21,7 @@ class BehaviourGraphTest
 
         public TestAction(GameConstraints.Constraint local_constr)
         {
-            display_name = "test_action "+ local_constr.toString();
+            displayName = "test_action "+ local_constr.toString();
             this.local_constr = local_constr;
         }
 
@@ -176,22 +176,22 @@ class BehaviourGraphTest
         ArrayList<NextAction> nextActions = new ArrayList<>(testInitOR.getNextActions(w1, map, c)) ;
 
         assertEquals(2 , nextActions.size());
-        assertEquals("MoveNONE",(nextActions.get(0)).getAction_name());
-        assertEquals("BuildNONE",(nextActions.get(1)).getAction_name());
+        assertEquals("MoveNONE",(nextActions.get(0)).getActionName());
+        assertEquals("BuildNONE",(nextActions.get(1)).getActionName());
 
         testInitOR.selectAction(0);
         nextActions.clear();
         nextActions = testInitOR.getNextActions(w1,map,c);
         assertEquals(2 , nextActions.size());
-        assertEquals("BuildNONE", nextActions.get(0).getAction_name());
-        assertEquals("MoveNONE", nextActions.get(1).getAction_name());
+        assertEquals("BuildNONE", nextActions.get(0).getActionName());
+        assertEquals("MoveNONE", nextActions.get(1).getActionName());
 
         testInitOR.resetExecutionStatus();
         testInitOR.selectAction(1);
         nextActions.clear();
         nextActions = testInitOR.getNextActions(w1,map,c);
         assertEquals(1, nextActions.size());
-        assertEquals("BuildAgainNONE",nextActions.get(0).getAction_name());
+        assertEquals("BuildAgainNONE",nextActions.get(0).getActionName());
         //
 
 
@@ -205,15 +205,15 @@ class BehaviourGraphTest
         ArrayList<NextAction> nextActions2 = test.getNextActions(w1, map, c);
 
         assertEquals(1,nextActions2.size());
-        assertEquals("MoveNONE",nextActions2.get(0).getAction_name());
+        assertEquals("MoveNONE",nextActions2.get(0).getActionName());
 
         test.selectAction(0);
         nextActions2.clear();
         nextActions2 = test.getNextActions(w1,map,c);
 
         assertEquals(2, nextActions2.size());
-        assertEquals("BuildNONE",nextActions2.get(0).getAction_name());
-        assertEquals("MoveNONE", nextActions2.get(1).getAction_name());
+        assertEquals("BuildNONE",nextActions2.get(0).getActionName());
+        assertEquals("MoveNONE", nextActions2.get(1).getActionName());
 
 
 
@@ -228,20 +228,20 @@ class BehaviourGraphTest
         nextActions = testMiddleOr.getNextActions(w1,map,c);
 
         assertEquals(1,nextActions.size());
-        assertEquals("MoveNONE",nextActions.get(0).getAction_name());
+        assertEquals("MoveNONE",nextActions.get(0).getActionName());
 
         nextActions.clear();
         testMiddleOr.selectAction(0);
         nextActions = testMiddleOr.getNextActions(w1,map,c);
         assertEquals(2,nextActions.size());
-        assertEquals("BuildNONE", nextActions.get(0).getAction_name());
-        assertEquals("MoveNONE",nextActions.get(1).getAction_name());
+        assertEquals("BuildNONE", nextActions.get(0).getActionName());
+        assertEquals("MoveNONE",nextActions.get(1).getActionName());
 
         nextActions.clear();
         testMiddleOr.selectAction(0);
         nextActions = testMiddleOr.getNextActions(w1,map,c);
         assertEquals(1,nextActions.size());
-        assertEquals("MoveNONE",nextActions.get(0).getAction_name());
+        assertEquals("MoveNONE",nextActions.get(0).getActionName());
 
     }
 
@@ -252,7 +252,7 @@ class BehaviourGraphTest
         BehaviourGraph graph = BehaviourGraph.makeEmptyGraph().appendSubGraph(
                 BehaviourNode.makeRootNode(new TestActionThrow()).setNext(new TestAction()).getRoot());
 
-        BehaviourNode prevAction = graph.getCurrent_node();
+        BehaviourNode prevAction = graph.getBehaviourNode();
 
         try{
             graph.selectAction(0);
@@ -266,7 +266,7 @@ class BehaviourGraphTest
             // 100% sure we go here because TestActionThrow always trows this exception
         }
 
-        assertEquals(prevAction, graph.getCurrent_node());
+        assertEquals(prevAction, graph.getBehaviourNode());
 
     }
 

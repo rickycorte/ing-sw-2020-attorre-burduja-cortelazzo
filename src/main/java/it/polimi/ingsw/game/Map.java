@@ -12,7 +12,7 @@ public class Map
 
     private int[][] map = new int[HEIGHT][LENGTH];
 
-    private ArrayList<Worker> workers = new ArrayList<>() ;
+    private ArrayList<Worker> workers;
 
     /*
      *          00000001 = 1 liv.0

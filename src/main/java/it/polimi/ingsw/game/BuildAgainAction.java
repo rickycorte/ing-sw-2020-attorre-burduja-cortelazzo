@@ -1,24 +1,24 @@
 package it.polimi.ingsw.game;
 
-import java.util.ArrayList;
-
-
+/**
+ * Class that represents a second build action and offers several constraints to customize its behaviour
+ */
 public class BuildAgainAction extends BuildAction {
 
     BuildAgainAction(GameConstraints.Constraint localConstrains)
     {
-        this.net_id = 21;
+        this.netId = 21;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
-        display_name = "BuildAgain"+ localConstrains.toString();
+        displayName = "BuildAgain"+ localConstrains.toString();
     }
 
     BuildAgainAction(GameConstraints.Constraint constraint1, GameConstraints.Constraint constraint2){
-        this.net_id = 21;
+        this.netId = 21;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(constraint1);
         this.localConstrains.add(constraint2);
-        display_name = "BuildAgain"+ localConstrains.toString();
+        displayName = "BuildAgain"+ localConstrains.toString();
     }
 
     public BuildAgainAction() {

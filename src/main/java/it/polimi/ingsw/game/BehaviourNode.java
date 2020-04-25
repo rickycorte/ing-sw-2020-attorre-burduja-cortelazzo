@@ -16,7 +16,7 @@ public class BehaviourNode
 
     private BehaviourNode parent;
 
-    private List<BehaviourNode> child_nodes;
+    private List<BehaviourNode> childNodes;
 
 
     private BehaviourNode(Action action)
@@ -27,12 +27,12 @@ public class BehaviourNode
     private BehaviourNode(Action action, BehaviourNode parent)
     {
         this.action = action;
-        child_nodes = new ArrayList<>();
+        childNodes = new ArrayList<>();
         this.parent = parent;
     }
 
-    public List<BehaviourNode> getChild_nodes() {
-        return child_nodes;
+    public List<BehaviourNode> getChildNodes() {
+        return childNodes;
     }
 
     /**
@@ -68,7 +68,7 @@ public class BehaviourNode
     ArrayList<NextAction> getNextActions(Worker w, Map m, GameConstraints constraints){
         ArrayList<NextAction> nodes = new ArrayList<>();
 
-        for(BehaviourNode n : child_nodes)
+        for(BehaviourNode n : childNodes)
         {
             NextAction nextAction = new NextAction(w,m,constraints,n);
             nodes.add(nextAction);
@@ -83,7 +83,7 @@ public class BehaviourNode
      */
     String[] getNextActionNames(){
         ArrayList<String> nodes = new ArrayList<>();
-        for(BehaviourNode n : child_nodes)
+        for(BehaviourNode n : childNodes)
         {
             nodes.add(n.getAction().displayName()); //use display name
         }
@@ -99,9 +99,9 @@ public class BehaviourNode
      */
     BehaviourNode getNextNode(int pos) throws OutOfGraphException
     {
-        if(pos < 0 || pos >= child_nodes.size() ) throw new OutOfGraphException();
+        if(pos < 0 || pos >= childNodes.size() ) throw new OutOfGraphException();
 
-        return  child_nodes.get(pos);
+        return  childNodes.get(pos);
     }
 
     /**
@@ -109,7 +109,7 @@ public class BehaviourNode
      * @return number of next nodes
      */
     public int getNextActionCount(){
-        return child_nodes.size();
+        return childNodes.size();
     }
 
 
@@ -133,7 +133,7 @@ public class BehaviourNode
      */
     public BehaviourNode addBranch(BehaviourNode node)
     {
-        child_nodes.add(node);
+        childNodes.add(node);
         node.setParent(this);
         return this;
     }
@@ -155,11 +155,11 @@ public class BehaviourNode
      * @return branch destination node
      */
     public BehaviourNode mergeBranches(BehaviourNode node){
-        if(child_nodes.size() > 0 )
+        if(childNodes.size() > 0 )
         {
-            for (int i = 0; i < child_nodes.size(); i++)
+            for (int i = 0; i < childNodes.size(); i++)
             {
-                child_nodes.get(i).mergeBranches(node);
+                childNodes.get(i).mergeBranches(node);
             }
         }
         else
@@ -187,8 +187,8 @@ public class BehaviourNode
     public BehaviourNode setNext(BehaviourNode node)
     {
         node.setParent(this);
-        child_nodes.clear();
-        child_nodes.add(node);
+        childNodes.clear();
+        childNodes.add(node);
         return node;
     }
 

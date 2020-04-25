@@ -88,7 +88,7 @@ public class Turn
     public boolean canStillMove(Map map,GameConstraints gc) {
         possible_move = 0;
         for (Worker w : player.getWorkers()){
-            canStillMoveNextAction(graph.getCurrent_node(),w,map,gc);
+            canStillMoveNextAction(graph.getBehaviourNode(),w,map,gc);
         }
         return possible_move>0;
     }
@@ -102,9 +102,9 @@ public class Turn
      */
     private void canStillMoveNextAction(BehaviourNode node, Worker w, Map map,GameConstraints gc) {
 
-        if(node.getChild_nodes().isEmpty()) possible_move++;
+        if(node.getChildNodes().isEmpty()) possible_move++;
 
-        for(BehaviourNode next : node.getChild_nodes()){
+        for(BehaviourNode next : node.getChildNodes()){
             if(next.getAction().possibleCells(w,map,gc).size() > 0) canStillMoveNextAction(next,w,map,gc);
         }
     }

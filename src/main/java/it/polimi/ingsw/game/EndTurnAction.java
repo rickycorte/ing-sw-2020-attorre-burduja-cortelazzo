@@ -8,8 +8,8 @@ public class EndTurnAction extends Action {
 
     EndTurnAction()
     {
-        this.net_id = 30;
-        display_name = "End Turn";
+        this.netId = 30;
+        displayName = "End Turn";
     }
 
 
