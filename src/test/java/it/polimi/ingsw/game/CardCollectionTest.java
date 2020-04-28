@@ -26,6 +26,7 @@ public class CardCollectionTest {
     public void shouldHasThreeOrMoreCards(){
         // min is 3 cards, 1 for every player
         assertTrue(coll.getCardIDs().length >= 3);
+        assertEquals(coll.size(), coll.getCardIDs().length);
     }
 
     @Test
@@ -62,7 +63,7 @@ public class CardCollectionTest {
     @Test
     void shouldReturnSelectedCards(){
 
-        int sz = coll.getCardIDs().length;
+        int sz = coll.size();
         int[] ids = new int[sz/2];
         Random r = new Random();
         // generate half ids size with random ids

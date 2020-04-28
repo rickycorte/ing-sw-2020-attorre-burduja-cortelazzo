@@ -12,7 +12,6 @@ public class MoveAction extends Action {
 
 
     MoveAction(GameConstraints.Constraint localConstrains) {
-        this.netId = 10;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
         displayName = "Move"+ localConstrains.toString();
@@ -94,7 +93,7 @@ public class MoveAction extends Action {
             return false;
 
         // same cell or distance grater than 1
-        if(target.equals(w.getPosition()) || target.distance(w.getPosition()) != 1)
+        if(target.distance(w.getPosition()) != 1)
             return false;
 
         int hDiff = m.getLevel(target) - m.getLevel(w.getPosition());

@@ -3,12 +3,18 @@ package it.polimi.ingsw.game;
 import java.util.ArrayList;
 
 
+/**
+ * This class represent a "exit" from a behaviour graph and should be used when optional parts
+ * of the god behaviour are optionals
+ * Thia actions must do nothing
+ * Example use:
+ *  Demeter: Your Worker MAY build one additional time...
+ */
 public class EndTurnAction extends Action {
 
 
     EndTurnAction()
     {
-        this.netId = 30;
         displayName = "End Turn";
     }
 
@@ -16,8 +22,10 @@ public class EndTurnAction extends Action {
 
     @Override
     public int run(Worker w, Vector2 target, Map m, GameConstraints gc){
-        return 0;
+        return 0;   // end turn does nothing!
     }
+
+
     @Override
     public ArrayList<Vector2> possibleCells(Worker w, Map m ,GameConstraints gc){
 

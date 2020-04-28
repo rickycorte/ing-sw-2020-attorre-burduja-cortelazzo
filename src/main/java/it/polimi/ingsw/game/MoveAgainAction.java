@@ -9,7 +9,6 @@ package it.polimi.ingsw.game;
 public class MoveAgainAction extends MoveAction {
 
     MoveAgainAction(GameConstraints.Constraint localConstrains) {
-        this.netId = 11;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
         this.localConstrains.add(GameConstraints.Constraint.BLOCK_SAME_CELL_MOVE);

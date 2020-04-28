@@ -11,7 +11,6 @@ public class BuildAction extends Action
 
     BuildAction(GameConstraints.Constraint localConstrains)
     {
-        this.netId = 20;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
         displayName = "Build" + localConstrains.toString();

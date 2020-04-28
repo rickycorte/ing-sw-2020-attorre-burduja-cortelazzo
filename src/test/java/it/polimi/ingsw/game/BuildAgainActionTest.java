@@ -1,5 +1,6 @@
 package it.polimi.ingsw.game;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -9,99 +10,127 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BuildAgainActionTest {
 
 
+    Map m;
+    Player p1, p2;
+    Worker w1p1, w1p2;
+    BuildAction buildAction;
+    GameConstraints gc;
+
+
+    /**
+     * short version to build level times in a map
+     */
+    void buildPos(Map m, int x, int y, int level)
+    {
+        Vector2 t = new Vector2(x,y);
+        if(m.isInsideMap(t))
+        {
+            for(int i = 0; i < level; i++)
+            {
+                m.build(t);
+            }
+        }
+    }
+
+
+        /*
+        Map scheme used in tests (covers lots of possible setups)
+        0--,1,2,3 -> build level
+        k -> p1 workers
+        t -> p2 workers
+        @ -> dome
+
+        xy  00 01 02 03 04 05 06
+        00 |--|--|-3|t-|-1|--|--|
+        01 |--|--|@-|k-|-2|--|--|
+        02 |--|--|--|-2|@4|--|--|
+        03 |--|--|--|--|--|--|--|
+        04 |--|--|--|--|--|--|--|
+        05 |--|--|--|--|--|--|--|
+        06 |--|--|--|--|--|--|--|
+
+     */
+
+
+    @BeforeEach
+    void init()
+    {
+        gc = new GameConstraints();
+
+        // create players
+        p1 = new Player(1, "Kazuma");
+        p2 = new Player(2, "Megumin");
+
+        //create workers
+        w1p1 = new Worker(p1);
+        p1.addWorker(w1p1);
+
+        w1p2 = new Worker(p2);
+        p2.addWorker(w1p2);
+
+        //create map
+        m = new Map();
+        buildPos(m,0,2,3);
+        buildPos(m,0,4,1);
+        buildPos(m,1,4,2);
+        buildPos(m,2,4,4);
+        buildPos(m,2,3,2);
+
+        m.buildDome(new Vector2(1,2));
+
+        //place workers
+        w1p1.setPosition(new Vector2(1,3));
+        w1p2.setPosition(new Vector2(0,3));
+
+        m.setWorkers(p1);
+        m.setWorkers(p2);
+    }
+
+
     @Test
-    void should_find_1_cell_same_space_noDome(){
-        GameConstraints gc = new GameConstraints();
-        gc.add(GameConstraints.Constraint.BLOCK_DIFF_CELL_BUILD); //testing the scenario when you can only build on the same cell
+    void shouldNotBuildDomeIfLocked()
+    {
+        buildAction = new BuildAgainAction(GameConstraints.Constraint.BLOCK_DOME_BUILD);
 
-        Map m = new Map();
-        Worker w = new Worker(null);
-        Vector2 p1 = new Vector2(3,3);
-        w.setPosition(p1);
-        w.setLastBuildLocation(new Vector2(2,2));
+        assertFalse(buildAction.possibleCells(w1p1, m, gc).contains(new Vector2(0,3)));
 
-        BuildAgainAction baa = new BuildAgainAction();
-
-        BehaviourGraph bh = BehaviourGraph.makeEmptyGraph();
-
-        ArrayList cells = baa.possibleCells(w,m,gc);
-        assertEquals(1, cells.size());
-
+        assertThrows(NotAllowedMoveException.class, ()-> { buildAction.run(w1p1, new Vector2(0,3), m, gc); });
+        assertThrows(NotAllowedMoveException.class, ()-> { buildAction.run(w1p1, new Vector2(1,2), m, gc); });
     }
 
     @Test
-    void should_find_7_cells_different_space(){
+    void shouldBuildOnlyInTheSameCellIfLocked()
+    {
 
-        Map m = new Map();
-        Worker w = new Worker(null);
-        Vector2 p1 = new Vector2(3,3);
-        w.setPosition(p1);
-        w.setLastBuildLocation(new Vector2(2,3));
+        buildAction = new BuildAgainAction(GameConstraints.Constraint.BLOCK_DIFF_CELL_BUILD);
+        w1p1.setLastBuildLocation(new Vector2(2,2));
 
-        BuildAgainAction baa = new BuildAgainAction(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD);  //testing the scenario when you can only build on diff cells
-
-        ArrayList cells = baa.possibleCells(w,m,null);
-        assertEquals(7, cells.size());
-
-    }
-
-    @Test
-    void should_find_8_cells() {
-        //build again with no constrains
-        GameConstraints gc = new GameConstraints();
-
-        Map m = new Map();
-        Worker w = new Worker(null);
-        Vector2 p1 = new Vector2(3, 3);
-        w.setPosition(p1);
-
-        BuildAgainAction baa = new BuildAgainAction();
-
-        ArrayList cells = baa.possibleCells(w, m, gc);
-        assertEquals(8, cells.size());
-
-
-    }
-
-    @Test
-    void buildAgainTest(){
-        Map m = new Map();
-        Player player = new Player(1,"uno");
-        Worker w = new Worker(player);
-        //pos
-        Vector2 p1 = new Vector2(3, 3);
-        Vector2 p2 = new Vector2(2,3);
-        Vector2 p3 = new Vector2(4,3);
-
-        //prepare map
-        w.setPosition(p1);
-        m.setWorkers(player);
-
-        BehaviourNode bn = BehaviourNode.makeRootNode(new BuildAction()).setNext(new BuildAgainAction()).getRoot();
-
-        GameConstraints gc = new GameConstraints();
+        assertEquals(1, buildAction.possibleCells(w1p1, m, null).size());
+        assertTrue(buildAction.possibleCells(w1p1, m, null).contains(new Vector2(2,2)));
 
         try
         {
-            gc.add(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD);
-            //first normal build
-            bn.getAction().run(w,p2,m,gc);
-            bn = bn.getNextNode(0);
+            assertEquals(0, buildAction.run(w1p1, new Vector2(2,2) , m, gc) );
+            assertEquals(1, m.getLevel(new Vector2(2,2)));
 
-            var cells = bn.getAction().possibleCells(w,m,gc);
-            assertEquals(7, cells.size());
-            assertFalse(cells.contains(p2));
-            assertEquals(0, bn.getAction().run(w,p3,m,gc));
-
-        }catch (OutOfGraphException e)
+        }catch (NotAllowedMoveException e)
         {
-            fail("Out of graph should not be thrown here");
-        }
-        catch (NotAllowedMoveException e)
-        {
-            fail("cant do this action");
+            fail("Correct build should not throw any exception");
         }
 
     }
+
+    @Test
+    void shouldBuildOnlyInDifferentCellIfLocked()
+    {
+        buildAction = new BuildAgainAction(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD);
+        w1p1.setLastBuildLocation(new Vector2(2,2));
+
+        assertFalse(buildAction.possibleCells(w1p1, m, null).contains(new Vector2(2,2)));
+        assertEquals(4, buildAction.possibleCells(w1p1, m, null).size());
+
+        assertThrows(NotAllowedMoveException.class, ()-> { buildAction.run(w1p1, new Vector2(2,2), m, gc); });
+    }
+
 
 }

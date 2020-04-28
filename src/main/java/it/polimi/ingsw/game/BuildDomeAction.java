@@ -7,7 +7,6 @@ public class BuildDomeAction extends BuildAction {
 
     BuildDomeAction(GameConstraints.Constraint localConstrains)
     {
-        this.netId = 22;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
         displayName = "BuildingDome" + localConstrains.toString();

@@ -8,15 +8,10 @@ import java.util.ArrayList;
  * Every parameter needed to execute the action is passed with run function
  *
  * Action should only store data about behaviour customizations passed only as Constructor parameters
- * Each Action is identified by a net_id 10-19 -- moveTypeAction
- *                                       20-29 -- buildTypeAction
- *                                       30-39 -- endTurnTypeAction
  * Every Action subclass must also set its display name and return it with display_name()
  */
 public abstract class Action
 {
-
-    protected int netId;
     protected  String displayName;
 
     /**

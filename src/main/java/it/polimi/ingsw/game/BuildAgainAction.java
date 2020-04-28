@@ -7,14 +7,12 @@ public class BuildAgainAction extends BuildAction {
 
     BuildAgainAction(GameConstraints.Constraint localConstrains)
     {
-        this.netId = 21;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
         displayName = "BuildAgain"+ localConstrains.toString();
     }
 
     BuildAgainAction(GameConstraints.Constraint constraint1, GameConstraints.Constraint constraint2){
-        this.netId = 21;
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(constraint1);
         this.localConstrains.add(constraint2);
