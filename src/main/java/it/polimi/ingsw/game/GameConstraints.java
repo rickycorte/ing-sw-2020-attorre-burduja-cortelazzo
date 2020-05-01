@@ -11,29 +11,55 @@ public class GameConstraints
      * List of available constrains
      */
     public enum Constraint{
-        NONE(0),
+        /**
+         * No constraint
+         */
+        NONE(0, "NONE"),
+        /**
+         * [MOVE ONLY] Block moves with height diff gte 1
+         */
+        BLOCK_MOVE_UP(1<<1,"No up"),
+        /**
+         * [MOVE ONLY] Enable BLOCK_MOVE_UP if one of your workers goes up
+         */
+        SET_BLOCK_MOVE_UP(1<<5, "Lock move up"),
+        /**
+         * [MOVE ONLY] Swap with an opponent worker
+         */
+        CAN_SWAP_CONSTRAINT(1<<2, "Swap"),
+        /**
+         * [MOVE ONLY] Push an opponent worker
+         */
+        CAN_PUSH_CONSTRAINT(1<<3, "Push"),
+        /**
+         * [BUILD ONLY] Block dome building
+         */
+        BLOCK_DOME_BUILD (1<<6, "No Dome"),
+        /**
+         * [MOVE ONLY] Prevent move to the same cell of previous moves
+         */
+        BLOCK_SAME_CELL_MOVE (1<<4, "No same cell"), //if active, can't return to the same cell     (used in MoveAgainAction)
+        /**
+         * [BUILD ONLY] Prevent building to the same cell
+         */
+        BLOCK_SAME_CELL_BUILD(1<<8, "No same cell"),  //if active, can't build on the same cell     (used in BuildAgainAction)
+        /**
+         * [BUILD ONLY] Prevent building to a different cell
+         */
+        BLOCK_DIFF_CELL_BUILD(1<<16, "No different cell"), //if active, can only build on the same cell  (used in BuildAgainAction)
+        /**
+         * [MOVE ONLY] Win when your move height diff is lower and equal than -2
+         */
+        WIN_BY_GOING_DOWN(1<<17, "Win by fall"),    //if active, the player wins by going down 2 lvls
 
-
-        BLOCK_MOVE_UP(1<<1),
-        SET_BLOCK_MOVE_UP(1<<5),
-        CAN_SWAP_CONSTRAINT(1<<2),
-        CAN_PUSH_CONSTRAINT(1<<3),
-        BLOCK_DOME_BUILD (1<<6),
-        BLOCK_SAME_CELL_MOVE (1<<4), //if active, can't return to the same cell     (used in MoveAgainAction)
-
-
-
-        BLOCK_SAME_CELL_BUILD(1<<8),  //if active, can't build on the same cell     (used in BuildAgainAction)
-        BLOCK_DIFF_CELL_BUILD(1<<16), //if active, can only build on the same cell  (used in BuildAgainAction)
-
-        WIN_BY_GOING_DOWN(1<<17),    //if active, the player wins by going down 2 lvls
-
-        BLOCK_NON_LO_SO(1<<32);
+        TEST(1<<32, "TEST");
 
         private int val;
+        private String displayName;
 
-        private Constraint(int val) {
+        private Constraint(int val, String displayName) {
             this.val = val;
+            this.displayName = displayName;
         }
 
         /**
@@ -42,6 +68,12 @@ public class GameConstraints
          */
         public int toInt(){
             return val;
+        }
+
+        @Override
+        public String toString()
+        {
+            return displayName;
         }
     }
 

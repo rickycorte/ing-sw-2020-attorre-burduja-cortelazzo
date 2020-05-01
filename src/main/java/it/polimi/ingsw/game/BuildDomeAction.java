@@ -9,7 +9,9 @@ public class BuildDomeAction extends BuildAction {
     {
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
-        displayName = "BuildingDome" + localConstrains.toString();
+        displayName = "Build Dome";
+        if(localConstrains != GameConstraints.Constraint.NONE)
+            displayName += " ("+ localConstrains.toString() + ")";
     }
 
     public BuildDomeAction() {

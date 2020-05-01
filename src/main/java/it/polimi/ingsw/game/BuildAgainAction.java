@@ -7,16 +7,29 @@ public class BuildAgainAction extends BuildAction {
 
     BuildAgainAction(GameConstraints.Constraint localConstrains)
     {
-        this.localConstrains = new GameConstraints();
-        this.localConstrains.add(localConstrains);
-        displayName = "BuildAgain"+ localConstrains.toString();
+        this(localConstrains, GameConstraints.Constraint.NONE);
     }
 
     BuildAgainAction(GameConstraints.Constraint constraint1, GameConstraints.Constraint constraint2){
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(constraint1);
         this.localConstrains.add(constraint2);
-        displayName = "BuildAgain"+ localConstrains.toString();
+
+        displayName = "Build";
+
+        if(constraint1 != GameConstraints.Constraint.NONE && constraint2 != GameConstraints.Constraint.NONE)
+        {
+            displayName += " ("+constraint1.toString() + ", "+constraint2.toString()+")";
+        }
+        else if(constraint1 != GameConstraints.Constraint.NONE)
+        {
+            displayName +=" ("+constraint1.toString()+")";
+        }
+        else if(constraint2 != GameConstraints.Constraint.NONE)
+        {
+            displayName +=" ("+constraint2.toString()+")";
+        }
+
     }
 
     public BuildAgainAction() {

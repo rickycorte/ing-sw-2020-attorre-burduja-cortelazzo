@@ -14,7 +14,11 @@ public class MoveAction extends Action {
     MoveAction(GameConstraints.Constraint localConstrains) {
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
-        displayName = "Move"+ localConstrains.toString();
+
+        if(localConstrains != GameConstraints.Constraint.NONE)
+            displayName = "Move ("+ localConstrains.toString()+")";
+        else
+            displayName = "Move";
     }
 
     public MoveAction() {

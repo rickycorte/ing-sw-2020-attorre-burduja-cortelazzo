@@ -13,7 +13,9 @@ public class BuildAction extends Action
     {
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
-        displayName = "Build" + localConstrains.toString();
+        displayName = "Build";
+        if(localConstrains != GameConstraints.Constraint.NONE)
+            displayName += " ("+localConstrains.toString()+")";
     }
 
     public BuildAction() {

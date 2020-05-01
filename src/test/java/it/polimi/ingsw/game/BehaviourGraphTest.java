@@ -143,6 +143,12 @@ class BehaviourGraphTest
         assertTrue(g.isExecutionEnded());
     }
 
+
+    String getActionName(BehaviourGraph g, int id) throws OutOfGraphException
+    {
+        return  g.getBehaviourNode().getNextNode(id).getAction().displayName();
+    }
+
     @Test
     void testNextActions() throws OutOfGraphException {
         Player p = new Player(0, "first");
@@ -176,22 +182,22 @@ class BehaviourGraphTest
         ArrayList<NextAction> nextActions = new ArrayList<>(testInitOR.getNextActions(w1, map, c)) ;
 
         assertEquals(2 , nextActions.size());
-        assertEquals("MoveNONE",(nextActions.get(0)).getActionName());
-        assertEquals("BuildNONE",(nextActions.get(1)).getActionName());
+        assertEquals(getActionName(testInitOR,0), (nextActions.get(0)).getActionName());
+        assertEquals(getActionName(testInitOR,1),(nextActions.get(1)).getActionName());
 
         testInitOR.selectAction(0);
         nextActions.clear();
         nextActions = testInitOR.getNextActions(w1,map,c);
         assertEquals(2 , nextActions.size());
-        assertEquals("BuildNONE", nextActions.get(0).getActionName());
-        assertEquals("MoveNONE", nextActions.get(1).getActionName());
+        assertEquals(getActionName(testInitOR,0), nextActions.get(0).getActionName());
+        assertEquals(getActionName(testInitOR,1), nextActions.get(1).getActionName());
 
         testInitOR.resetExecutionStatus();
         testInitOR.selectAction(1);
         nextActions.clear();
         nextActions = testInitOR.getNextActions(w1,map,c);
         assertEquals(1, nextActions.size());
-        assertEquals("BuildAgainNONE",nextActions.get(0).getActionName());
+        assertEquals(getActionName(testInitOR,0),nextActions.get(0).getActionName());
         //
 
 
@@ -205,15 +211,15 @@ class BehaviourGraphTest
         ArrayList<NextAction> nextActions2 = test.getNextActions(w1, map, c);
 
         assertEquals(1,nextActions2.size());
-        assertEquals("MoveNONE",nextActions2.get(0).getActionName());
+        assertEquals(getActionName(test,0),nextActions2.get(0).getActionName());
 
         test.selectAction(0);
         nextActions2.clear();
         nextActions2 = test.getNextActions(w1,map,c);
 
         assertEquals(2, nextActions2.size());
-        assertEquals("BuildNONE",nextActions2.get(0).getActionName());
-        assertEquals("MoveNONE", nextActions2.get(1).getActionName());
+        assertEquals(getActionName(test,0),nextActions2.get(0).getActionName());
+        assertEquals(getActionName(test,1), nextActions2.get(1).getActionName());
 
 
 
@@ -228,20 +234,20 @@ class BehaviourGraphTest
         nextActions = testMiddleOr.getNextActions(w1,map,c);
 
         assertEquals(1,nextActions.size());
-        assertEquals("MoveNONE",nextActions.get(0).getActionName());
+        assertEquals(getActionName(testMiddleOr,0),nextActions.get(0).getActionName());
 
         nextActions.clear();
         testMiddleOr.selectAction(0);
         nextActions = testMiddleOr.getNextActions(w1,map,c);
         assertEquals(2,nextActions.size());
-        assertEquals("BuildNONE", nextActions.get(0).getActionName());
-        assertEquals("MoveNONE",nextActions.get(1).getActionName());
+        assertEquals(getActionName(testMiddleOr,0), nextActions.get(0).getActionName());
+        assertEquals(getActionName(testMiddleOr,1),nextActions.get(1).getActionName());
 
         nextActions.clear();
         testMiddleOr.selectAction(0);
         nextActions = testMiddleOr.getNextActions(w1,map,c);
         assertEquals(1,nextActions.size());
-        assertEquals("MoveNONE",nextActions.get(0).getActionName());
+        assertEquals(getActionName(testMiddleOr,0),nextActions.get(0).getActionName());
 
     }
 
