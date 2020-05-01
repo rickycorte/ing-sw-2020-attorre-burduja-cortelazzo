@@ -29,7 +29,7 @@ class GameConstraintsTest
     @Test
     void shouldAddAConstraint()
     {
-        c.add(GameConstraints.Constraint.BLOCK_NON_LO_SO);
+        c.add(GameConstraints.Constraint.TEST);
 
         c.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
         c.add(GameConstraints.Constraint.BLOCK_MOVE_UP); // also check double set
@@ -46,18 +46,18 @@ class GameConstraintsTest
     @Test
     void shouldRemoveConstraint()
     {
-        c.add(GameConstraints.Constraint.BLOCK_NON_LO_SO);
+        c.add(GameConstraints.Constraint.TEST);
         c.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
-        c.remove(GameConstraints.Constraint.BLOCK_NON_LO_SO);
-        c.remove(GameConstraints.Constraint.BLOCK_NON_LO_SO); // also check double remove
+        c.remove(GameConstraints.Constraint.TEST);
+        c.remove(GameConstraints.Constraint.TEST); // also check double remove
 
-        assertFalse(c.check(GameConstraints.Constraint.BLOCK_NON_LO_SO));
+        assertFalse(c.check(GameConstraints.Constraint.TEST));
     }
 
     @Test
     void shouldCheckNothing()
     {
-        c.add(GameConstraints.Constraint.BLOCK_NON_LO_SO);
+        c.add(GameConstraints.Constraint.TEST);
 
         assertFalse(c.check(GameConstraints.Constraint.NONE));
 
@@ -69,9 +69,9 @@ class GameConstraintsTest
     @Test
     void shouldCheckConstraint()
     {
-        c.add(GameConstraints.Constraint.BLOCK_NON_LO_SO);
+        c.add(GameConstraints.Constraint.TEST);
 
-        assertTrue(c.check(GameConstraints.Constraint.BLOCK_NON_LO_SO));
+        assertTrue(c.check(GameConstraints.Constraint.TEST));
         assertFalse(c.check(GameConstraints.Constraint.NONE), "checking NONE should return false if a constraint is set");
     }
 
@@ -85,7 +85,7 @@ class GameConstraintsTest
     @Test
     void shouldEquals()
     {
-        c.add(GameConstraints.Constraint.BLOCK_NON_LO_SO);
+        c.add(GameConstraints.Constraint.TEST);
         GameConstraints c2 = new GameConstraints(), c3 = new GameConstraints();
         c2.add(c);
         assertTrue(c.equals(c2));
