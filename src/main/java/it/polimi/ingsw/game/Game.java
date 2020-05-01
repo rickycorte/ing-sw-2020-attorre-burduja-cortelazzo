@@ -16,8 +16,8 @@ import java.io.*;
  */
 public final class Game
 {
-    private static final int MAX_PLAYERS = 3;
     private static final int MIN_PLAYERS = 2;
+    private static final int MAX_PLAYERS = 3;
     private static final int WORKERS_PER_PLAYER = 2;
 
     /**
@@ -237,15 +237,7 @@ public final class Game
             {
                 players.get(0).setGod(allowedCards.get(0)); // autopick god for last player
                 allowedCards.clear();
-                if(playerCount() == MIN_PLAYERS)
-                {
-                    firstPlayer = 1;
-                    gameState = GameState.WORKER_PLACE;
-                }
-                else
-                {
-                    gameState = GameState.FIRST_PLAYER_PICK;
-                }
+                gameState = GameState.FIRST_PLAYER_PICK;
             }
 
             return true;
@@ -658,7 +650,7 @@ public final class Game
      */
     private void playerLost(Player loser)
     {
-        if(players.size() == 2)
+        if(players.size() <= 2)
         {
             nextPlayer(); //if we are two and i lost the winner is the next player... "the other player"
             endGame(players.get(currentPlayer));

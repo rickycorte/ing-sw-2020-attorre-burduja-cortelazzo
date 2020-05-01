@@ -50,6 +50,8 @@ public class Map
                 map[i][j] = other.map[i][j];
     }
 
+    public int[][] getMap() { return map; }
+
     /**
      * Increases level of selected cell, if level = 4 becomes a dome
      * @param pos selected cell

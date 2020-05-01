@@ -147,6 +147,8 @@ public class MapTest {
 
         assertEquals(map.getWorkers().get(0),newMap.getWorkers().get(0));
 
+        assertArrayEquals(map.getMap(),newMap.getMap());
+
         for (int i = 0; i<7 ; i++)
             for (int j = 0; j<7; j++)
                 assertEquals(map.getLevel(new Vector2(i,j)),newMap.getLevel(new Vector2(i,j)));

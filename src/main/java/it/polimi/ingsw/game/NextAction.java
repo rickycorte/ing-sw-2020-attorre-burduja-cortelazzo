@@ -20,4 +20,6 @@ public class NextAction {
     public String getActionName() {
         return this.actionName;
     }
+    public ArrayList<Vector2> getAvailable_position(){ return this.available_position; }
+    public int getWorker() { return worker; }
 }

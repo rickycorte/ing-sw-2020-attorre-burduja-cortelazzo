@@ -1,13 +1,9 @@
 package it.polimi.ingsw.controller;
 
 
-import it.polimi.ingsw.game.NextAction;
+import com.google.gson.Gson;
 import it.polimi.ingsw.game.Vector2;
 import it.polimi.ingsw.network.INetworkSerializable;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
 
 /**
  * A command sent/received from network
@@ -28,7 +24,11 @@ public class Command  implements INetworkSerializable
         SELECT_FIRST_PLAYER(6),
         PLACE_WORKERS(7),
         ACTION_TIME(8),
-        WINNER(9);
+        LOSER(9),
+        WINNER(10),
+        ACK_JOIN(11),
+        UPDATE(12);
+
 
         private int val;
 
@@ -64,7 +64,7 @@ public class Command  implements INetworkSerializable
 
     private int[] intData;
     private Vector2[] v2Data;
-    private NextAction[] nextActionsData;
+    private String[] stringData;
 
 
     public Command(int type, boolean request, int sender, int target)
@@ -87,17 +87,28 @@ public class Command  implements INetworkSerializable
         this(type, request, sender, target, null, v2Data,null);
     }
 
-    public Command(int type, boolean request, int sender, int target, Vector2 v2Data)
+    public Command(int type,boolean request, int sender,int target,String stringData)
     {
-        this(type, request, sender, target, null, new Vector2[]{v2Data},null);
+        this(type, request, sender, target, null, null,new String[]{stringData});
     }
 
-    public Command(int type,boolean request, int sender,int target,NextAction[] nextActionsData)
+    public Command(int type,boolean request, int sender,int target,int[] intData, String[] stringData)
     {
-        this(type, request, sender, target, null, null, nextActionsData);
+        this(type, request, sender, target, intData, null,stringData);
     }
 
-    public  Command(int type, boolean request, int sender, int target, int[] intData, Vector2[] v2Data,NextAction[] nextActionsData)
+    public Command(int type,boolean request, int sender,int target,int[] intData, Vector2[] v2Data)
+    {
+        this(type, request, sender, target, intData, v2Data,null);
+    }
+
+    public Command(int type,boolean request, int sender,int target,int[] intData, Vector2 v2Data)
+    {
+        this(type, request, sender, target, intData, new Vector2[]{v2Data},null);
+    }
+
+
+    public  Command(int type, boolean request, int sender, int target, int[] intData, Vector2[] v2Data,String[] stringData)
     {
         this.type = type;
         this.request = request;
@@ -105,7 +116,7 @@ public class Command  implements INetworkSerializable
         this.target = target;
         this.intData = intData;
         this.v2Data = v2Data;
-        this.nextActionsData= nextActionsData;
+        this.stringData = stringData;
     }
 
     public CType getType()
@@ -132,12 +143,12 @@ public class Command  implements INetworkSerializable
 
     public Vector2[] getV2Data() { return v2Data; }
 
-    public NextAction[] getNextActionsData(){ return nextActionsData; }
+    public String[] getStringData(){ return stringData; }
 
     @Override
     public String Serialize() {
-        //TODO: implements Serialize
-        return null;
+        Gson gson = new Gson();
+        return gson.toJson(this);
     }
 
 }

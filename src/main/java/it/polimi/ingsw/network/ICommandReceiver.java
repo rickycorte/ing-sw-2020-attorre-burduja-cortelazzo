@@ -8,10 +8,9 @@ public interface ICommandReceiver
      * Callback to a join operation
      * Server: this callback is called for every player that tries to join
      * Client: this callback is called when you join a match
-     * @param id id of the player
-     * @param username username of the player
+     * @param cmd join command
      */
-    void onConnect(int id, String username);
+    void onConnect(Command cmd);
 
     /**
      * Callback for a disconnect operation
