@@ -237,7 +237,7 @@ class GameTest
             assertTrue(game.selectGod(game.getCurrentPlayer(), 2));
             assertEquals(1, p1.getGod().getId());
             assertEquals(2, p2.getGod().getId()); // autoselect last
-            assertEquals(Game.GameState.WORKER_PLACE, game.getCurrentState());
+            assertEquals(Game.GameState.FIRST_PLAYER_PICK, game.getCurrentState());
             assertTrue(game.getAllowedCardIDs().length == 0);
         }catch (NotAllowedOperationException e)
         {
