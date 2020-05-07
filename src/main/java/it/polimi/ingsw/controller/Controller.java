@@ -1,22 +1,18 @@
 package it.polimi.ingsw.controller;
 
 import it.polimi.ingsw.game.*;
-import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
 
-import java.lang.reflect.Array;
-import java.nio.channels.NetworkChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import static it.polimi.ingsw.game.Game.GameState.END;
-import static it.polimi.ingsw.game.Game.GameState.GAME;
 
 public class Controller {
     private static final int SERVER_ID = -1111;
     private static final int BROADCAST_ID = -2222;
     private static final int MAX_PLAYERS = 3;
+    private static final int MIN_PLAYERS = 2;
     private static final int HEIGHT = 7;
     private static final int LENGTH = 7;
 
@@ -25,35 +21,36 @@ public class Controller {
     private List<Player> connected_players;
     private Game match;
     private INetworkAdapter virtualProxy;
-    private Command lastSent;
+    private CommandWrapper lastSent;
     private int host;
+    private  int nextPlayer;
 
     /*
     outgoing command description
-    JOIN : -
-    LEAVE : -
-    START : -
-    FILTER_GOD : request
-    PICK_GOD : request, this cmd is Sent with available card's ids
-    FIRST_PLAYER_PICK : request, send ids and usernames of connected players in this game
-    WORKER_PLACE : request, send available Vector2 in map
-    ACTION_TIME : request, send int[0] id worker, int [1] n. of avaialble cell, Vector2[0 to int[1]] available cell,String[0] action name
-    LOSER : update, lose notification
-    WINNER : update, win notification
-    ACK_JOIN : update, join successful/not
-    UPDATE : update, first 49 [0-48] are map int, from 49 to end are pairs id owner - id worker
+    BaseCommand = -
+    JoinCommand = notification for successful(or not) joining TODO:notifcation also for leave ? (needed by network ??)
+    StartCommand = notification of started game, int player's ID
+    FilterGodCommand = request, no payload
+    PickGodCommand = request, available card's id
+    FirstPlayerPickCommand = request, id and username of connected players in this game
+    WorkerPlaceCommand = request, send available Vector2
+    ActionTimeCommand = request, send pair(id worker,n. available cell), all Vector2 available cell, all action's names
+    EndGameCommand = update, boolean lose/win notification
+    UpdateCommand = update, first 49 int element are map, from 49 to end are pairs(id owner,id worker), Vector2 element for workers position on map
      */
 
     /*
     incoming command description
-    JOIN : -
-    LEAVE : - (network send only id to onDisconnect)
-    START : -
-    FILTER_GOD : (host only)send ids of card want to be allowed
-    PICK_GOD : send selected god id
-    FIRST_PLAYER_PICK : (host only) send id of first player
-    WORKER_PLACE : send Vector2 with 2 positions for workers
-    ACTION_TIME : send worker selected(forced if turn started already),action id for graph(selectAction),Vector2 target
+    BaseCommand = -
+    JoinCommand = username want to play, boolean if i want to join/leave
+    StartCommand = notification (from host) to start a match
+    FilterGodCommand = god's id want to be allowed(from host)
+    PickGodCommand = chosen god id
+    FirstPlayerPickCommand = id of first player (from host)
+    WorkerPlaceCommand = two Vector2 for client's two worker
+    ActionTimeCommand = selected worker,action id, target position Vector2
+    EndGameCommand = -
+    UpdateCommand = -
      */
 
     public Controller (INetworkAdapter adapter){
@@ -74,7 +71,7 @@ public class Controller {
 
     public Game getMatch() { return match; }
 
-    public Command getLastSent() { return lastSent; }
+    public CommandWrapper getLastSent() { return lastSent; }
 
     public List<Player> getConnected_players() { return connected_players; }
 
@@ -87,66 +84,70 @@ public class Controller {
      * Create a new game if necessary
      * Send an acknowledgment with identifier if player joined correctly (negative identifier if can't join)
      * wait for Start command, or start a game if number of players reached MAX_PLAYERS
-     * @param cmd join command
+     * @param cmdWrapper wrapped join command
      */
-    public void onConnect(Command cmd) {
+    public void onConnect(CommandWrapper cmdWrapper) {
+        JoinCommand joinCommand;
+        if(cmdWrapper == null) return;
+        else   joinCommand = cmdWrapper.getCommand(JoinCommand.class);
+
         if (match == null || match.isEnded()) {
             match = new Game();
-            host = cmd.getSender();
+            host = joinCommand.getSender();
         }
 
-        if(cmd.getStringData() == null){
-            ackJoin(cmd,false);
+        if(joinCommand.getUsername() == null){
+            ackJoin(joinCommand,false);
             return;
         }
 
-        String username = cmd.getStringData()[0];
+        String username = joinCommand.getUsername();
         if(usernameAvailability(username)) {
-            Player p = new Player(cmd.getSender(),username);
+            Player p = new Player(joinCommand.getSender(),username);
 
             if(match.join(p)){
                 connected_players.add(p);
-                ackJoin(cmd,true); //player connected to current game
+                ackJoin(joinCommand,true); //player connected to current game
                 if(match.getPlayers().size() == MAX_PLAYERS ){
                     match.start(getPlayer(host));
-                    sendNextCommand(new Command(Command.CType.FILTER_GODS.toInt(),true,host,SERVER_ID)); //first command
+                    virtualProxy.SendBroadcast(new CommandWrapper(CommandType.START,new StartCommand(CommandType.START.toInt(),false,BROADCAST_ID,SERVER_ID,idsToArray())));
+                    sendNextCommand(new CommandWrapper(CommandType.FILTER_GODS,new FilterGodCommand(CommandType.FILTER_GODS.toInt(),true,host,SERVER_ID))); //first command
                 }
             }else
-                ackJoin(cmd,false); //connection failed
+                ackJoin(joinCommand,false); //connection failed
 
         }else
-            ackJoin(cmd,false); //can be fixed with return a usernameError value
+            ackJoin(joinCommand,false); //can be fixed with return a usernameError value
     }
 
     /**
      * Callback function called by the network layer when a command is received
      * Discard the command if not allowed for the sender
      * Send a new command to client
-     * @param cmd command issued by a client
+     * @param cmdWrapper wrapped command issued by a client
      */
-    public void onCommand(Command cmd) {
+    public void onCommand(CommandWrapper cmdWrapper) {
+        CommandWrapper nextCmd;
         Game.GameState prevGameState = match.getCurrentState();
-        Player prevPlayer = match.getCurrentPlayer();
 
-        Command nextCmd;
 
-        if(!filterCommandType(cmd)) return; //se comando diverso da atteso
+        if(!filterCommandType(cmdWrapper)) return; //command not expected
 
         try {
 
-            if (runCommand(cmd)) {
+            if (runCommand(cmdWrapper)) {
                 //command executed
                 if (prevGameState != match.getCurrentState()) {
                     //different state
-                    nextCmd = changedState(cmd, prevGameState);
+                    nextCmd = changedState(cmdWrapper, prevGameState);
                 } else {
                     //different player same state OR same player same state
-                    nextCmd = repeatCommand(cmd);
+                    nextCmd = repeatCommand();
                 }
-                sendUpdate(cmd);
+                sendUpdate(cmdWrapper);
             } else {
                 //command failed
-                nextCmd = repeatCommand(cmd);
+                nextCmd = lastSent;
             }
 
             sendNextCommand(nextCmd);
@@ -167,8 +168,11 @@ public class Controller {
 
         match.left(getPlayer(id));
 
+        //TODO: send notification for leave ?
+
         if(match.getCurrentState() == END)
-            sendNextCommand(new Command(Command.CType.WINNER.toInt(),false,SERVER_ID,match.getCurrentPlayer().getId()));
+            sendNextCommand(new CommandWrapper(CommandType.END_GAME,new EndGameCommand(CommandType.END_GAME.toInt(),false,SERVER_ID,match.getCurrentPlayer().getId(),true)));
+
     }
 
     // **********************************************************************************************
@@ -195,8 +199,8 @@ public class Controller {
      * @param cmd Command to be checked
      * @return true if cmd type is valid
      */
-    private boolean filterCommandType(Command cmd){
-        if(match.getCurrentState() != Game.GameState.WAIT && cmd.getType() == Command.CType.START) return false;
+    private boolean filterCommandType(CommandWrapper cmd){
+        if(match.getCurrentState() != Game.GameState.WAIT && cmd.getType() == CommandType.START) return false;
 
         return lastSent == null || lastSent.getType() == cmd.getType();
     }
@@ -208,26 +212,33 @@ public class Controller {
      * @return false if a command execution failed
      * @throws NotAllowedOperationException if a not allowed command is run, it's not sender turn
      */
-    private boolean runCommand(Command cmd) throws NotAllowedOperationException {
-        Player p = getPlayer(cmd.getSender());
+    private boolean runCommand(CommandWrapper cmd) throws NotAllowedOperationException {
+        BaseCommand baseCommand = cmd.getCommand(BaseCommand.class);
+        Player p = getPlayer(baseCommand.getSender());
+        nextPlayer = baseCommand.getSender();
 
         switch (cmd.getType()) {
             case START:
                 return match.start(p);
             case FILTER_GODS:
-                return match.applyGodFilter(p, cmd.getIntData());
+                FilterGodCommand filterGodCommand = cmd.getCommand(FilterGodCommand.class);
+                return match.applyGodFilter(p, filterGodCommand.getGodID());
             case PICK_GOD:
-                return match.selectGod(p, cmd.getIntData()[0]);
+                PickGodCommand pickGodCommand = cmd.getCommand(PickGodCommand.class);
+                return match.selectGod(p, pickGodCommand.getGodID()[0]);
             case SELECT_FIRST_PLAYER:
-                return match.selectFirstPlayer(p, getPlayer(cmd.getIntData()[0]));
+                FirstPlayerPickCommand firstPlayerPickCommand = cmd.getCommand(FirstPlayerPickCommand.class);
+                return match.selectFirstPlayer(p, getPlayer(firstPlayerPickCommand.getPlayersID()[0]));
             case PLACE_WORKERS:
-                return match.placeWorkers(p, cmd.getV2Data());
+                WorkerPlaceCommand workerPlaceCommand = cmd.getCommand(WorkerPlaceCommand.class);
+                return match.placeWorkers(p, workerPlaceCommand.getPositions());
             case ACTION_TIME:{
-                int res = match.executeAction(p, cmd.getIntData()[0], cmd.getIntData()[1], cmd.getV2Data()[0]);
+                ActionCommand actionCommand = cmd.getCommand(ActionCommand.class);
+                int res = match.executeAction(p, actionCommand.getIdWorkerNMove()[0], actionCommand.getIdWorkerNMove()[1], actionCommand.getAvaialablePos()[0]);
                 if(res>0)
                     return true;
                 else if(res == 0) {
-                    metLoseCondition(cmd.getSender());
+                    metLoseCondition(actionCommand.getSender());
                     return true;
                 }else
                     return false;
@@ -240,32 +251,33 @@ public class Controller {
 
     /**
      * Method called when Game.State changed after a run command
-     * create the next command
-     * @param cmd command already executed
+     * create the next command based on game sequencing
+     * @param cmdWrapper command already executed
      * @param previousGameState Game.State before the command execution
      * @return new command to be Sent
      */
-    private Command changedState(Command cmd, Game.GameState previousGameState) {
+    private CommandWrapper changedState(CommandWrapper cmdWrapper, Game.GameState previousGameState) {
 
         switch (previousGameState) {
             case WAIT:
-                return new Command(Command.CType.FILTER_GODS.toInt(), true,SERVER_ID, match.getCurrentPlayer().getId());
+                //virtualProxy.SendBroadcast(new CommandWrapper(CommandType.START,new StartCommand(CommandType.START.toInt(),false,BROADCAST_ID,SERVER_ID,idsToArray()))) ;
+                return new CommandWrapper(CommandType.FILTER_GODS, new FilterGodCommand(CommandType.FILTER_GODS.toInt(), true,SERVER_ID, match.getCurrentPlayer().getId()));
             case GOD_FILTER:
-                return new Command(Command.CType.PICK_GOD.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), match.getAllowedCardIDs());
+                return new CommandWrapper(CommandType.PICK_GOD,new PickGodCommand(CommandType.PICK_GOD.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), match.getAllowedCardIDs()));
             case GOD_PICK:
                 int[] ids = idsToArray();
                 String[] usernames = usernamesToArray();
-                return new Command(Command.CType.SELECT_FIRST_PLAYER.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), ids, usernames);
+                return new CommandWrapper(CommandType.SELECT_FIRST_PLAYER,new FirstPlayerPickCommand(CommandType.SELECT_FIRST_PLAYER.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), ids, usernames));
             case FIRST_PLAYER_PICK:
                 Vector2[] pos = match.getCurrentMap().cellWithoutWorkers().toArray(new Vector2[0]);
-                return new Command(Command.CType.PLACE_WORKERS.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), pos);
+                return new CommandWrapper(CommandType.PLACE_WORKERS,new WorkerPlaceCommand(CommandType.PLACE_WORKERS.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), pos));
             case WORKER_PLACE:
                 String[] actionName = actionNameToArray(match.getNextActions(match.getCurrentPlayer()));
                 int[] idWorkerNMove = idWorkerNMoveToArray(match.getNextActions(match.getCurrentPlayer()));
                 Vector2[] availablePosPerAction = availablePosToArray(match.getNextActions(match.getCurrentPlayer()));
-                return new Command(Command.CType.ACTION_TIME.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(),idWorkerNMove,availablePosPerAction,actionName);
+                return new CommandWrapper(CommandType.ACTION_TIME, new ActionCommand(CommandType.ACTION_TIME.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(),idWorkerNMove,availablePosPerAction,actionName));
             case GAME:
-                return new Command(Command.CType.WINNER.toInt(),false,SERVER_ID,match.getCurrentPlayer().getId());
+                return new CommandWrapper(CommandType.END_GAME, new EndGameCommand(CommandType.END_GAME.toInt(),false,SERVER_ID,match.getCurrentPlayer().getId(),true));
         }
 
         return null; //never here
@@ -273,31 +285,29 @@ public class Controller {
 
     /**
      * Method called if state or player are not changed after a run command
-     * create the next command
-     * @param cmd command just runned
+     * create the next command baseod on Current State of game and Current Player of game
      * @return new command to be Sent
      */
-    private Command repeatCommand(Command cmd) {
-        //if it's GAME then send next possible actions (should send with starting worker chose)
+    private CommandWrapper repeatCommand() {
         switch (match.getCurrentState()) {
             case WAIT:
                 return null; //start failed then don't send a command back
             case GOD_FILTER:
-                return new Command(cmd.getType().toInt(),true,SERVER_ID,cmd.getSender());
+                return new CommandWrapper(CommandType.FILTER_GODS, new FilterGodCommand(CommandType.FILTER_GODS.toInt(),true,SERVER_ID,match.getCurrentPlayer().getId()));
             case GOD_PICK:
-                return new Command(cmd.getType().toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), match.getAllowedCardIDs());
+                return new CommandWrapper(CommandType.PICK_GOD, new PickGodCommand(CommandType.PICK_GOD.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), match.getAllowedCardIDs()));
             case FIRST_PLAYER_PICK:
                 int[] ids = idsToArray();
                 String[] usernames = usernamesToArray();
-                return new Command(Command.CType.SELECT_FIRST_PLAYER.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), ids, usernames);
+                return new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(CommandType.SELECT_FIRST_PLAYER.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(), ids, usernames));
             case WORKER_PLACE:
                 Vector2[] pos = match.getCurrentMap().cellWithoutWorkers().toArray(new Vector2[0]);
-                return new Command(Command.CType.PLACE_WORKERS.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(),pos);
+                return new CommandWrapper(CommandType.PLACE_WORKERS, new WorkerPlaceCommand(CommandType.PLACE_WORKERS.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(),pos));
             case GAME:
                 String[] actionName = actionNameToArray(match.getNextActions(match.getCurrentPlayer()));
                 int[] idWorkerNMove = idWorkerNMoveToArray(match.getNextActions(match.getCurrentPlayer()));
                 Vector2[] availablePosPerAction = availablePosToArray(match.getNextActions(match.getCurrentPlayer()));
-                return new Command(Command.CType.ACTION_TIME.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(),idWorkerNMove,availablePosPerAction,actionName);
+                return new CommandWrapper(CommandType.ACTION_TIME, new ActionCommand(CommandType.ACTION_TIME.toInt(), true, SERVER_ID, match.getCurrentPlayer().getId(),idWorkerNMove,availablePosPerAction,actionName));
         }
         return null;
     }
@@ -305,17 +315,12 @@ public class Controller {
     /**
      * Create and send a command with correct information for acknowledgment
      * @param cmd JOIN command received
-     * @param correctJoin true if player joined the game
+     * @param successfulJoining true if player joined the game, false if player could't join
      */
-    private void ackJoin(Command cmd, Boolean correctJoin){
+    private void ackJoin(JoinCommand cmd, Boolean successfulJoining){
         int id = cmd.getSender();
-        if(correctJoin){
-            Command next = new Command(Command.CType.ACK_JOIN.toInt(),false, cmd.getTarget(), cmd.getSender(),id);
-            //virtualProxy.Send(id,next);
-        }else{
-            Command next = new Command(Command.CType.ACK_JOIN.toInt(),false,cmd.getTarget(),cmd.getSender(),-id);
-            //virtualProxy.Send(id,next);
-        }
+        CommandWrapper next = new CommandWrapper(CommandType.JOIN,new JoinCommand(CommandType.JOIN.toInt(),false, cmd.getTarget(), cmd.getSender(),successfulJoining));
+        //virtualProxy.Send(id,next);
     }
 
     /**
@@ -412,10 +417,10 @@ public class Controller {
      *  LENGTH * HEIGHT element represent map values
      *  the rest are pairs of (id owner, id worker)
      * Every Vector2 is corrispondent to a pai of (id owner, id worker)
-     * @param lastCommand
+     * @param lastCommand last command received
      */
-    private void sendUpdate(Command lastCommand){
-        if(lastCommand.getType() == Command.CType.PLACE_WORKERS || lastCommand.getType() == Command.CType.ACTION_TIME) {
+    private void sendUpdate(CommandWrapper lastCommand){
+        if(lastCommand.getType() == CommandType.PLACE_WORKERS || lastCommand.getType() == CommandType.ACTION_TIME) {
             Map map = match.getCurrentMap();
 
             int[] intMap = new int[(HEIGHT * LENGTH)+(map.getWorkers().size()*2)];
@@ -435,29 +440,31 @@ public class Controller {
             for(int i=0; i<map.getWorkers().size();i++)
                 vector[i] = map.getWorkers().get(i).getPosition();
 
-            Command next = new Command(Command.CType.UPDATE.toInt(), false, SERVER_ID, BROADCAST_ID, intMap,vector);
+
+            CommandWrapper next = new CommandWrapper(CommandType.UPDATE, new UpdateCommand(CommandType.UPDATE.toInt(), false, SERVER_ID, BROADCAST_ID, intMap,vector));
             //virtualProxy.SendBroadcast(next);
         }
     }
 
     /**
      * invoke this if a player met a lose condition
-     * send a loser update command
+     * send a command for defeat update
      * @param player loser player
      */
     private void metLoseCondition(int player){
-        Command cmd = new Command(Command.CType.LOSER.toInt(),false,lastSent.getSender(),player);
+
+        CommandWrapper cmd = new CommandWrapper(CommandType.END_GAME,new EndGameCommand(CommandType.END_GAME.toInt(),false,SERVER_ID,player,false));
         //virtualProxy.Send(player,cmd);
     }
 
     /**
      * send a command
-     * @param cmd next command to send
+     * @param cmdWrap next command to send
      */
-    private void sendNextCommand(Command cmd){
-        if(cmd != null){
-            lastSent = cmd;
-            //virtualProxy.Send(cmd.getTarget(),cmd);
+    private void sendNextCommand(CommandWrapper cmdWrap){
+        if(cmdWrap != null){
+            lastSent = cmdWrap;
+            //virtualProxy.Send(nextPlayer,cmd);
         }
     }
 }

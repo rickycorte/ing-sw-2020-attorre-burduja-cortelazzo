@@ -10,9 +10,9 @@ public class CommandWrapper implements INetworkSerializable
 {
     CommandType type;
     String data;
-    transient Command cachedCommand; // this field must no be sent
+    transient BaseCommand cachedCommand; // this field must no be sent
 
-    public CommandWrapper(CommandType type, Command command)
+    public CommandWrapper(CommandType type, BaseCommand command)
     {
         this.type = type;
         this.cachedCommand = command;
@@ -34,7 +34,7 @@ public class CommandWrapper implements INetworkSerializable
      * @param <T> expected command type
      * @return parsed command with required type if parse is successfull
      */
-    public <T extends Command> T getCommand(Class<T> type)
+    public <T extends BaseCommand> T getCommand(Class<T> type)
     {
         if(cachedCommand != null)
         {

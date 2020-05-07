@@ -9,6 +9,7 @@ public class Map
 {
     private static final int HEIGHT = 7;
     private static final int LENGTH = 7;
+    private static final int MAP_VALUE = 128;
 
     private int[][] map = new int[HEIGHT][LENGTH];
 
@@ -65,7 +66,7 @@ public class Map
             map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
 
             if (getLevel(pos) == 4)
-                map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + 128;
+                map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + MAP_VALUE;
 
             return true;
         }
@@ -83,7 +84,7 @@ public class Map
         if(isInsideMap(pos) && !isCellDome(pos))
         {
             map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
-            map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + 128;
+            map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + MAP_VALUE;
             return true;
         }
 
@@ -107,7 +108,7 @@ public class Map
      * @return true if dome, false if is not in map or is not dome
      */
     public boolean isCellDome (Vector2 pos){
-        if(isInsideMap(pos)) return map[pos.getX()][pos.getY()] > 128;
+        if(isInsideMap(pos)) return map[pos.getX()][pos.getY()] > MAP_VALUE;
         return false;
     }
 
