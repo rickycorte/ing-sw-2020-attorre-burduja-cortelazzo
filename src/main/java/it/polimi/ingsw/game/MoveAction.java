@@ -78,7 +78,7 @@ public class MoveAction extends Action {
     protected Vector2 calculatePushPos(Worker w, Vector2 target)
     {
         int x = target.getX() + (target.getX() - w.getPosition().getX());
-        int y = target.getY() + (target.getY() - w.getPosition().getX());
+        int y = target.getY() + (target.getY() - w.getPosition().getY());
         return new Vector2(x, y);
     }
 

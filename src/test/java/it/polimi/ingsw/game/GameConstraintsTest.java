@@ -27,14 +27,43 @@ class GameConstraintsTest
     }
 
     @Test
+    void shouldDisableNoneConstraintIfSomethingIsSet()
+    {
+        // nothing set -> NONE is true
+        assertTrue(c.check(GameConstraints.Constraint.NONE));
+
+        c.add(GameConstraints.Constraint.TEST);
+
+        // something is set NONE is false
+        assertFalse(c.check(GameConstraints.Constraint.NONE));
+    }
+
+    @Test
     void shouldAddAConstraint()
     {
         c.add(GameConstraints.Constraint.TEST);
 
         c.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
-        c.add(GameConstraints.Constraint.BLOCK_MOVE_UP); // also check double set
 
-        assertTrue(c.check(GameConstraints.Constraint.NONE) == false && c.check(GameConstraints.Constraint.BLOCK_MOVE_UP) );
+        assertTrue(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP) );
+    }
+
+    @Test
+    void shouldAddMultipleTimesTheSameConstraintOnlySetOnce()
+    {
+        c.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
+        c.add(GameConstraints.Constraint.BLOCK_MOVE_UP); // also check double set
+        assertTrue(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP) );
+
+        c.add(GameConstraints.Constraint.BLOCK_MOVE_UP); // triple set
+        assertTrue(c.check(GameConstraints.Constraint.BLOCK_MOVE_UP) );
+    }
+
+    @Test
+    void shouldAddAGroupOfConstraints()
+    {
+        c.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
+        c.add(GameConstraints.Constraint.TEST);
 
         //add a group of constrains
         GameConstraints t2 = new GameConstraints();
@@ -49,9 +78,26 @@ class GameConstraintsTest
         c.add(GameConstraints.Constraint.TEST);
         c.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
         c.remove(GameConstraints.Constraint.TEST);
-        c.remove(GameConstraints.Constraint.TEST); // also check double remove
 
-        assertFalse(c.check(GameConstraints.Constraint.TEST));
+        // only affect selected constraint
+        assertFalse(c.check(GameConstraints.Constraint.TEST) && c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
+    }
+
+    @Test
+    void shouldRemoveMultipleTimesTheSameConstraintOnlyDisableOnce()
+    {
+        c.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
+        c.add(GameConstraints.Constraint.TEST);
+
+        //double remove
+        c.remove(GameConstraints.Constraint.TEST);
+        c.remove(GameConstraints.Constraint.TEST);
+        assertFalse(c.check(GameConstraints.Constraint.TEST) && c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
+
+        // triple
+        c.remove(GameConstraints.Constraint.TEST);
+        assertFalse(c.check(GameConstraints.Constraint.TEST) && c.check(GameConstraints.Constraint.BLOCK_MOVE_UP));
+
     }
 
     @Test

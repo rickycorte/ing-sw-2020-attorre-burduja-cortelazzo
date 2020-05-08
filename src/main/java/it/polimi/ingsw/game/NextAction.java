@@ -17,9 +17,23 @@ public class NextAction {
         this.available_position.addAll(node.getAction().possibleCells(w,m,constraints));
     }
 
+    /**
+     * Return the action name
+     * @return the action name
+     */
     public String getActionName() {
         return this.actionName;
     }
+
+    /**
+     * Return a valid list of position where this move can be applied
+     * @return valid list of cells
+     */
     public ArrayList<Vector2> getAvailable_position(){ return this.available_position; }
+
+    /**
+     * Return the worker id that must be used to run this move
+     * @return worker id
+     */
     public int getWorker() { return worker; }
 }

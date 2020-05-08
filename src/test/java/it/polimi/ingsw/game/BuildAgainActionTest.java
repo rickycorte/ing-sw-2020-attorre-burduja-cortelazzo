@@ -3,8 +3,6 @@ package it.polimi.ingsw.game;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BuildAgainActionTest {
@@ -49,6 +47,9 @@ public class BuildAgainActionTest {
         05 |--|--|--|--|--|--|--|
         06 |--|--|--|--|--|--|--|
 
+        All later tests are based on this map, it's recommend to draw a copy on the paper
+        to easily follow the moves and the checks done
+
      */
 
 
@@ -86,6 +87,30 @@ public class BuildAgainActionTest {
         m.setWorkers(p2);
     }
 
+    @Test
+    void shouldDisplayConstraintInName()
+    {
+        buildAction = new BuildAgainAction(GameConstraints.Constraint.BLOCK_DOME_BUILD);
+        assertTrue(buildAction.displayName().contains(GameConstraints.Constraint.BLOCK_DOME_BUILD.toString()));
+
+        // alias parameter 1
+        buildAction = new BuildAgainAction(GameConstraints.Constraint.BLOCK_DOME_BUILD, GameConstraints.Constraint.NONE);
+        assertTrue(buildAction.displayName().contains(GameConstraints.Constraint.BLOCK_DOME_BUILD.toString()));
+        assertFalse(buildAction.displayName().contains(GameConstraints.Constraint.NONE.toString()));
+
+        // alias parameter 2
+        buildAction = new BuildAgainAction( GameConstraints.Constraint.NONE, GameConstraints.Constraint.BLOCK_DOME_BUILD);
+        assertTrue(buildAction.displayName().contains(GameConstraints.Constraint.BLOCK_DOME_BUILD.toString()));
+        assertFalse(buildAction.displayName().contains(GameConstraints.Constraint.NONE.toString()));
+    }
+
+    @Test
+    void shouldDisplayBothConstraintInName()
+    {
+        buildAction = new BuildAgainAction( GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD, GameConstraints.Constraint.BLOCK_DOME_BUILD);
+        assertTrue(buildAction.displayName().contains(GameConstraints.Constraint.BLOCK_DOME_BUILD.toString()));
+        assertTrue(buildAction.displayName().contains(GameConstraints.Constraint.BLOCK_SAME_CELL_BUILD.toString()));
+    }
 
     @Test
     void shouldNotBuildDomeIfLocked()
@@ -94,6 +119,7 @@ public class BuildAgainActionTest {
 
         assertFalse(buildAction.possibleCells(w1p1, m, gc).contains(new Vector2(0,3)));
 
+        //test different places
         assertThrows(NotAllowedMoveException.class, ()-> { buildAction.run(w1p1, new Vector2(0,3), m, gc); });
         assertThrows(NotAllowedMoveException.class, ()-> { buildAction.run(w1p1, new Vector2(1,2), m, gc); });
     }
@@ -113,7 +139,8 @@ public class BuildAgainActionTest {
             assertEquals(0, buildAction.run(w1p1, new Vector2(2,2) , m, gc) );
             assertEquals(1, m.getLevel(new Vector2(2,2)));
 
-        }catch (NotAllowedMoveException e)
+        }
+        catch (NotAllowedMoveException e)
         {
             fail("Correct build should not throw any exception");
         }

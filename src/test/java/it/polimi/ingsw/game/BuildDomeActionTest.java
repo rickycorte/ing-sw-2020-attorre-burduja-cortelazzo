@@ -47,6 +47,9 @@ class BuildDomeActionTest
         05 |--|--|--|--|--|--|--|
         06 |--|--|--|--|--|--|--|
 
+        All later tests are based on this map, it's recommend to draw a copy on the paper
+        to easily follow the moves and the checks done
+
      */
 
 
@@ -105,7 +108,8 @@ class BuildDomeActionTest
             assertEquals(0, buildAction.run(w1p1, new Vector2(0,4) , m, gc) );
             assertTrue(m.isCellDome(new Vector2(0,4)));
 
-        }catch (NotAllowedMoveException e)
+        }
+        catch (NotAllowedMoveException e)
         {
             fail("Correct build should not throw any exception");
         }

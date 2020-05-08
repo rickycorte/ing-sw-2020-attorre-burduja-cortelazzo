@@ -33,7 +33,9 @@ class BehaviourGraphTest
         }
 
         public ArrayList<Vector2> possibleCells(Worker w, Map m, GameConstraints gc) {
-            return null;
+            var list = new ArrayList<Vector2>();
+            list.add(new Vector2(0,0));
+            return list;
         }
     }
 
@@ -51,6 +53,8 @@ class BehaviourGraphTest
             return null;
         }
     }
+
+    //**********************************************************************************************************************************************************************
 
     BehaviourGraph testSeq;
 
@@ -87,12 +91,16 @@ class BehaviourGraphTest
     }
 
     @Test
-    void shouldSelectActionAndRun()
+    void shouldThrowWithBrokenSelectionIndex()
     {
         assertThrows(OutOfGraphException.class, () -> {testSeq.selectAction(-1);});
         assertThrows(OutOfGraphException.class, () -> {testSeq.selectAction(2);});
         assertThrows(OutOfGraphException.class, () -> {testSeq.selectAction(18);});
+    }
 
+    @Test
+    void shouldSelectActionAndRun()
+    {
         try
         {
             GameConstraints c = new GameConstraints();
@@ -144,113 +152,66 @@ class BehaviourGraphTest
     }
 
 
-    String getActionName(BehaviourGraph g, int id) throws OutOfGraphException
+    // for next action tests
+    // the test are good because all actions are used only from their base class interface
+    // so an action or another its fine as the are able to pass their own tests
+
+    // helper to keep test code clean
+    // return the name of the action located in the node id in the branch of graph g
+    String getActionName(BehaviourGraph g, int id)
     {
-        return  g.getBehaviourNode().getNextNode(id).getAction().displayName();
+        try
+        {
+
+            return g.getBehaviourNode().getNextNode(id).getAction().displayName();
+        }
+        catch (OutOfGraphException e)
+        {
+            return null; // break tests :3
+        }
+    }
+
+
+    @Test
+    void shouldReturnNextActionsWithOneChild()
+    {
+        Worker w1 = new Worker(0, null, null);
+        // we use directly text action to get a copy of allowed moves because its fixed (see implementation at the beginning)
+        TestAction ta = new TestAction();
+
+        var actions = testSeq.getNextActions(w1, null, null);
+        assertEquals(1, actions.size());
+        assertEquals(getActionName(testSeq,0), actions.get(0).getActionName());
+        assertEquals(ta.possibleCells(null,null, null), actions.get(0).getAvailable_position());
     }
 
     @Test
-    void testNextActions() throws OutOfGraphException {
-        Player p = new Player(0, "first");
-        Worker w1 = new Worker(p);
-        Worker w2 = new Worker(p);
-        Map map = new Map();
-        GameConstraints c = new GameConstraints();
-        Vector2 posw1 = new Vector2(1,1);
-        Vector2 posw2 = new Vector2(1,2);
+    void shouldReturnNextActionsWithMoreBranches()
+    {
+        Worker w1 = new Worker(0, null, null);
 
-        map.readMapOut("map.bin");
+        // we use directly text action to get a copy of allowed moves because its fixed (see implementation at the beginning)
+        TestAction ta = new TestAction();
 
-        w1.setPosition(posw1);
-        p.addWorker(w1);
-        w2.setPosition(posw2);
-        p.addWorker(w2);
+        testSeq.appendSubGraph(BehaviourNode.makeRootNode(new TestAction()))
+                .appendSubGraph(BehaviourNode.makeRootNode(new TestAction())); // 3 branches
 
-        map.setWorkers(p);
-
-        BehaviourGraph testInitOR = BehaviourGraph.makeEmptyGraph().appendSubGraph(
-                BehaviourNode.makeRootNode(new MoveAction())
-                        .addBranch(new BuildAction())
-                        .addBranch(new MoveAction())
-                        .getRoot()
-        ).appendSubGraph(
-                BehaviourNode.makeRootNode(new BuildAction())
-                        .addBranch(new BuildAgainAction())
-                        .getRoot()
-        );
-        testInitOR.resetExecutionStatus();
-        ArrayList<NextAction> nextActions = new ArrayList<>(testInitOR.getNextActions(w1, map, c)) ;
-
-        assertEquals(2 , nextActions.size());
-        assertEquals(getActionName(testInitOR,0), (nextActions.get(0)).getActionName());
-        assertEquals(getActionName(testInitOR,1),(nextActions.get(1)).getActionName());
-
-        testInitOR.selectAction(0);
-        nextActions.clear();
-        nextActions = testInitOR.getNextActions(w1,map,c);
-        assertEquals(2 , nextActions.size());
-        assertEquals(getActionName(testInitOR,0), nextActions.get(0).getActionName());
-        assertEquals(getActionName(testInitOR,1), nextActions.get(1).getActionName());
-
-        testInitOR.resetExecutionStatus();
-        testInitOR.selectAction(1);
-        nextActions.clear();
-        nextActions = testInitOR.getNextActions(w1,map,c);
-        assertEquals(1, nextActions.size());
-        assertEquals(getActionName(testInitOR,0),nextActions.get(0).getActionName());
-        //
-
-
-        BehaviourGraph test = BehaviourGraph.makeEmptyGraph().appendSubGraph(
-                BehaviourNode.makeRootNode(new MoveAction())
-                        .addBranch(new BuildAction())
-                        .addBranch(new MoveAction())
-                        .getRoot()
-        );
-        test.resetExecutionStatus();
-        ArrayList<NextAction> nextActions2 = test.getNextActions(w1, map, c);
-
-        assertEquals(1,nextActions2.size());
-        assertEquals(getActionName(test,0),nextActions2.get(0).getActionName());
-
-        test.selectAction(0);
-        nextActions2.clear();
-        nextActions2 = test.getNextActions(w1,map,c);
-
-        assertEquals(2, nextActions2.size());
-        assertEquals(getActionName(test,0),nextActions2.get(0).getActionName());
-        assertEquals(getActionName(test,1), nextActions2.get(1).getActionName());
+        var actions = testSeq.getNextActions(w1, null, null);
+        assertEquals(3, actions.size());
 
 
 
-        BehaviourGraph testMiddleOr = BehaviourGraph.makeEmptyGraph().appendSubGraph(
-                BehaviourNode.makeRootNode(new MoveAction())
-                        .addBranch(new BuildAction())
-                        .addBranch(new MoveAction())
-                        .mergeBranches(new MoveAction())
-                        .getRoot()
-        );
+        //check all branches
+        assertEquals(getActionName(testSeq,0), actions.get(0).getActionName());
+        assertEquals(ta.possibleCells(null,null, null), actions.get(0).getAvailable_position());
 
-        nextActions = testMiddleOr.getNextActions(w1,map,c);
+        assertEquals(getActionName(testSeq,1), actions.get(1).getActionName());
+        assertEquals(ta.possibleCells(null,null, null), actions.get(1).getAvailable_position());
 
-        assertEquals(1,nextActions.size());
-        assertEquals(getActionName(testMiddleOr,0),nextActions.get(0).getActionName());
-
-        nextActions.clear();
-        testMiddleOr.selectAction(0);
-        nextActions = testMiddleOr.getNextActions(w1,map,c);
-        assertEquals(2,nextActions.size());
-        assertEquals(getActionName(testMiddleOr,0), nextActions.get(0).getActionName());
-        assertEquals(getActionName(testMiddleOr,1),nextActions.get(1).getActionName());
-
-        nextActions.clear();
-        testMiddleOr.selectAction(0);
-        nextActions = testMiddleOr.getNextActions(w1,map,c);
-        assertEquals(1,nextActions.size());
-        assertEquals(getActionName(testMiddleOr,0),nextActions.get(0).getActionName());
+        assertEquals(getActionName(testSeq,2), actions.get(2).getActionName());
+        assertEquals(ta.possibleCells(null,null, null), actions.get(2).getAvailable_position());
 
     }
-
 
     @Test
     void shouldNotMoveForwardOnActionError()
@@ -263,7 +224,8 @@ class BehaviourGraphTest
         try{
             graph.selectAction(0);
             graph.runSelectedAction(null, null, null, null);
-        }catch (OutOfGraphException e)
+        }
+        catch (OutOfGraphException e)
         {
             fail("Unexpected exception");
         }
@@ -289,7 +251,8 @@ class BehaviourGraphTest
             graph.selectAction(0);
             assertEquals(309217, graph.runSelectedAction(null, null, null, null));
 
-        }catch (OutOfGraphException e)
+        }
+        catch (OutOfGraphException e)
         {
             fail("Unexpected out of graph");
         }

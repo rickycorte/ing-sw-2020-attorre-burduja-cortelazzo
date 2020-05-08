@@ -5,17 +5,10 @@ package it.polimi.ingsw.game;
  */
 public class BuildDomeAction extends BuildAction {
 
-    BuildDomeAction(GameConstraints.Constraint localConstrains)
-    {
-        this.localConstrains = new GameConstraints();
-        this.localConstrains.add(localConstrains);
-        displayName = "Build Dome";
-        if(localConstrains != GameConstraints.Constraint.NONE)
-            displayName += " ("+ localConstrains.toString() + ")";
-    }
-
     public BuildDomeAction() {
-        this(GameConstraints.Constraint.NONE);
+
+        this.localConstrains = new GameConstraints();
+        displayName = "Build Dome";
     }
 
 

@@ -26,6 +26,7 @@ public class Worker
 
 
     /**
+     * Get the current worker position
      * @return current worker position
      */
     public Vector2 getPosition() {
@@ -33,6 +34,7 @@ public class Worker
     }
 
     /**
+     * Get the owner of this worker
      * @return player that owns this worker
      */
     public Player getOwner() {
@@ -40,6 +42,7 @@ public class Worker
     }
 
     /**
+     * Set the worker position
      * @param pos move a worker into a new position
      */
     public void setPosition(Vector2 pos){
@@ -47,6 +50,7 @@ public class Worker
     }
 
     /**
+     * Return the worker id
      * @return worker id relative to
      */
     public int getId() {
@@ -60,6 +64,7 @@ public class Worker
     public void setOwner(Player owner) { this.owner = owner; }
 
     /**
+     * Return the last position where this worker was located
      * @return return last worker position, null if no move has been done
      */
     public Vector2 getLastLocation()
@@ -77,7 +82,8 @@ public class Worker
     }
 
     /**
-     * @return get last position where a worker build something, null if no build has been done
+     * Return the last position where this worker built something
+     * @return get last position where this worker built something, null if no build has been done
      */
     public Vector2 getLastBuildLocation()
     {
@@ -107,17 +113,6 @@ public class Worker
         return id == worker.id &&
                 owner.equals(worker.owner) &&
                position.equals(worker.position);
-    }
-
-
-    /**
-     * Clear last locations for this worker
-     * Locations should be cleared at the beginning of the turn
-     */
-    public void clearLastLocations()
-    {
-        lastBuildLocation = null;
-        lastLocation = null;
     }
 
 }

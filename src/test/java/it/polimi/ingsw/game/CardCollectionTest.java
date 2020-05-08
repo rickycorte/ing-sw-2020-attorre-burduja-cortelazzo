@@ -1,13 +1,8 @@
 package it.polimi.ingsw.game;
 
-import it.polimi.ingsw.game.Card;
-import it.polimi.ingsw.game.CardCollection;
-import it.polimi.ingsw.game.CardNotExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,14 +18,14 @@ public class CardCollectionTest {
     }
 
     @Test
-    public void shouldHasThreeOrMoreCards(){
+    public void shouldHaveThreeOrMoreCards(){
         // min is 3 cards, 1 for every player
         assertTrue(coll.getCardIDs().length >= 3);
         assertEquals(coll.size(), coll.getCardIDs().length);
     }
 
     @Test
-    public void shouldReturnCorrectCard(){
+    public void shouldReturnCorrectCardForEveryID(){
 
         int[] ids = coll.getCardIDs();
         for(int id : ids){
@@ -41,7 +36,8 @@ public class CardCollectionTest {
                 assertNotEquals(null, c.getName());
                 assertNotEquals("", c.getName());
                 assertNotEquals(null, c.getGraph());
-            } catch (CardNotExistsException e)
+            }
+            catch (CardNotExistsException e)
             {
                 fail("getCardsID returned an invalid id");
             }
@@ -49,7 +45,7 @@ public class CardCollectionTest {
     }
 
     @Test
-    void shouldHaveNoDuplicateId() {
+    void shouldHaveNoDuplicateID() {
         int[] ids = coll.getCardIDs();
 
         boolean[] bitmap = new boolean[ids.length +1];
@@ -86,7 +82,7 @@ public class CardCollectionTest {
     }
 
     @Test
-    void shouldThowOnWrongID(){
+    void shouldThrowOnWrongID(){
         //single card
         assertThrows(CardNotExistsException.class, ()-> { coll.getCard(-100); });
         assertThrows(CardNotExistsException.class, ()-> { coll.getCard(1000000); });

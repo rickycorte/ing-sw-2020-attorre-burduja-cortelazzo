@@ -35,11 +35,6 @@ class BehaviourNodeTest
         BehaviourNode innerNode = BehaviourNode.makeRootNode(m2);
         n.addBranch(m1).addBranch(innerNode).addBranch(m3);
 
-        // check out of range
-        assertThrows(OutOfGraphException.class, () -> n.getNextNode(-1));
-        assertThrows(OutOfGraphException.class, () -> n.getNextNode(3));
-        assertThrows(OutOfGraphException.class, () -> n.getNextNode(10));
-
         //check real values
         try
         {
@@ -51,6 +46,20 @@ class BehaviourNodeTest
             // already tested exception we should not reach here
             fail("Unexpected exception: "+ e.getClass().toString() + " - " + e.getMessage());
         }
+    }
+
+    @Test
+    void shouldThrowWithBadIndex()
+    {
+        BehaviourNode n = BehaviourNode.makeRootNode(null);
+        MoveAction m1 = new MoveAction(), m2 = new MoveAction(), m3 = new MoveAction();
+        BehaviourNode innerNode = BehaviourNode.makeRootNode(m2);
+        n.addBranch(m1).addBranch(innerNode).addBranch(m3);
+
+        // check out of range
+        assertThrows(OutOfGraphException.class, () -> n.getNextNode(-1));
+        assertThrows(OutOfGraphException.class, () -> n.getNextNode(3));
+        assertThrows(OutOfGraphException.class, () -> n.getNextNode(10));
     }
 
     @Test

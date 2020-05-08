@@ -9,17 +9,10 @@ public class BuildAction extends Action
 {
     GameConstraints localConstrains;
 
-    BuildAction(GameConstraints.Constraint localConstrains)
-    {
-        this.localConstrains = new GameConstraints();
-        this.localConstrains.add(localConstrains);
-        displayName = "Build";
-        if(localConstrains != GameConstraints.Constraint.NONE)
-            displayName += " ("+localConstrains.toString()+")";
-    }
-
     public BuildAction() {
-        this(GameConstraints.Constraint.NONE);
+
+        this.localConstrains = new GameConstraints();
+        displayName = "Build";
     }
 
 

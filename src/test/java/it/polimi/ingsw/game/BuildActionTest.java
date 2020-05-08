@@ -3,8 +3,6 @@ package it.polimi.ingsw.game;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BuildActionTest {
@@ -49,6 +47,9 @@ public class BuildActionTest {
         05 |--|--|--|--|--|--|--|
         06 |--|--|--|--|--|--|--|
 
+        All later tests are based on this map, it's recommend to draw a copy on the paper
+        to easily follow the moves and the checks done
+
      */
 
 
@@ -88,7 +89,7 @@ public class BuildActionTest {
     }
 
     @Test
-    void shouldReturnCorrectAllowedCellsNoConstraints()
+    void shouldReturnAllowedCellsNoConstraints()
     {
         var cells = buildAction.possibleCells(w1p1,m, gc);
         assertEquals(5, cells.size());
@@ -97,9 +98,13 @@ public class BuildActionTest {
         assertTrue(cells.contains(new Vector2(1,4)));
         assertTrue(cells.contains(new Vector2(2,2)));
         assertTrue(cells.contains(new Vector2(2,3)));
+    }
 
-        // check with border
-        cells = buildAction.possibleCells(w1p2,m, gc);
+
+    @Test
+    void shouldReturnAllowedCellsOnBorderNoConstraints()
+    {
+        var cells = buildAction.possibleCells(w1p2,m, gc);
         assertEquals(3, cells.size());
         assertTrue(cells.contains(new Vector2(0,2)));
         assertTrue(cells.contains(new Vector2(0,4)));
@@ -107,27 +112,36 @@ public class BuildActionTest {
     }
 
     @Test
-    void shouldNotBuildWithNoConstraint()
+    void shouldNotBuildFarCells()
     {
+        // a far cell is a cell that has 2+ distance from the worker
         assertThrows(NotAllowedMoveException.class,
-                () -> { buildAction.run(w1p1, new Vector2(0,3), m, gc); },
-                "Can't build a used cell");
-
-        assertThrows(NotAllowedMoveException.class,
-                () -> { buildAction.run(w1p1, new Vector2(1,2), m, gc); },
-                "Can't build on a dome");
-
-        assertThrows(NotAllowedMoveException.class,
-                () -> { buildAction.run(w1p1, new Vector2(-1,2), m, gc); },
-                "Can't build outside map");
-
-        assertThrows(NotAllowedMoveException.class,
-                () -> { buildAction.run(w1p1, new Vector2(0,1), m, gc); },
-                "Can't build far cells");
+                () -> { buildAction.run(w1p1, new Vector2(0,1), m, gc); });
     }
 
     @Test
-    void shouldBuildWithNoConstraint()
+    void shouldNotBuildOutsideMap()
+    {
+        assertThrows(NotAllowedMoveException.class,
+                () -> { buildAction.run(w1p1, new Vector2(-1,2), m, gc); });
+    }
+
+    @Test
+    void shouldNotBuildInUsedCell()
+    {
+        assertThrows(NotAllowedMoveException.class,
+                () -> { buildAction.run(w1p1, new Vector2(0,3), m, gc); });
+    }
+
+    @Test
+    void shouldNotBuildOnADome()
+    {
+        assertThrows(NotAllowedMoveException.class,
+                () -> { buildAction.run(w1p1, new Vector2(1,2), m, gc); });
+    }
+
+    @Test
+    void shouldBuildNewLevel()
     {
         try
         {
@@ -136,11 +150,22 @@ public class BuildActionTest {
             assertEquals(2, m.getLevel(pos));
             assertEquals(pos, w1p1.getLastBuildLocation());
             assertEquals(new Vector2(1,3),w1p1.getPosition());
+        }
+        catch (NotAllowedMoveException e)
+        {
+            fail("Correct build should not throw any exception");
+        }
+    }
 
-            // build dome
+    @Test
+    void shouldBuildDome()
+    {
+        try
+        {
             assertEquals(0, buildAction.run(w1p1, new Vector2(0,2) , m, gc));
             assertTrue(m.isCellDome(new Vector2(0,2)));
-        }catch (NotAllowedMoveException e)
+        }
+        catch (NotAllowedMoveException e)
         {
             fail("Correct build should not throw any exception");
         }
@@ -149,7 +174,9 @@ public class BuildActionTest {
     @Test
     void shouldLoseIfCantBuild()
     {
+        // place the worker in a corner
         w1p1.setPosition(new Vector2(0,0));
+        // build domes around it
         buildPos(m,0,1,4);
         buildPos(m,1,0,4);
         buildPos(m,1,1,4);
@@ -160,7 +187,8 @@ public class BuildActionTest {
         {
             Vector2 pos  = new Vector2(0,1);
             assertTrue(buildAction.run(w1p1, pos , m, gc) < 0);
-        }catch (NotAllowedMoveException e)
+        }
+        catch (NotAllowedMoveException e)
         {
             fail("Correct build should not throw any exception");
         }

@@ -101,224 +101,53 @@ public class MoveActionTest {
 
 
     @Test
-    void shouldReturn8CellsNoConstraints(){
-        // testing the basic scenario
-        Player p1 = new Player(1,"uno");
-        Worker w = new Worker(p1);
-        Vector2 pos = new Vector2(3,3);  // tested with multiple positions
-        Vector2 pos2 = new Vector2(4,4);
-        w.setPosition(pos);
-        Map m = new Map();
-        MoveAction ma = new MoveAction();
-        GameConstraints gc = new GameConstraints();
-
-            ArrayList<Vector2> cells = ma.possibleCells(w,m,gc);
-            assertEquals(8, cells.size());
-            assertTrue(cells.contains(pos2));
-
-    }
-
-    @Test
-    void shouldReturn7CellsCloseWorkersNoConstrains(){
-        // testing, no costraints and 2 workers are close
-        Player player1 = new Player(1,"uno");
-        Player player2 = new Player(2,"due");
-
-        Worker w1 = new Worker(player1);
-        Vector2 p1 = new Vector2(3,3);
-        w1.setPosition(p1);
-        player1.addWorker(w1);
-
-        assertEquals(p1, w1.getPosition());
-
-        Worker w2 = new Worker(player2);
-        Vector2 p2 = new Vector2(2,2);
-        w2.setPosition(p2);
-        player2.addWorker(w2);
-
-        Map m = new Map();
-        m.setWorkers(player1);
-        m.setWorkers(player2);
-
-        assertEquals(1, player1.getWorkers().size());
-
-        GameConstraints gc = new GameConstraints();
-
-        MoveAction ma = new MoveAction();
-
-
-            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc);
-            assertEquals(7, cells.size());
-
-    }
-    @Test
-    void shouldReturn8CellsCloseWorkersCanSwap(){
-        // testing swap constraint , two workers are close
-        Player player1 = new Player(1,"uno");
-        Player player2 = new Player(2,"due");
-
-        Worker w1 = new Worker(player1);
-        Vector2 p1 = new Vector2(3,3);
-        w1.setPosition(p1);
-        player1.addWorker(w1);
-
-        assertEquals(p1, w1.getPosition());
-
-        Worker w2 = new Worker(player2);
-        Vector2 p2 = new Vector2(2,2);
-        w2.setPosition(p2);
-        player2.addWorker(w2);
-
-        Map m = new Map();
-        m.setWorkers(player1);
-        m.setWorkers(player2);
-
-        assertEquals(1, player1.getWorkers().size());
-
-        GameConstraints gc = new GameConstraints();
-        gc.add(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT);
-
-        MoveAction ma = new MoveAction();
-
-
-            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc);
-            assertEquals(8, cells.size());
-
-    }
-    @Test
-    void shouldReturn8CellsCloseWorkersCanPush(){
-        // testing push constraint, two workers are close
-        Player player1 = new Player(1,"uno");
-        Player player2 = new Player(2,"due");
-
-        Worker w1 = new Worker(player1);
-        Vector2 p1 = new Vector2(3,3);
-        w1.setPosition(p1);
-        player1.addWorker(w1);
-
-        assertEquals(p1, w1.getPosition());
-
-        Worker w2 = new Worker(player2);
-        Vector2 p2 = new Vector2(2,3);
-        w2.setPosition(p2);
-        player2.addWorker(w2);
-
-        Map m = new Map();
-        m.setWorkers(player1);
-        m.setWorkers(player2);
-
-        assertEquals(1, player1.getWorkers().size());
-
-        GameConstraints gc = new GameConstraints();
-        gc.add(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
-
-        MoveAction ma = new MoveAction();
-
-
-            ArrayList<Vector2>  cells = ma.possibleCells(w1,m,gc);
-            assertEquals(8, cells.size());
-
-    }
-
-    @Test
-    void simpleMoveTest(){
-        Map m = new Map();
-        Player player1 = new Player(1,"uno");
-        player1.setGod(new Card(3,"Athena", null));
-        Worker w1 = new Worker(player1);
-        w1.setPosition(new Vector2(3,3));
-        player1.addWorker(w1);
-        m.setWorkers(player1);
-
-        assertEquals(1, m.getWorkers().size());     // there should be one worker on the map
-
-        Vector2 p2 = new Vector2(2,3);                 // where i would like to move
-        GameConstraints gc = new GameConstraints();
-
-        BehaviourNode bn = BehaviourNode.makeRootNode(new MoveAction());
-        try {
-
-            int outcome = (bn.getAction()).run(w1, p2, m, gc);
-            assertEquals(0, outcome);
-            assertEquals(p2, w1.getPosition());
-            assertTrue(m.isCellEmpty(new Vector2(3,3)));
-        }catch (NotAllowedMoveException e){}
-
-    }
-    @Test
-    void pushSwapTest(){
-        Map m = new Map();
-        Player player1 = new Player(1,"uno");
-        Player player2 = new Player(2,"due");
-        player1.setGod(new Card(3,"Athena", null));
-        player2.setGod(new Card(8,"Pan", null));
-        Worker w1 = new Worker(player1);
-        Worker w2 = new Worker(player2);
-        Vector2 pos1 = new Vector2(3,3);
-        w1.setPosition(pos1);
-        Vector2 pos2 = new Vector2(2,3);
-        w2.setPosition(pos2);
-        player1.addWorker(w1);
-        player2.addWorker(w2);
-        GameConstraints gc = new GameConstraints();
-        m.setWorkers(player2);
-        m.setWorkers(player1);
-        int outcome;
-        BehaviourNode bn = BehaviourNode.makeRootNode(new MoveAction());
-        gc.add(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT);
-        try{
-            assertNotEquals(pos2, w1.getPosition());
-            outcome = bn.getAction().run(w1,pos2,m,gc);
-            assertEquals(0,outcome);
-            assertEquals(pos2, w1.getPosition());
-            assertEquals(pos1, w2.getPosition());
-        }catch (NotAllowedMoveException e){
-            System.out.println("this is not a valid move");
+    void shouldPushOtherWorker()
+    {
+        moveAct = new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
+        try
+        {
+            assertEquals(0, moveAct.run(w1p2, new Vector2(1,3),m, gc));
+            assertFalse(m.isCellEmpty(new Vector2(1,3)));
+            assertEquals(new Vector2(1,3), w1p2.getPosition());
+            assertEquals(new Vector2(2, 3), w1p1.getPosition());
         }
-        gc.remove(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT);
-        gc.add(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
-        w1.setPosition(pos1);
-        w2.setPosition(pos2);
-        Vector2 push_pos = new Vector2(1,3); // if execution is ok, w2 should be pushed there
-        try{
-            assertNotEquals(pos2, w1.getPosition());
-            assertEquals(pos2, w2.getPosition());
-            outcome = bn.getAction().run(w1,pos2,m,gc);
-            assertEquals(0,outcome);
-            assertEquals(pos2, w1.getPosition());
-            assertEquals(push_pos, w2.getPosition());
-        }catch (NotAllowedMoveException e){
-            System.out.println("this is not a valid move");
+        catch (NotAllowedMoveException e)
+        {
+            fail("No exception should be thrown with valid moves");
         }
     }
 
     @Test
-    void blockMoveUpTest(){
-        Map m = new Map();
-        Player player1 = new Player(1,"uno");
-        player1.setGod(new Card(3,"Athena", null));
-        Worker w1 = new Worker(player1);
-        Vector2 pos1 = new Vector2(3,3);
-        w1.setPosition(pos1);
-        Vector2 pos2 = new Vector2(2,3);
-        player1.addWorker(w1);
-        GameConstraints gc = new GameConstraints();
-        m.setWorkers(player1);
-        int outcome;
-        BehaviourNode bn = BehaviourNode.makeRootNode(new MoveAction());
-        try{
-            m.build(pos2);
-            outcome = bn.getAction().run(w1,pos2,m,gc);
-            assertEquals(0, outcome);
-            assertEquals(pos2, w1.getPosition());
-            w1.setPosition(pos1);
-            gc.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
-            outcome = bn.getAction().run(w1,pos2,m,gc);
-
-        }catch (NotAllowedMoveException e){
-            System.out.println("move is not allowed");
+    void shouldSwapWithOtherWorker()
+    {
+        moveAct = new MoveAction(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT);
+        try
+        {
+            assertEquals(0, moveAct.run(w1p1, new Vector2(2,4),m, gc));
+            assertEquals(new Vector2(2,4), w1p1.getPosition());
+            assertEquals(new Vector2(1, 3), w2p2.getPosition());
         }
+        catch (NotAllowedMoveException e)
+        {
+            fail("No exception should be thrown with valid moves");
+        }
+    }
 
+    @Test
+    void shouldBlockMoveUpTest(){
+        gc.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
+
+        assertThrows(NotAllowedMoveException.class, ()-> {  moveAct.run(w1p1, new Vector2(2,3), m, gc); });
+    }
+
+    @Test
+    void shouldReturnSameLevelCellsIfBlockMoveUp()
+    {
+        gc.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
+
+        var cells = moveAct.possibleCells(w1p1,m, gc);
+        assertEquals(1, cells.size());
+        assertTrue(cells.contains(new Vector2(2,2)));
     }
 
     @Test
@@ -338,7 +167,7 @@ public class MoveActionTest {
     }
 
     @Test
-    void shouldReturnCorrectAllowedCellsNoConstraints()
+    void shouldReturnAllowedCellsNoConstraints()
     {
         ArrayList<Vector2> cells;
         //refer to map (top of file) to check correct positions manually
@@ -348,13 +177,6 @@ public class MoveActionTest {
         assertTrue(cells.contains(new Vector2(0,4)));
         assertTrue(cells.contains(new Vector2(1,4)));
         assertTrue(cells.contains(new Vector2(2,2)));
-
-        //use w1p2 to check out of map
-        cells = moveAct.possibleCells(w1p2, m, null);
-        assertEquals(3, cells.size());
-        assertTrue(cells.contains(new Vector2(0,2)));
-        assertTrue(cells.contains(new Vector2(0,4)));
-        assertTrue(cells.contains(new Vector2(1,4)));
 
         // move p1 to 3,3
         w1p1.setPosition(new Vector2(3,3));
@@ -369,38 +191,120 @@ public class MoveActionTest {
     }
 
     @Test
-    void shouldNotMoveWithNoConstraints()
+    void shouldReturnAllowedCellsNearBorderNoConstaints()
+    {
+        //use w1p2 to check out of map
+        var cells = moveAct.possibleCells(w1p2, m, null);
+        assertEquals(3, cells.size());
+        assertTrue(cells.contains(new Vector2(0,2)));
+        assertTrue(cells.contains(new Vector2(0,4)));
+        assertTrue(cells.contains(new Vector2(1,4)));
+    }
+
+    @Test
+    void shouldMoveSameLevelNoConstraints()
+    {
+        try
+        {
+            // level 0
+            assertEquals(0, moveAct.run(w1p1, new Vector2(2,2),m, gc)); // level 0 to 0 diagonal
+            assertTrue(m.isCellEmpty(new Vector2(1,3)));
+            assertFalse(m.isCellEmpty(new Vector2(2,2)));
+            assertEquals(new Vector2(1,3), w1p1.getLastLocation());
+            assertEquals(new Vector2(2,2), w1p1.getPosition());
+
+            // level 1
+            assertEquals(0, moveAct.run(w1p2, new Vector2(0,4),m, gc));
+            assertTrue(m.isCellEmpty(new Vector2(0,3)));
+            assertFalse(m.isCellEmpty(new Vector2(0,4)));
+            assertEquals(new Vector2(0,3), w1p2.getLastLocation());
+            assertEquals(new Vector2(0,4), w1p2.getPosition());
+        }
+        catch (NotAllowedMoveException e)
+        {
+            fail("No exception should be thrown with valid moves");
+        }
+    }
+
+    @Test
+    void shouldMoveDownNoConstraints()
+    {
+        try
+        {
+            w1p1.setPosition(new Vector2(3,3)); // jump from 3
+
+            assertEquals(0, moveAct.run(w1p1, new Vector2(3,4),m, gc));
+            assertTrue(m.isCellEmpty(new Vector2(3,3)));
+            assertFalse(m.isCellEmpty(new Vector2(3,4)));
+            assertEquals(new Vector2(3,4), w1p1.getPosition());
+        }
+        catch (NotAllowedMoveException e)
+        {
+            fail("No exception should be thrown with valid moves");
+        }
+    }
+
+    @Test
+    void shouldMoveUpNoConstraints()
+    {
+        try
+        {
+            assertEquals(0, moveAct.run(w1p1, new Vector2(1,4),m, gc));
+            assertTrue(m.isCellEmpty(new Vector2(1,3)));
+            assertFalse(m.isCellEmpty(new Vector2(1,4)));
+            assertEquals(new Vector2(1,4), w1p1.getPosition());
+        }
+        catch (NotAllowedMoveException e)
+        {
+            fail("No exception should be thrown with valid moves");
+        }
+    }
+
+    @Test
+    void shouldNotMoveToADome()
     {
         assertThrows(NotAllowedMoveException.class,
-                ()-> { moveAct.run(w1p1, new Vector2(1,2),m, gc);},
-                "Can't move into a dome");
+                ()-> { moveAct.run(w1p1, new Vector2(1,2),m, gc);});
         assertEquals(new Vector2(1,3), w1p1.getPosition());
         assertNull(w1p1.getLastLocation());
+    }
 
+    @Test
+    void shouldNoMoveToTooHighCell()
+    {
+        // high cells have height difference of 2+
         assertThrows(NotAllowedMoveException.class,
-                ()-> { moveAct.run(w1p1, new Vector2(2,3),m, gc);},
-                "Can't move to a place with height diff > 1");
+                ()-> { moveAct.run(w1p1, new Vector2(2,3),m, gc);});
         assertEquals(new Vector2(1,3), w1p1.getPosition());
         assertNull(w1p1.getLastLocation());
+    }
 
+    @Test
+    void shouldNotMoveToUsedCell()
+    {
         assertThrows(NotAllowedMoveException.class,
-                ()-> { moveAct.run(w1p1, new Vector2(0,3),m, gc);},
-                "Can't move into a used place");
+                ()-> { moveAct.run(w1p1, new Vector2(0,3),m, gc);});
         assertEquals(new Vector2(1,3), w1p1.getPosition());
         assertNull(w1p1.getLastLocation());
+    }
 
+    @Test
+    void shouldNotMoveToFarCell()
+    {
+        //far cells have distance of 2+
         assertThrows(NotAllowedMoveException.class,
-                ()-> { moveAct.run(w1p1, new Vector2(3,2),m, gc);},
-                "Can't move to a far cell");
+                ()-> { moveAct.run(w1p1, new Vector2(3,2),m, gc);});
         assertEquals(new Vector2(1,3), w1p1.getPosition());
         assertNull(w1p1.getLastLocation());
+    }
 
+    @Test
+    void shouldNotMoveToInvalidCell()
+    {
         assertThrows(NotAllowedMoveException.class,
-                ()-> { moveAct.run(w1p1, new Vector2(8,8),m, gc);},
-                "Can't move to invalid cell");
+                ()-> { moveAct.run(w1p1, new Vector2(8,8),m, gc);});
         assertEquals(new Vector2(1,3), w1p1.getPosition());
         assertNull(w1p1.getLastLocation());
-
     }
 
     @Test
@@ -457,16 +361,18 @@ public class MoveActionTest {
             assertTrue(moveAct.run(w1p1, new Vector2(2, 2), m, gc) < 0);
         } catch (NotAllowedMoveException e) { fail("The move should lead to lose condition and do nothing"); }
         assertEquals(new Vector2(1,3), w1p1.getPosition());
+    }
 
+    @Test
+    void shouldLoseIfNoMoveIsAllowedOnBorder()
+    {
         // check with towers at edge
         w1p1.setPosition(new Vector2(0,0));
         try
         {
-        assertTrue(moveAct.run(w1p1, new Vector2(1, 1), m, gc) < 0);
+            assertTrue(moveAct.run(w1p1, new Vector2(1, 1), m, gc) < 0);
         } catch (NotAllowedMoveException e) { fail("The move should lead to lose condition and do nothing"); }
         assertEquals(new Vector2(0,0), w1p1.getPosition());
-
-
     }
 
     @Test
@@ -484,10 +390,10 @@ public class MoveActionTest {
     void shouldNotPushWithUsedCell()
     {
         moveAct = new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
-        w1p1.setPosition(new Vector2(0,6));
-        assertFalse(moveAct.possibleCells(w1p1, m, null).contains(new Vector2(1,5)));
+        w1p2.setPosition(new Vector2(1,6));
+        assertFalse(moveAct.possibleCells(w1p2, m, null).contains(new Vector2(1,5)));
 
-        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w1p1, new Vector2(1,5),m, gc); });
+        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w1p2, new Vector2(1,5),m, gc); });
     }
 
     @Test

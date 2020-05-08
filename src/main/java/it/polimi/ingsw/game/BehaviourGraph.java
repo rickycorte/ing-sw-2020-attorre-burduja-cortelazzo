@@ -30,13 +30,15 @@ public class BehaviourGraph
         alreadyRun = true; // root node has no action
     }
 
+    /**
+     * Return the current node
+     * @return return the current node
+     */
     public BehaviourNode getBehaviourNode() {
         return behaviourNode;
     }
 
-    public void setBehaviourNode(BehaviourNode behaviourNode) {
-        this.behaviourNode = behaviourNode;
-    }
+
     /**
      * Select one of the actions returned by getNextActions using array index
      * @param pos action index used to select the next operation (index obtained from action list)

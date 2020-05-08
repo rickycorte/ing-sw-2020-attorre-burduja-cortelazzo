@@ -5,12 +5,12 @@ package it.polimi.ingsw.game;
  */
 public class BuildAgainAction extends BuildAction {
 
-    BuildAgainAction(GameConstraints.Constraint localConstrains)
+    public BuildAgainAction(GameConstraints.Constraint localConstrains)
     {
         this(localConstrains, GameConstraints.Constraint.NONE);
     }
 
-    BuildAgainAction(GameConstraints.Constraint constraint1, GameConstraints.Constraint constraint2){
+    public BuildAgainAction(GameConstraints.Constraint constraint1, GameConstraints.Constraint constraint2){
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(constraint1);
         this.localConstrains.add(constraint2);
