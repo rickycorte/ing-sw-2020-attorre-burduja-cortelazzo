@@ -1,6 +1,5 @@
 package it.polimi.ingsw.game;
 import java.util.ArrayList;
-import java.io.*;
 
 /**
  * Game map representation
@@ -9,7 +8,7 @@ public class Map
 {
     private static final int HEIGHT = 7;
     private static final int LENGTH = 7;
-    private static final int MAP_VALUE = 128;
+    private static final int DOME_VALUE = 128;
 
     private int[][] map = new int[HEIGHT][LENGTH];
 
@@ -66,7 +65,7 @@ public class Map
             map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
 
             if (getLevel(pos) == 4)
-                map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + MAP_VALUE;
+                map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + DOME_VALUE;
 
             return true;
         }
@@ -84,7 +83,7 @@ public class Map
         if(isInsideMap(pos) && !isCellDome(pos))
         {
             map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
-            map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + MAP_VALUE;
+            map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + DOME_VALUE;
             return true;
         }
 
@@ -108,7 +107,7 @@ public class Map
      * @return true if dome, false if is not in map or is not dome
      */
     public boolean isCellDome (Vector2 pos){
-        if(isInsideMap(pos)) return map[pos.getX()][pos.getY()] > MAP_VALUE;
+        if(isInsideMap(pos)) return map[pos.getX()][pos.getY()] > DOME_VALUE;
         return false;
     }
 
@@ -169,7 +168,7 @@ public class Map
             }
             return true;
         }
-        return false;
+        return true;
     }
 
     /**
@@ -188,48 +187,6 @@ public class Map
         return free;
     }
 
-    /**
-     * Write map status on a bin file
-     * @param fileName name of the file (ex "map.bin")
-     */
-    public void writeMapOut(String fileName){
-        String path = "src/test/resources";
-        File file = new File(path);
-        String absolutePath = file.getAbsolutePath();
-        try(OutputStream outputStream = new FileOutputStream(absolutePath + "/" + fileName)) {
-            for (int i = 0; i < LENGTH; i++) {
-                for (int j = 0; j < HEIGHT; j++) {
-                    outputStream.write(map[i][j]);
-                }
-            }
-        }catch(IOException e){
-                e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * Read and set map status from a bin file
-     * @param fileName name of the file (ex "map.bin")
-     */
-    public void readMapOut(String fileName){
-        String path = "src/test/resources";
-        File file = new File(path);
-        String absolutePath = file.getAbsolutePath();
-        try (InputStream inputStream = new FileInputStream(absolutePath + "/" + fileName)) {
-            int byteRead;
-
-            for(int i = 0; i<LENGTH;i++){
-                for(int j = 0; j<HEIGHT;j++){
-                    if ((byteRead = inputStream.read()) != -1) {
-                        map[i][j] = byteRead;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
 
 

@@ -1,5 +1,6 @@
 package it.polimi.ingsw.game;
 
+import com.sun.source.tree.AssertTree;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,18 +16,102 @@ public class MapTest {
     }
 
     @Test
-    void testCompleteCell(){
+    void shouldHaveAllLevelZeroCells()
+    {
+        int[][] m = map.getMap();
+        // m is a square
+        for(int i =0; i< m.length; i++)
+        {
+            for(int j =0; j < m.length; j++)
+            {
+                Vector2 p = new Vector2(i,j);
+                assertEquals(0, map.getLevel(p));
+                assertTrue(map.isCellEmpty(p));
+                assertFalse(map.isCellDome(p));
+            }
+        }
+    }
+
+
+    @Test
+    void shouldBeInsideMap()
+    {
+        //map is 7x7 starting from 0
+        assertTrue(map.isInsideMap(new Vector2(0,0)));
+
+        assertTrue(map.isInsideMap(new Vector2(4,0)));
+
+        assertTrue(map.isInsideMap(new Vector2(5,6)));
+
+        assertTrue(map.isInsideMap(new Vector2(6,6)));
+    }
+
+    @Test
+    void shouldNotBeInsideMap()
+    {
+        assertFalse(map.isInsideMap(new Vector2(-1,0))); // x < 0
+
+        assertFalse(map.isInsideMap(new Vector2(7,0))); // x > 6
+
+        assertFalse(map.isInsideMap(new Vector2(5,-1))); // y < 0
+
+        assertFalse(map.isInsideMap(new Vector2(6,7))); //y > 6
+    }
+
+    @Test
+    void shouldBuildOneLevel()
+    {
+        Vector2 pos = new Vector2(0,0);
+
+        // 0 -> 1
+        map.build(pos);
+        assertEquals(1, map.getLevel(pos));
+        assertFalse(map.isCellDome(pos));
+        assertTrue(map.isCellEmpty(pos));
+
+        // 1 -> 2
+        map.build(pos);
+        assertEquals(2, map.getLevel(pos));
+        assertFalse(map.isCellDome(pos));
+        assertTrue(map.isCellEmpty(pos));
+    }
+
+
+    @Test
+    void shouldBuildDomeAtLevelFour(){
         Vector2 pos = new Vector2(0,0);
 
         for(int i = 0; i < 4 ; i++)
             assertTrue(map.build(pos));
         assertEquals(4,map.getLevel(pos));
         assertTrue(map.isCellDome(pos));
+
         assertFalse(map.build(pos));
     }
 
     @Test
-    void testBuildDome(){
+    void shouldNotBuildOnDome()
+    {
+        Vector2 pos = new Vector2(0,0);
+
+        map.buildDome(pos);
+        assertFalse(map.build(pos));
+    }
+
+    @Test
+    void shouldNotBuildADomeToALevelFourDome()
+    {
+        Vector2 pos = new Vector2(0,0);
+
+        for(int i = 0; i < 4 ; i++)
+            assertTrue(map.build(pos));
+
+        assertFalse(map.build(pos));
+        assertFalse(map.buildDome(pos));
+    }
+
+    @Test
+    void shouldBuildDomeAtAnyLevel(){
         Vector2 pos = new Vector2(0,0);
 
         assertTrue(map.buildDome(pos));
@@ -35,113 +120,151 @@ public class MapTest {
         assertFalse(map.buildDome(pos));
     }
 
+    @Test
+    void shouldNotBuildOutsideMap()
+    {
+        assertFalse(map.build(new Vector2(-100, -92)));
+    }
+
+    @Test
+    void shouldNotBuildDomeOutsideMap()
+    {
+        assertFalse(map.buildDome(new Vector2(-100, -92)));
+    }
+
+    @Test
+    void shouldReturnMinusOneIfLevelOutsideMap()
+    {
+        assertEquals(-1, map.getLevel(new Vector2(-100, -92)));
+    }
+
+    @Test
+    void shouldNeverBeADomeOutsideMap()
+    {
+        assertFalse(map.isCellDome(new Vector2(-100, 87)));
+    }
+
+    @Test
+    void shouldAlwaysBeEmptyIfCellOutsideMap()
+    {
+        assertTrue(map.isCellEmpty(new Vector2(-100,862)));
+    }
+
 
     //Create a player and its 2 workers, add and remove workers in map
     @Test
-    void testWorkersList(){
-        Vector2 pos = new Vector2(0,0);
-        Vector2 post = new Vector2(6,6);
+    void shouldAddWorkers(){
+
         Player p = new Player(1, "FirstPlayer");
-        Worker w1 = new Worker(p);
-        Worker w2 = new Worker(p);
-
-        w1.setPosition(pos);
-        w2.setPosition(post);
-
+        Worker w1 = new Worker(0, p, new Vector2(0,0));
+        Worker w2 = new Worker(1, p, new Vector2(6,6));
         p.addWorker(w1);
         p.addWorker(w2);
 
+        Player p2 = new Player(2,"padoru");
+        Worker w3 = new Worker(0, p2, new Vector2(3,3));
+        p2.addWorker(w3);
+
         map.setWorkers(p);
+        map.setWorkers(p2);
 
-        assertFalse(map.isCellEmpty(pos));
-        assertFalse(map.isCellEmpty(post));
+        var mw = map.getWorkers();
+        assertEquals(3, mw.size());
+        assertTrue(mw.contains(w1));
+        assertTrue(mw.contains(w2));
+        assertTrue(mw.contains(w3));
+    }
 
+    @Test
+    void shouldRemoveWorkers()
+    {
+        Player p = new Player(1, "FirstPlayer");
+        Worker w1 = new Worker(0, p, new Vector2(0,0));
+        Worker w2 = new Worker(1, p, new Vector2(6,6));
+        p.addWorker(w1);
+        p.addWorker(w2);
+
+        Player p2 = new Player(2,"padoru");
+        Worker w3 = new Worker(0, p2, new Vector2(3,3));
+        p2.addWorker(w3);
+
+        map.setWorkers(p);
+        map.setWorkers(p2);
 
         map.removeWorkers(p);
 
-        assertTrue(map.isCellEmpty(pos));
-        assertTrue(map.isCellEmpty(post));
-
-
+        var mw = map.getWorkers();
+        assertEquals(1, mw.size());
+        assertTrue(mw.contains(w3));
     }
 
     @Test
-    void testMapToFile(){
-        Vector2 pos = new Vector2(0,0);
-
-        //setting
-        map.build(pos);
-        map.build(pos);
-        map.build(pos);
-        pos.set(6,6);
-        map.buildDome(pos);
-        pos.set(3,4);
-        map.build(pos);
-        map.buildDome(pos);
-
-        //save and re-setting
-        map.writeMapOut("map.bin");
-        pos.set(0, 0);
-        map.build(pos);
-        pos.set(1, 1);
-        map.build(pos);
-        pos.set(1, 2);
-        map.build(pos);
-
-        pos.set(0, 0);
-        assertEquals(4,map.getLevel(pos));
-        assertTrue(map.isCellDome(pos));
-        pos.set(1, 1);
-        assertEquals(1,map.getLevel(pos));
-        pos.set(1, 2);
-        assertEquals(1,map.getLevel(pos));
-        pos.set(3, 4);
-        assertEquals(2,map.getLevel(pos));
-        assertTrue(map.isCellDome(pos));
-        pos.set(6, 6);
-        assertEquals(1,map.getLevel(pos));
-        assertTrue(map.isCellDome(pos));
-        //loading
-        map.readMapOut("map.bin");
-        pos.set(0,0);
-        assertEquals(3,map.getLevel(pos));
-        assertFalse(map.isCellDome(pos));
-        pos.set(1, 1);
-        assertEquals(0,map.getLevel(pos));
-        pos.set(1, 2);
-        assertEquals(0,map.getLevel(pos));
-        pos.set(3,4);
-        assertEquals(2,map.getLevel(pos));
-        assertTrue(map.isCellDome(pos));
-        pos.set(6,6);
-        assertEquals(1, map.getLevel(pos));
-        assertTrue(map.isCellDome(pos));
-        //sovrascrittura
-        //re-setting
-        pos.set(1, 1);
-        map.build(pos);
-        assertEquals(1,map.getLevel(pos));
-        //save re-setted
-        map.writeMapOut("map.bin");
-
-        pos.set(1,1);
-        map.build(pos);
-        assertEquals(2,map.getLevel(pos));
-
-        map.readMapOut("map.bin");
-        assertEquals(1,map.getLevel(pos));
+    void shouldReturnNullWorkerIfCellIsEmpty()
+    {
+        assertNull(map.getWorker(new Vector2(0,0)));
     }
 
     @Test
-    void copyConstructorTest(){
+    void shouldReturnNullWorkerIfOutsideMap()
+    {
+        assertNull(map.getWorker(new Vector2(-973,0)));
+    }
 
-        map.readMapOut("map00closed.bin");
+    @Test
+    void shouldReturnWorkerByPosition()
+    {
+        Player p = new Player(1, "FirstPlayer");
+        Worker w1 = new Worker(0, p, new Vector2(0,0));
+        Worker w2 = new Worker(1, p, new Vector2(6,6));
+        p.addWorker(w1);
+        p.addWorker(w2);
+
+        Player p2 = new Player(2,"padoru");
+        Worker w3 = new Worker(0, p2, new Vector2(3,3));
+        p2.addWorker(w3);
+
+        map.setWorkers(p);
+        map.setWorkers(p2);
+
+        assertEquals(w1, map.getWorker(new Vector2(0,0)));
+        assertEquals(w2, map.getWorker(new Vector2(6,6)));
+        assertEquals(w3, map.getWorker(new Vector2(3,3)));
+    }
+
+    @Test
+    void shouldFillCellsWhenWorkersAreAdded()
+    {
+        Player p = new Player(1, "FirstPlayer");
+        Worker w1 = new Worker(0, p, new Vector2(0,0));
+        Worker w2 = new Worker(1, p, new Vector2(6,6));
+        p.addWorker(w1);
+        p.addWorker(w2);
+
+        Player p2 = new Player(2,"padoru");
+        Worker w3 = new Worker(0, p2, new Vector2(3,3));
+        p2.addWorker(w3);
+
+        map.setWorkers(p);
+        map.setWorkers(p2);
+
+
+        assertFalse(map.isCellEmpty(new Vector2(0,0)));
+        assertFalse(map.isCellEmpty(new Vector2(6,6)));
+        assertFalse(map.isCellEmpty(new Vector2(3,3)));
+    }
+
+
+    @Test
+    void shouldReturnACopyOfTheMap(){
+
         Vector2 pos = new Vector2(0,0);
         Player p = new Player(1, "FirstPlayer");
         Worker w1 = new Worker(p);
         w1.setPosition(pos);
         p.addWorker(w1);
         map.setWorkers(p);
+        map.build(new Vector2(0,0));
+        map.buildDome(new Vector2(0,5));
 
         Map newMap = new Map(map);
 
