@@ -650,7 +650,7 @@ public final class Game
      */
     private void playerLost(Player loser)
     {
-        if(players.size() <= 2)
+        if(players.size() < 2)
         {
             nextPlayer(); //if we are two and i lost the winner is the next player... "the other player"
             endGame(players.get(currentPlayer));

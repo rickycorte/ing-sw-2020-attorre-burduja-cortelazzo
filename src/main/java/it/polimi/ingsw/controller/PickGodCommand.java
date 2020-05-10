@@ -4,14 +4,14 @@ public class PickGodCommand extends BaseCommand {
     private int[] godsID;
 
     //to client
-    public PickGodCommand(int type, boolean request, int sender, int target,int[] godsID) {
-        super(type, request, sender, target);
+    public PickGodCommand(int sender, int target,int[] godsID) {
+        super(sender, target);
         this.godsID = godsID;
     }
 
     //to server
-    public PickGodCommand(int type, boolean request, int sender, int target,int godID) {
-        super(type, request, sender, target);
+    public PickGodCommand(int sender, int target,int godID) {
+        super(sender, target);
         this.godsID = new int[]{godID};
     }
 

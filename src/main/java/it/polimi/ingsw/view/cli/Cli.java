@@ -27,8 +27,6 @@ public class Cli {
     public void onCommand(CommandWrapper cmdWrapper){
         BaseCommand baseCommand = cmdWrapper.getCommand(BaseCommand.class);
 
-        if(baseCommand.isRequest()) {
-            //request commands
             switch (cmdWrapper.getType()){
                 case FILTER_GODS:
                     printGodsID();
@@ -45,11 +43,6 @@ public class Cli {
                 case PLACE_WORKERS:
 
                     break;
-            }
-
-        }else{
-
-            switch (cmdWrapper.getType()) {
                 case JOIN:
                     JoinCommand joinCommand = cmdWrapper.getCommand(JoinCommand.class);
                     if(joinCommand.isJoin())
@@ -73,7 +66,7 @@ public class Cli {
                     show(updateCommand);
                     break;
             }
-        }
+
     }
 
 

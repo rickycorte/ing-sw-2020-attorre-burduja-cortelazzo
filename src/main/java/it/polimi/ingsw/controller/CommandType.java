@@ -11,7 +11,8 @@ public enum CommandType
     SELECT_FIRST_PLAYER(7),
     PLACE_WORKERS(8),
     ACTION_TIME(9),
-    END_GAME(10);
+    END_GAME(10),
+    LEAVE(11);
 
     private int val;
 
