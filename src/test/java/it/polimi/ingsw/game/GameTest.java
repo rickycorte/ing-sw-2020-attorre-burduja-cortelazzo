@@ -52,23 +52,7 @@ class GameTest
     }
 
     @Test
-    void shouldNotJoin() {
-        game.join(p1);
-        game.join(p2);
-
-        //null player
-        assertFalse(game.join(null));
-        assertEquals(2, game.playerCount());
-        assertFalse(game.getPlayers().contains(null));
-
-        // game full
-        game.join(p3);
-
-        assertFalse(game.join(p4));
-        assertFalse(game.getPlayers().contains(p4));
-
-        //game started
-        game = new Game(); // reset game
+    void shouldNotJoinIfGameStarted() {
         game.join(p1);
         game.join(p2);
 
@@ -77,8 +61,25 @@ class GameTest
         assertFalse(game.join(p3));
         assertEquals(2, game.playerCount());
         assertFalse(game.getPlayers().contains(p3));
+    }
 
-        //TODO: check for game ended
+    @Test
+    void shouldNotJoinIfFullGame()
+    {
+        game.join(p1);
+        game.join(p2);
+        game.join(p3);
+
+        assertFalse(game.join(p4));
+        assertFalse(game.getPlayers().contains(p4));
+    }
+
+    @Test
+    void shouldNotJoinIfNullPlayer()
+    {
+        assertFalse(game.join(null));
+        assertEquals(0, game.playerCount());
+        assertFalse(game.getPlayers().contains(null));
     }
 
     @Test
@@ -90,11 +91,19 @@ class GameTest
     }
 
     @Test
-    void shouldNotLeft() {
+    void shouldNotLeftIfNullPlayer() {
+        game.join(p1);
+        game.join(p2);
+        assertFalse(game.left(null));
+        assertEquals(2, game.playerCount());
+    }
+
+    @Test
+    void shouldNotLeftIfNeverJoined()
+    {
         game.join(p1);
         game.join(p2);
         assertFalse(game.left(p3));
-        assertFalse(game.left(null));
         assertEquals(2, game.playerCount());
     }
 
@@ -117,15 +126,17 @@ class GameTest
     }
 
     @Test
-    void shouldStartGame() {
+    void shouldStartGameWithTwoPlayers() {
         //2 player start
         game.join(p1);
         game.join(p2);
         assertTrue(game.start(p1));
         assertTrue(game.isStarted());
+    }
 
-        // 3 players
-        game = new Game();
+    @Test
+    void shouldStartGameWithThreePlayers()
+    {
         game.join(p1);
         game.join(p2);
         game.join(p3);
@@ -135,20 +146,27 @@ class GameTest
     }
 
     @Test
-    void shouldNotStartGame()
+    void shouldNotStartGameIfNotHost()
     {
-        //empty game
-        assertFalse(game.start(null));
-        assertEquals(Game.GameState.WAIT, game.getCurrentState());
-        // 1 player game
         game.join(p1);
-        assertFalse(game.start(p1));
-        assertEquals(Game.GameState.WAIT, game.getCurrentState());
-        //started by not host
         game.join(p2);
         assertFalse(game.start(p2));
         assertEquals(Game.GameState.WAIT, game.getCurrentState());
-        //TODO: check during gameplay
+    }
+
+    @Test
+    void shouldNotStartGameIfOnlyOnePlayer()
+    {
+        game.join(p1);
+        assertFalse(game.start(p1));
+        assertEquals(Game.GameState.WAIT, game.getCurrentState());
+    }
+
+    @Test
+    void shouldNotStartGameIfEmpty()
+    {
+        assertFalse(game.start(null));
+        assertEquals(Game.GameState.WAIT, game.getCurrentState());
     }
 
 
@@ -166,7 +184,8 @@ class GameTest
             assertNotEquals(game.getHost(), game.getCurrentPlayer());
             assertArrayEquals(ids, game.getAllowedCardIDs());
 
-        }catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception thrown");
         }
@@ -174,50 +193,102 @@ class GameTest
 
 
     @Test
-    void shouldNotApplyGodFilter()
+    void shouldNotApplyGodFilterIfEmptyGame()
     {
-        final int[] ids = new int[]{1,-199};
+        final int[] ids = new int[]{1,2};
+        Game.GameState prevState = game.getCurrentState();
+
+        assertThrows(NotAllowedOperationException.class, ()-> {game.applyGodFilter(p1,ids);});
+        assertEquals(prevState, game.getCurrentState());
+    }
+
+    @Test
+    void shouldNotApplyGodFilterIfNullSender()
+    {
+        game.join(p1);
+        final int[] ids = new int[]{1,2};
         Game.GameState prevState = game.getCurrentState();
         //empty game
         assertThrows(NotAllowedOperationException.class, ()-> {game.applyGodFilter(null,ids);});
         assertEquals(prevState, game.getCurrentState());
+    }
 
-        assertThrows(NotAllowedOperationException.class, ()-> {game.applyGodFilter(p1,ids);});
-        assertEquals(prevState, game.getCurrentState());
-
-        //not in this match
+    @Test
+    void shouldNotApplyGodFilterIfNotInTheGame()
+    {
+        final int[] ids = new int[]{1,2};
+        Game.GameState prevState = game.getCurrentState();
         game.join(p1);
+
         assertThrows(NotAllowedOperationException.class, ()-> {game.applyGodFilter(p2,ids);});
         assertEquals(prevState, game.getCurrentState());
+    }
 
-        //not host
+    @Test
+    void shouldNotApplyGodFilterIfNotHost()
+    {
+        final int[] ids = new int[]{1,2};
+        Game.GameState prevState = game.getCurrentState();
+        game.join(p1);
         game.join(p2);
+
         assertThrows(NotAllowedOperationException.class, ()-> {game.applyGodFilter(p2,ids);});
         assertEquals(prevState, game.getCurrentState());
+    }
 
-        //null cards
+    @Test
+    void shouldNotApplyGodFilterIfNullCards()
+    {
+        Game.GameState prevState = game.getCurrentState();
+
         assertThrows(NotAllowedOperationException.class, ()-> {game.applyGodFilter(p1,null);});
         assertEquals(prevState, game.getCurrentState());
+    }
+
+    @Test
+    void shouldNotApplyGodFilterIfCardListSizeNotMatchPlayerCount()
+    {
+        Game.GameState prevState = game.getCurrentState();
+        game.join(p1);
+        game.join(p2);
 
         try
         {
-            //no cards
+            // 0 cards
             assertFalse(game.applyGodFilter(p1, new int[]{}));
             assertEquals(prevState, game.getCurrentState());
 
-            //wrong id
-            assertFalse(game.applyGodFilter(p1, ids));
-            assertEquals(prevState, game.getCurrentState());
-
-            //wrong number
+            // 1 cards
             assertFalse(game.applyGodFilter(p1, new int[]{1}));
             assertEquals(prevState, game.getCurrentState());
 
+            // 3 cards
+            assertFalse(game.applyGodFilter(p1, new int[]{1,2,3}));
+            assertEquals(prevState, game.getCurrentState());
+
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception thrown");
+        }
+
+    }
+
+    @Test
+    void shouldNotApplyGodFilterIfDuplicateCardID()
+    {
+        Game.GameState prevState = game.getCurrentState();
+        game.join(p1);
+        game.join(p2);
+
+        try
+        {
             // duplicates
             assertFalse(game.applyGodFilter(p1, new int[]{1,1}));
             assertEquals(prevState, game.getCurrentState());
 
-        }catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception thrown");
         }
@@ -225,7 +296,7 @@ class GameTest
 
 
     @Test
-    void shouldPickGod()
+    void shouldPickGodWithTwoPlayers()
     {
         // 2 player pick
         game.join(p1);
@@ -239,13 +310,16 @@ class GameTest
             assertEquals(2, p2.getGod().getId()); // autoselect last
             assertEquals(Game.GameState.FIRST_PLAYER_PICK, game.getCurrentState());
             assertTrue(game.getAllowedCardIDs().length == 0);
-        }catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception");
         }
+    }
 
-        //3 players
-        game = new Game();
+    @Test
+    void shouldPickGodWithThreePlayers()
+    {
         game.join(p1);
         game.join(p2);
         game.join(p3);
@@ -273,31 +347,46 @@ class GameTest
             assertEquals(Game.GameState.FIRST_PLAYER_PICK, game.getCurrentState());
             assertEquals(0, game.getAllowedCardIDs().length);
 
-        }catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception");
         }
     }
 
     @Test
-    void shouldNotPickGod()
+    void shouldNotPickGodIfNullPlayer()
     {
-
-        // player not in the match
         assertThrows(NotAllowedOperationException.class, ()->{ game.selectGod(null, 1); });
-        assertThrows(NotAllowedOperationException.class, ()->{ game.selectGod(p1, 1); });
+    }
 
+    @Test
+    void shouldNotPickGodIfNotInTheMatch()
+    {
+        assertThrows(NotAllowedOperationException.class, ()->{ game.selectGod(p1, 1); });
+    }
+
+    @Test
+    void shouldNotPickGodIfNotCurrentPlayer()
+    {
         game.join(p1);
         game.join(p2);
 
         // not current player
         assertThrows(NotAllowedOperationException.class, ()->{ game.selectGod(p2, 1); });
+    }
 
-        // no filter applied or no more gods
-        try {
+    @Test
+    void shouldNotPickGodIfNoFiltersWasApplied()
+    {
+        game.join(p1);
+        game.join(p2);
 
+        try
+        {
             assertFalse(game.selectGod(p1, -100));
-        }catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception");
         }
@@ -318,35 +407,63 @@ class GameTest
             assertEquals(p3, game.getCurrentPlayer());
             assertEquals(Game.GameState.WORKER_PLACE, game.getCurrentState());
 
-            //first player as host
+            // the host is also a valid player, make sure it can be selected
             assertTrue(game.selectFirstPlayer(game.getHost(), game.getHost()));
             assertEquals(game.getHost(), game.getCurrentPlayer());
             assertEquals(Game.GameState.WORKER_PLACE, game.getCurrentState());
 
-        }catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception");
         }
     }
 
     @Test
-    void shouldNotSelectFirstPlayer()
+    void shouldNotSelectFirstPlayerIfNullSender()
+    {
+        // null sender
+        assertThrows(NotAllowedOperationException.class, () -> {game.selectFirstPlayer(null, null);});
+    }
+
+    @Test
+    void shouldNotSelectFirstPlayerIfSenderIsNotHost()
     {
         game.join(p1);
         game.join(p2);
-        // null sender
-        assertThrows(NotAllowedOperationException.class, () -> {game.selectFirstPlayer(null, null);});
+
         // not host
         assertThrows(NotAllowedOperationException.class, () -> {game.selectFirstPlayer(p2, p2);});
+    }
 
-        try {
+    @Test
+    void shouldNotSelectFirstPlayerIfNull()
+    {
+        game.join(p1);
+        game.join(p2);
 
-            // null player
+        try
+        {
             assertFalse(game.selectFirstPlayer(game.getHost(), null));
-            //player not in game
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
+
+    @Test
+    void shouldNotSelectFirstPlayerIfNotInGame()
+    {
+        game.join(p1);
+        game.join(p2);
+
+        try
+        {
             assertFalse(game.selectFirstPlayer(game.getHost(), p4));
 
-        } catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception");
         }
@@ -383,45 +500,106 @@ class GameTest
             assertEquals(Game.GameState.GAME, game.getCurrentState());
             assertEquals(p1, game.getCurrentPlayer());
 
-        }catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
+
+
+    @Test
+    void shouldNotPlaceWorkersIfNullSender()
+    {
+        assertThrows(NotAllowedOperationException.class, ()->{game.placeWorkers(null, null);});
+    }
+
+    @Test
+    void shouldNotPlaceWorkersIfNotInTheGame()
+    {
+        assertThrows(NotAllowedOperationException.class, ()->{game.placeWorkers(p1, null);});
+    }
+
+    @Test
+    void shouldNotPlaceWorkersIfNotCurrentPlayer()
+    {
+        game.join(p1);
+        game.join(p2);
+        assertThrows(NotAllowedOperationException.class, ()->{game.placeWorkers(p2, null);});
+    }
+
+    @Test
+    void shouldNotPlaceWorkersIfNullPositions()
+    {
+        game.join(p1);
+        game.join(p2);
+        try
+        {
+            assertFalse(game.placeWorkers(p1, null));
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception");
         }
     }
 
     @Test
-    void shouldNotPlaceWorkers()
+    void shouldNotPlaceWorkersIfPositionsSizeIsNotTwo()
     {
-
-        // null player
-        assertThrows(NotAllowedOperationException.class, ()->{game.placeWorkers(null, null);});
-        // not a player
-        assertThrows(NotAllowedOperationException.class, ()->{game.placeWorkers(p1, null);});
-
         game.join(p1);
         game.join(p2);
-        game.join(p4);
-
-        // not current player
-        assertThrows(NotAllowedOperationException.class, ()->{game.placeWorkers(p4, null);});
-
-        try {
-
-            // null pos
-            assertFalse(game.placeWorkers(p1, null));
-
-            // invalid size
-            Vector2[] pos = new Vector2[]{new Vector2(0,0)};
+        try
+        {
+            //size 0
+            Vector2[] pos = new Vector2[]{};
             assertFalse(game.placeWorkers(p1, pos));
             assertEquals(0, p1.getWorkers().size());
 
+            // size 1
+            pos = new Vector2[]{new Vector2(0,0)};
+            assertFalse(game.placeWorkers(p1, pos));
+            assertEquals(0, p1.getWorkers().size());
+
+            //size 3
+            // size 1
+            pos = new Vector2[]{new Vector2(0,0), new Vector2(1,1), new Vector2(3,3)};
+            assertFalse(game.placeWorkers(p1, pos));
+            assertEquals(0, p1.getWorkers().size());
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
+
+    @Test
+    void shouldNotPlaceWorkersIfDuplicatePositions()
+    {
+        game.join(p1);
+        game.join(p2);
+        try
+        {
             // same position repeated
-            pos = new Vector2[]{new Vector2(0,0), new Vector2(0,0)};
+            var pos = new Vector2[]{new Vector2(0,0), new Vector2(0,0)};
             assertFalse(game.placeWorkers(p1, pos));
             assertEquals(0, p1.getWorkers().size());
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
 
+
+    @Test
+    void shouldNotPlaceWorkersIfOnePositionIsInvalid()
+    {
+        game.join(p1);
+        game.join(p2);
+        try
+        {
             //wrong position[0]
-            pos = new Vector2[]{new Vector2(-1,+29), new Vector2(0,0)};
+            var pos = new Vector2[]{new Vector2(-1,+29), new Vector2(0,0)};
             assertFalse(game.placeWorkers(p1, pos));
             assertEquals(0, p1.getWorkers().size());
 
@@ -429,16 +607,29 @@ class GameTest
             pos = new Vector2[]{new Vector2(0,0), new Vector2(-1,+29)};
             assertFalse(game.placeWorkers(p1, pos));
             assertEquals(0, p1.getWorkers().size());
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
 
-            //used cells
-            pos = new Vector2[]{new Vector2(0,0), new Vector2(1,1)};
+    @Test
+    void shouldNotPlaceWorkersInAlreadyUsedCells()
+    {
+        game.join(p1);
+        game.join(p2);
+
+        try
+        {
+            var pos = new Vector2[]{new Vector2(0,0), new Vector2(1,1)};
             game.placeWorkers(p1, pos);
 
             assertFalse(game.placeWorkers(p2, pos));
             assertFalse(game.placeWorkers(p2, pos));
             assertEquals(0, p2.getWorkers().size());
-
-        }catch(NotAllowedOperationException e)
+        }
+        catch(NotAllowedOperationException e)
         {
             fail("Unexpected exception");
         }
@@ -485,21 +676,31 @@ class GameTest
         }
     }
 
-
     @Test
-    void shouldNotRunAction()
+    void shouldNotRunActionIfNotCurrentPlayer()
     {
-        // we assume the default turn (move - build) is used
         prepareGameForAction();
 
         // not current player
         assertThrows(NotAllowedOperationException.class, ()->{game.executeAction(p2, 0,0, null);});
+    }
+
+
+    @Test
+    void shouldNotRunActionIfNotInTheGame()
+    {
+        prepareGameForAction();
 
         // not in game
         assertThrows(NotAllowedOperationException.class, ()->{game.executeAction(p3, 0,0, null);});
+    }
 
-        try{
-
+    @Test
+    void  shouldNotRunActionIfWrongWorkerID()
+    {
+        prepareGameForAction();
+        try
+        {
             // wrong worker id (neg)
             assertTrue(game.executeAction(p1,-1, 6, null) < 0);
             assertEquals(p1, game.getCurrentPlayer());
@@ -507,31 +708,72 @@ class GameTest
             // wrong worker id (sep)
             assertTrue(game.executeAction(p1,2, 6, null) < 0);
             assertEquals(p1, game.getCurrentPlayer());
-
-            // out of range action
-            assertTrue(game.executeAction(p1,0, 10, null) < 0);
-            assertTrue(game.executeAction(p1,0, -1, null) < 0);
-
-            // null position
-            assertTrue(game.executeAction(p1,0, 0, null) < 0);
-
-            // wrong position
-            assertTrue(game.executeAction(p1,0, 0, new Vector2(-1,-1)) < 0);
-
-            // wrong worker after first action
-            assertTrue(game.executeAction(p1,1, 0, new Vector2(0,1)) > 0);
-            assertTrue(game.executeAction(p1,1, 0, new Vector2(0,0)) < 0);
-            assertEquals(Game.GameState.GAME, game.getCurrentState());
-            assertEquals(p1, game.getCurrentPlayer());
-
-        }catch (NotAllowedOperationException e)
+        }
+        catch (NotAllowedOperationException e)
         {
             fail("Unexpected exception");
         }
     }
 
     @Test
-    void jsonTest(){
+    void  shouldNotRunActionIfWrongActionID()
+    {
+        prepareGameForAction();
+        try
+        {
+            // out of range action
+            assertTrue(game.executeAction(p1,0, 10, null) < 0);
+            assertTrue(game.executeAction(p1,0, -1, null) < 0);
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
+
+    @Test
+    void shouldNotRunActionIfWrongPosition()
+    {
+        prepareGameForAction();
+        try
+        {
+            // null position
+            assertTrue(game.executeAction(p1,0, 0, null) < 0);
+
+            // wrong position
+            assertTrue(game.executeAction(p1,0, 0, new Vector2(-1,-1)) < 0);
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
+
+    @Test
+    void shouldNotRunSecondActionWithDifferentWorker()
+    {
+        // we assume the default turn (move - build) is used
+        prepareGameForAction();
+
+        try
+        {
+            // wrong worker after first action
+            assertTrue(game.executeAction(p1,1, 0, new Vector2(0,1)) > 0);
+            assertTrue(game.executeAction(p1,1, 0, new Vector2(0,0)) < 0);
+            assertEquals(Game.GameState.GAME, game.getCurrentState());
+            assertEquals(p1, game.getCurrentPlayer());
+
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception");
+        }
+    }
+
+
+    @Test
+    void shouldSaveAndReloadGame(){
+        // create save
         CardCollection cardCollection = new CardCollection();
         Player player1 = new Player(0,"firstPlayer");
         Player player2 = new Player(1,"secondPlayer");
@@ -567,6 +809,7 @@ class GameTest
 
         game.gameJsonToFile("game.txt");
 
+        // reload and check if save was correct
         Game newGame = new Game();
         newGame = newGame.gameJsonFromFile("game.txt");
 

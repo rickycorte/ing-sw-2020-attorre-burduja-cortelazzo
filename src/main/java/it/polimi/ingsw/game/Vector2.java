@@ -32,7 +32,7 @@ public class Vector2 {
             return false;
         }
         Vector2 test_pos = (Vector2) obj;
-        return Integer.compare(x, test_pos.x) == 0 && Integer.compare(y, test_pos.y) == 0;
+        return x == test_pos.x && y == test_pos.y;
     }
 
     /**
