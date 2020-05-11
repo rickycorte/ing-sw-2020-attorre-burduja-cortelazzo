@@ -2,12 +2,9 @@ package it.polimi.ingsw.network.client;
 
 
 import com.google.gson.Gson;
-import it.polimi.ingsw.controller.Command;
-import it.polimi.ingsw.controller.CommandType;
-import it.polimi.ingsw.controller.CommandWrapper;
+import it.polimi.ingsw.controller.*;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
-import it.polimi.ingsw.network.INetworkSerializable;
 import it.polimi.ingsw.view.cli.Cli;
 
 import java.io.BufferedReader;
@@ -23,6 +20,7 @@ import java.util.Timer;
  */
 
 public class ServerConnection implements Runnable, INetworkAdapter {
+
     private String host;   //server's ip address
     private int id;
     private Socket s_socket;
@@ -31,7 +29,9 @@ public class ServerConnection implements Runnable, INetworkAdapter {
     private PrintWriter out;
     BufferedReader keyboard;
     private Timer pingTimer;
-    private Cli cli;
+    private String username;
+    //private Cli cli;
+    private ICommandReceiver commandReceiver;
     //private Gui gui;
 
     /**
@@ -47,6 +47,7 @@ public class ServerConnection implements Runnable, INetworkAdapter {
             out = new PrintWriter(s_socket.getOutputStream(), true);            //used to send messages
             keyboard = new BufferedReader(new InputStreamReader(System.in));               //handle user input
             pingTimer = new Timer();
+            this.username = null;
         }catch (IOException e){
             System.out.println("unhandled exception in ServerConnection constructor");
         }
@@ -64,14 +65,26 @@ public class ServerConnection implements Runnable, INetworkAdapter {
         try {
             serverResponse = in.readLine(); // this is the client_id given to me by the server
         } catch (IOException e) {
-            close();
+            Disconnect();
         }
         System.out.println("My client_id is "+ serverResponse);
         int id = Integer.parseInt(serverResponse);
         setId(id);
+
         pingTimer.cancel();
         pingTimer = new Timer();
         pingTimer.scheduleAtFixedRate(new PingTask(this), 1000, 3000);
+
+        System.out.println("[SERVER_CONNECTION] Enter username");
+        try {
+            username = keyboard.readLine();
+
+        }catch (IOException e){
+            System.out.println("Err keyboard");
+        }
+
+
+
         int interface_choice = 0;
         try {
             do {
@@ -83,14 +96,18 @@ public class ServerConnection implements Runnable, INetworkAdapter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         if(interface_choice == 1){
-            this.cli = new Cli(this);
+            commandReceiver = new Cli(this);
         }
         else{
             //Start the GUI with this adapter
+
         }
         readLoop();
     }
+
+
 
 
     /**
@@ -99,50 +116,34 @@ public class ServerConnection implements Runnable, INetworkAdapter {
      */
     public void readLoop(){
         String serverResponse = null;
+        //TODO Start command receiver
+
+        Send(getServerID(),new CommandWrapper(CommandType.JOIN, new JoinCommand(this.id, getServerID() , username, true )));
+
         boolean condition = true;
         while (condition) {
             try {
                 serverResponse = in.readLine();
                 if (serverResponse == null) break;
                 CommandWrapper cmd = Deserialize(serverResponse);
-                if(cli != null){
-                    cli.onCommand(cmd);
-                }else{
-                    //gui.onCommand(cmd);
-                }
+                if (cmd.getType() == CommandType.JOIN)
+                    commandReceiver.onConnect(cmd);
+                else if (cmd.getType() == CommandType.LEAVE)
+                    commandReceiver.onDisconnect(cmd);
+                else
+                    commandReceiver.onCommand(cmd);
+
 
             }catch (IOException e){
                 System.out.println("[SERVER_CONNECTION] Couldn't read from the socket, closing connection");
-                close();
+                Disconnect();
             }
         }
 
     }
 
-    /**
-     * Method used to send a message to the server
-     * @param message to send
-     */
-    public void send(String message) {
-        if(out != null) {
-            out.println(message);
-            out.flush();
-        }
-    }
 
-    /**
-     * Method used to close the connection to the server
-     */
-    public void close(){
-        try {
-            in.close();
-            out.close();
-            s_socket.close();
-            System.out.println("connection was closed");
-        }catch (IOException e){
-            System.out.println("[SERVERCONNECTION] error in closing the connection");
-        }
-    }
+
 
 
     void setId(int client_id){
@@ -176,6 +177,14 @@ public class ServerConnection implements Runnable, INetworkAdapter {
 
     @Override
     public void Disconnect() {
+        try {
+            in.close();
+            out.close();
+            s_socket.close();
+            System.out.println("connection was closed");
+        }catch (IOException e){
+            System.out.println("[SERVERCONNECTION] error in closing the connection");
+        }
 
     }
 
@@ -185,18 +194,35 @@ public class ServerConnection implements Runnable, INetworkAdapter {
     }
 
     @Override
+    public ICommandReceiver getReceiver() {
+        return this.commandReceiver;
+    }
+
+    @Override
     public void RemoveReceiver(ICommandReceiver receiver) {
 
     }
 
     @Override
-    public void Send(int id, INetworkSerializable packet) {
-        out.println(packet.Serialize());
-        out.flush();
+    public void Send(int id, CommandWrapper packet) {
+        if(out != null) {
+            out.println(packet.Serialize());
+            out.flush();
+        }
     }
 
     @Override
-    public void SendBroadcast(INetworkSerializable packet) {
+    public void SendBroadcast(CommandWrapper packet) {
+        //do nothing, client can't broadcast
+    }
 
+    @Override
+    public int getServerID() {
+        return -1111;
+    }
+
+    @Override
+    public int getBroadCastID() {
+        return 0;
     }
 }

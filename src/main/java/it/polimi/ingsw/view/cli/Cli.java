@@ -8,7 +8,7 @@ import it.polimi.ingsw.network.INetworkAdapter;
 import java.io.PrintStream;
 import java.util.*;
 
-public class Cli {
+public class Cli implements ICommandReceiver{
     private static final int HEIGHT = 7;
     private static final int LENGTH = 7;
     private static final int DOME_VALUE = 128;
@@ -22,6 +22,16 @@ public class Cli {
 
     public Cli(INetworkAdapter adapter){
         virtualServer = adapter;
+    }
+
+    @Override
+    public void onConnect(CommandWrapper cmd) {
+
+    }
+
+    @Override
+    public void onDisconnect(CommandWrapper cmd) {
+
     }
 
     public void onCommand(CommandWrapper cmdWrapper){

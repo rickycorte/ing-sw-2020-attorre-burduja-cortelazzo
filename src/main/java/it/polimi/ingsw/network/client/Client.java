@@ -3,7 +3,6 @@ package it.polimi.ingsw.network.client;
 import it.polimi.ingsw.controller.Command;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
-import it.polimi.ingsw.network.INetworkSerializable;
 
 import java.io.*;
 import java.net.Socket;
@@ -11,6 +10,10 @@ import java.net.Socket;
 public class Client {
     private static final String SERVER_IP = "127.0.0.1";
     private static final int PORT = 16000;
+    private static ServerConnection serverConnection;
+    //public String username;
+    //private BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
+
 
 
     /**
@@ -19,14 +22,14 @@ public class Client {
      * @param server_ip server's address
      * @param port      server's listening port
      */
-    public static void connect(String server_ip, int port) {
+    public void connect(String server_ip, int port) {
         System.out.println("[CLIENT] Connecting...");
         Socket s_socket;
         try {
             s_socket = new Socket(SERVER_IP, PORT);
             System.out.println("[CLIENT] Connection to server established");
-            ServerConnection serverConnection = new ServerConnection(s_socket, SERVER_IP);
-
+            serverConnection = new ServerConnection(s_socket, SERVER_IP);
+            //username = askUsername();
             new Thread(serverConnection).start();
 
         } catch (IOException e) {
@@ -34,14 +37,19 @@ public class Client {
             e.printStackTrace();
         }
     }
+    public ServerConnection getServerConnection(){
+        return serverConnection;
+    }
+    /*
 
-
-    public static void main(String[] args) throws IOException {
-        System.out.println("[CLIENT] Welcome to the Santorini client!");
-        //TODO should ask the server ip and the port you want to connect to
-        connect(SERVER_IP, PORT);
+    public String askUsername() throws IOException {
+        System.out.println("[CLIENT] Username?");
+        return keyboard.readLine();
 
     }
+
+     */
+
 
 
 

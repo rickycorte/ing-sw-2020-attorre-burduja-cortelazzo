@@ -5,7 +5,6 @@ package it.polimi.ingsw.network.server;
 import com.google.gson.Gson;
 import it.polimi.ingsw.controller.CommandType;
 import it.polimi.ingsw.controller.CommandWrapper;
-import it.polimi.ingsw.network.INetworkSerializable;
 
 import java.io.*;
 import java.net.Socket;
@@ -27,7 +26,7 @@ public class Client_Handler implements Runnable {
     private PrintWriter out;
 
     private Timer disconnectTimer;      //disconnection timer in case i dont receive a ping message in 9 seconds
-
+    private final Object outLock;
 
 
     /**
@@ -37,9 +36,9 @@ public class Client_Handler implements Runnable {
      * @param client_id unique identifier for a client
      * @param server server to handle the messages
      */
-    Client_Handler(Socket clientSocket, int client_id, Server server) {
+    Client_Handler(Socket clientSocket, int client_id, Server server, Object outLock) {
         this.connected = true;
-
+        this.outLock = outLock;
         this.server = server;
         this.c_socket = clientSocket;
 
@@ -115,10 +114,12 @@ public class Client_Handler implements Runnable {
      * Method used to send a message to the client
      * @param packet is the message to send
      */
-    public void sendMessage(INetworkSerializable packet){
+    public void sendMessage(CommandWrapper packet){
         if(connected) {
-            out.println(packet.Serialize());
-            out.flush();
+            synchronized (outLock) {
+                out.println(packet.Serialize());
+                out.flush();
+            }
         }
     }
 

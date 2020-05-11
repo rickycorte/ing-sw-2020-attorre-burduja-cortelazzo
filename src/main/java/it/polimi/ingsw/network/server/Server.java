@@ -6,7 +6,6 @@ import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.Controller;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
-import it.polimi.ingsw.network.INetworkSerializable;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -22,14 +21,15 @@ import java.util.concurrent.Executors;
  * This class is the main server which starts a socket
  * Handles the clients
  */
-public class Server {
+public class Server implements INetworkAdapter {
     private static int server_id = -1111;
     private static int port;                                //the port on which the server will listen
     private ServerSocket s_socket;                          //the socket on which the server will read/write
     private static ExecutorService pool;                    //max num of connected clients
-    private final Object lock = new Object();
+    private final Object mapLock;
     private Map<Integer, Client_Handler> clientHandlerMap;  //Hash map to map a client_id to a ClientHandler
-    private Controller controller;                          //Controller to handle commands
+    private ICommandReceiver controller;                    //Controller to handle commands
+    private final Object outLock;
 
 
 
@@ -37,12 +37,14 @@ public class Server {
     /**
      * Server constructor
      */
-    Server(INetworkAdapter ina){
-        synchronized (lock) {
+    public Server(){
+        this.mapLock = new Object();
+        this.outLock = new Object();
+        synchronized (mapLock) {
             clientHandlerMap = new HashMap<>();
         }
         this.pool = Executors.newCachedThreadPool();
-        this.controller = new Controller(ina);
+        controller = new Controller(this);
 
     }
 
@@ -89,8 +91,8 @@ public class Server {
             try {
                 client_socket = listener.accept();
                 id++;
-                Client_Handler clientHandler = new Client_Handler(client_socket, id, this);
-                synchronized (clientHandlerMap) {
+                Client_Handler clientHandler = new Client_Handler(client_socket, id, this, outLock);
+                synchronized (mapLock) {
                     clientHandlerMap.put(id, clientHandler);
                 }
                 pool.execute(clientHandler);
@@ -116,7 +118,7 @@ public class Server {
         controller.onDisconnect(leave_command);
 
         //remove both id and client handler from the mapped ones
-        synchronized (clientHandlerMap) {
+        synchronized (mapLock) {
             clientHandlerMap.remove(ch.getId());
         }
 
@@ -128,8 +130,10 @@ public class Server {
      * @param packet represents the message to send
      */
 
-    public void Send(int id, INetworkSerializable packet) {
-        clientHandlerMap.get(id).sendMessage(packet);
+    public void Send(int id, CommandWrapper packet) {
+        synchronized (mapLock) {
+            clientHandlerMap.get(id).sendMessage(packet);
+        }
     }
 
 
@@ -137,11 +141,24 @@ public class Server {
      * Method used to send a message to all the clients
      * @param packet represents the message to send
      */
-    public void SendBroadcast(INetworkSerializable packet) {
-        clientHandlerMap.forEach((id, clientHandler) -> {
-            clientHandlerMap.get(id).sendMessage(packet);
-        });
+    public void SendBroadcast(CommandWrapper packet) {
+        synchronized (mapLock) {
+            clientHandlerMap.forEach((id, clientHandler) -> {
+                clientHandlerMap.get(id).sendMessage(packet);
+            });
+        }
     }
+
+    @Override
+    public int getServerID() {
+        return 0;
+    }
+
+    @Override
+    public int getBroadCastID() {
+        return 0;
+    }
+
     /**
      * Method used to close the server
      */
@@ -153,10 +170,40 @@ public class Server {
         }
     }
 
+    @Override
+    public void Connect(String ip, int port, String username) {
+
+    }
+
+    @Override
+    public void Disconnect() {
+
+    }
+
+    @Override
+    public void AddReceiver(ICommandReceiver receiver) {
+        this.controller = receiver;
+
+    }
+
+    @Override
+    public ICommandReceiver getReceiver() {
+        return this.controller;
+    }
+
+    @Override
+    public void RemoveReceiver(ICommandReceiver receiver) {
+        this.controller = null;
+
+    }
+
     int getServer_id(){
         return server_id;
     }
 
+    ICommandReceiver getController(){
+        return this.controller;
+    }
 
 
 }

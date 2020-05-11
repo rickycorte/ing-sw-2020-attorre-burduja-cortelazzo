@@ -24,6 +24,6 @@ public class PingTask extends TimerTask {
      */
     @Override
     public void run() {
-        serverConnection.send(new CommandWrapper(CommandType.BASE, null).Serialize());
+        serverConnection.Send( -1111 ,new CommandWrapper(CommandType.BASE, null));
     }
 }

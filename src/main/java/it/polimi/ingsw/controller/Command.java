@@ -3,13 +3,12 @@ package it.polimi.ingsw.controller;
 
 import com.google.gson.Gson;
 import it.polimi.ingsw.game.Vector2;
-import it.polimi.ingsw.network.INetworkSerializable;
 
 /**
  * A command sent/received from network
  * Can be serialized in json
  */
-public class Command  implements INetworkSerializable
+public class Command
 {
     /**
      * Possible types of messages exchanged by server and client
@@ -146,11 +145,13 @@ public class Command  implements INetworkSerializable
     public Vector2[] getV2Data() { return v2Data; }
 
     public String[] getStringData(){ return stringData; }
-
+/*
     @Override
     public String Serialize() {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
+
+ */
 
 }

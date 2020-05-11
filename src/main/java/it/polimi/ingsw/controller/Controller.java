@@ -1,6 +1,7 @@
 package it.polimi.ingsw.controller;
 
 import it.polimi.ingsw.game.*;
+import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
 
 import java.util.ArrayList;
@@ -8,7 +9,7 @@ import java.util.List;
 
 import static it.polimi.ingsw.game.Game.GameState.END;
 
-public class Controller {
+public class Controller implements ICommandReceiver {
     private static final int SERVER_ID = -1111;
     private static final int BROADCAST_ID = -2222;
     private static final int MAX_PLAYERS = 3;
@@ -313,7 +314,7 @@ public class Controller {
         int id = cmd.getSender();
         CommandWrapper next = new CommandWrapper(CommandType.JOIN,new JoinCommand(cmd.getTarget(), cmd.getSender(),successfulJoining));
         lastSent = next;
-        //virtualProxy.Send(id,next);
+        virtualProxy.Send(id,next);
     }
 
     /**
@@ -339,7 +340,7 @@ public class Controller {
     private void sendUpdate(CommandWrapper lastCommand){
         if(lastCommand.getType() == CommandType.PLACE_WORKERS || lastCommand.getType() == CommandType.ACTION_TIME) {
             CommandWrapper next = new CommandWrapper(CommandType.UPDATE, new UpdateCommand(SERVER_ID, BROADCAST_ID,match.getCurrentMap()));
-            //virtualProxy.SendBroadcast(next);
+            virtualProxy.SendBroadcast(next);
         }
     }
 
@@ -350,7 +351,7 @@ public class Controller {
      */
     private void metLoseCondition(int player){
         CommandWrapper cmd = new CommandWrapper(CommandType.END_GAME,new EndGameCommand(SERVER_ID,player,false));
-        //virtualProxy.Send(player,cmd);
+        virtualProxy.Send(player,cmd);
     }
 
     /**
@@ -360,7 +361,7 @@ public class Controller {
     private void sendNextCommand(CommandWrapper cmdWrap){
         if(cmdWrap != null){
             lastSent = cmdWrap;
-            //virtualProxy.Send(nextPlayer,cmd);
+            virtualProxy.Send(nextPlayer,cmdWrap);
         }
     }
 }

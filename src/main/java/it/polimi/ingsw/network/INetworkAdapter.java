@@ -1,5 +1,7 @@
 package it.polimi.ingsw.network;
 
+import it.polimi.ingsw.controller.CommandWrapper;
+
 /**
  * Interface for a network adapter
  */
@@ -42,6 +44,8 @@ public interface INetworkAdapter
      */
     void AddReceiver(ICommandReceiver receiver);
 
+
+    ICommandReceiver getReceiver();
     /**
      * Remove a receiver for packers
      * @param receiver packet receiver to remove
@@ -53,11 +57,15 @@ public interface INetworkAdapter
      * @param id client id
      * @param packet packet to send
      */
-    void Send(int id, INetworkSerializable packet);
+    void Send(int id, CommandWrapper packet);
 
     /**
      * Send a packet to all the clients
      * @param packet packet to send
      */
-    void SendBroadcast(INetworkSerializable packet);
+    void SendBroadcast(CommandWrapper packet);
+
+    int getServerID();
+
+    int getBroadCastID();
 }

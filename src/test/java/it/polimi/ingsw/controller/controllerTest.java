@@ -1,8 +1,8 @@
 package it.polimi.ingsw.controller;
 
 import it.polimi.ingsw.game.*;
+import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
-import it.polimi.ingsw.network.server.Network;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +14,62 @@ public class controllerTest {
 
     @BeforeEach
     void setUp() {
-        INetworkAdapter adapter = new Network();
+        INetworkAdapter adapter = new INetworkAdapter() {
+            @Override
+            public void StartServer(int port) {
+
+            }
+
+            @Override
+            public void StopServer() {
+
+            }
+
+            @Override
+            public void Connect(String ip, int port, String username) {
+
+            }
+
+            @Override
+            public void Disconnect() {
+
+            }
+
+            @Override
+            public void AddReceiver(ICommandReceiver receiver) {
+
+            }
+
+            @Override
+            public ICommandReceiver getReceiver() {
+                return null;
+            }
+
+            @Override
+            public void RemoveReceiver(ICommandReceiver receiver) {
+
+            }
+
+            @Override
+            public void Send(int id, CommandWrapper packet) {
+
+            }
+
+            @Override
+            public void SendBroadcast(CommandWrapper packet) {
+
+            }
+
+            @Override
+            public int getServerID() {
+                return 0;
+            }
+
+            @Override
+            public int getBroadCastID() {
+                return 0;
+            }
+        };
         controller = new Controller(adapter);
     }
 

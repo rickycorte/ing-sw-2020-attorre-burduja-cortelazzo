@@ -1,12 +1,12 @@
 package it.polimi.ingsw.controller;
 
 import com.google.gson.Gson;
-import it.polimi.ingsw.network.INetworkSerializable;
+
 
 /**
  * Command wrapper used to easily detect command type and deserialize with the correct type
  */
-public class CommandWrapper implements INetworkSerializable
+public class CommandWrapper
 {
     CommandType type;
     String data;
@@ -49,7 +49,7 @@ public class CommandWrapper implements INetworkSerializable
      * Serialize data as string to send it over network
      * @return commandWrapper as Json string
      */
-    @Override
+
     public String Serialize()
     {
         Gson gson = new Gson();
