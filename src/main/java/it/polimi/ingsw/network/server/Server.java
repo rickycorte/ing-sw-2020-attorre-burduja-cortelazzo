@@ -1,6 +1,11 @@
 package it.polimi.ingsw.network.server;
 
+import it.polimi.ingsw.controller.BaseCommand;
+import it.polimi.ingsw.controller.CommandType;
+import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.Controller;
+import it.polimi.ingsw.network.ICommandReceiver;
+import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.network.INetworkSerializable;
 
 import java.io.IOException;
@@ -9,6 +14,8 @@ import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+
 
 
 /**
@@ -20,50 +27,53 @@ public class Server {
     private static int port;                                //the port on which the server will listen
     private ServerSocket s_socket;                          //the socket on which the server will read/write
     private static ExecutorService pool;                    //max num of connected clients
-    private Timer timer;
-    private Map<Integer, Client_Handler> clientHandlerMap;   //Hash map to map a client_id to a ClientHandler
+    private final Object lock = new Object();
+    private Map<Integer, Client_Handler> clientHandlerMap;  //Hash map to map a client_id to a ClientHandler
     private Controller controller;                          //Controller to handle commands
+
 
 
 
     /**
      * Server constructor
      */
-    Server(){
-        clientHandlerMap = new HashMap<>();
+    Server(INetworkAdapter ina){
+        synchronized (lock) {
+            clientHandlerMap = new HashMap<>();
+        }
         this.pool = Executors.newCachedThreadPool();
-        this.timer = new Timer();
-        this.controller = new Controller();
+        this.controller = new Controller(ina);
 
     }
 
-    /**
-     * Method used to start a connection to a given port
-     * @param port int representing the exact port
-     */
     public void StartServer(int port) {
         System.out.println("Welcome to the Santorini server!");
         System.out.println("[SERVER] Starting...");
         Server.port = port;
+
         ServerSocket listener = null;
         try {
             listener = new ServerSocket(port);
-
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("ERR! Couldn't start the server");
         }
+
         System.out.println("[SERVER] Started!");
         System.out.println("[SERVER] Listening on: " + port + " port");
 
-        try {
-            behaviour(listener);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        } finally {
-            System.out.println("[SERVER] Shutting down...");
+        if (listener != null) {
+            try {
+                behaviour(listener);
+            } catch (Throwable e) {
+                System.out.println("[SERVER] err behaviour(listener)");
+            } finally {
+                System.out.println("[SERVER] Shutting down...");
+                StopServer();
+            }
+        } else {
+            System.out.println("Error in setting the listener");
             StopServer();
         }
-
     }
 
     /**
@@ -74,18 +84,42 @@ public class Server {
         int id = 0;
         System.out.println("[SERVER] Waiting for clients...");
         while (true) {
-            Socket client_socket = null;
+
+            Socket client_socket;
             try {
                 client_socket = listener.accept();
                 id++;
-                Client_Handler clientHandler = new Client_Handler(client_socket, id, controller);
-                clientHandlerMap.put(id, clientHandler);
+                Client_Handler clientHandler = new Client_Handler(client_socket, id, this);
+                synchronized (clientHandlerMap) {
+                    clientHandlerMap.put(id, clientHandler);
+                }
                 pool.execute(clientHandler);
                 System.out.println("[SERVER] Connected to client");
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("[SERVER] err in accepting");
+                //e.printStackTrace();
             }
         }
+    }
+
+    void handleJoin(CommandWrapper cmd){
+        controller.onConnect(cmd);
+    }
+
+    void onCommand(CommandWrapper cmd){
+        controller.onCommand(cmd);
+    }
+
+    void onDisconnect(Client_Handler ch){
+
+        CommandWrapper leave_command = new CommandWrapper(CommandType.LEAVE, new BaseCommand(ch.getId(), -1111));
+        controller.onDisconnect(leave_command);
+
+        //remove both id and client handler from the mapped ones
+        synchronized (clientHandlerMap) {
+            clientHandlerMap.remove(ch.getId());
+        }
+
     }
 
     /**
@@ -122,4 +156,7 @@ public class Server {
     int getServer_id(){
         return server_id;
     }
+
+
+
 }

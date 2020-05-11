@@ -12,22 +12,21 @@ import it.polimi.ingsw.network.INetworkSerializable;
 public class Network implements INetworkAdapter {
 
 
-    public static Server my_server;
+    private static Server my_server;
+
 
      public  Network(){
-        my_server = new Server();
+         my_server = new Server(this);
     }
+
+
 
     public static void main(String[] args) {
         Network my_network = new Network();
-        my_network.StartServer(9090); //TODO ask the user to choose a port
 
+        my_network.StartServer(16000); //TODO ask the user to choose a port
     }
 
-
-
-
-    //INetworkAdapter methods
 
     @Override
     public void StartServer(int port) {
@@ -37,17 +36,16 @@ public class Network implements INetworkAdapter {
     @Override
     public void StopServer() {
         my_server.StopServer();
-
     }
 
     @Override
     public void Connect(String ip, int port, String username) {
-        //client method, do nothing in server
+
     }
 
     @Override
     public void Disconnect() {
-        //client method, do nothing in server
+
     }
 
     @Override
