@@ -45,7 +45,7 @@ This are all possible values of `CommandType` and they represent all possible co
 | JOIN                | Request to join a match | -- |
 | LEAVE               | Request to quit a match | -- | 
 | START               | Ask the server to start a match (setup phase) | Request made by the host to start a match
-| FILTER_GODS         | Request the host to pick the gods for the match | List of gods that shoul be used in the match |  
+| FILTER_GODS         | Request the host to pick the gods for the match | List of gods that should be used in the match |  
 | PICK_GOD            | Request to to pick a god from the provided list | God pick by a player
 | SELECT_FIRST_PLAYER | Request the host to chose the first player from a list| First player chosen by the host | 
 | PLACE_WORKERS       | Request to place the workers in the map | Positions where the player wants to place his workers
@@ -97,16 +97,17 @@ When a connection dies for every reason, the network layer generates a virtual `
 | Seq | CommandType            | Sender   | Receiver | Payload                                              |
 |-----|------------------------|----------|----------|------------------------------------------------------|
 | 1   | StartCommand           | 1        | ServerID | --                                                   |
-| 2   | FilterGodCommand       | ServerID | 1        | GodsID: `[1,2,3,4,...]`                              |
-| 3   | FilterGodCommand       | 1        | ServerID | GodsID: `[3,4]`                                      |
-| 4   | PickGodCommand         | ServerID | 2        | GodsID: `[3,4]`                                      |
-| 5   | PickGodCommand         | 2        | ServerID | GodsID: `[4]`                                        |
-| 6   | FirstPlayerPickCommand | ServerID | 1        | PlayerID: `[1,2]`<br>Usernames: `["Trash", "Panda"]` |
-| 7   | FirstPlayerPickCommand | 1        | ServerID | PlayerID: `[2]`                                      |
-| 8   | WorkerPlaceCommand     | ServerID | 2        | Positions: `[{0,0},{0,1},{0,2},{0,3},{0,4}...{6,6}]` |
-| 9   | WorkerPlaceCommand     | 2        | ServerID | Positions: `[{0,0},{0,1}]`                           |
-| 10  | WorkerPlaceCommand     | ServerID | 1        | Positions: `[{0,2},{0,3},{0,4}...{6,6}]`             |
-| 11  | WorkerPlaceCommand     | 1        | ServerID | Positions: `[{1,1},{3,3}]`                           |
+| 2   | StartCommand           | ServerID | *        | PlayerIDs: `[1,2]`                                   |
+| 3   | FilterGodCommand       | ServerID | 1        | GodsID: `[1,2,3,4,...]`                              |
+| 4   | FilterGodCommand       | 1        | ServerID | GodsID: `[3,4]`                                      |
+| 5   | PickGodCommand         | ServerID | 2        | GodsID: `[3,4]`                                      |
+| 6   | PickGodCommand         | 2        | ServerID | GodsID: `[4]`                                        |
+| 7   | FirstPlayerPickCommand | ServerID | 1        | PlayerID: `[1,2]`<br>Usernames: `["Trash", "Panda"]` |
+| 8   | FirstPlayerPickCommand | 1        | ServerID | PlayerID: `[2]`                                      |
+| 9   | WorkerPlaceCommand     | ServerID | 2        | Positions: `[{0,0},{0,1},{0,2},{0,3},{0,4}...{6,6}]` |
+| 10  | WorkerPlaceCommand     | 2        | ServerID | Positions: `[{0,0},{0,1}]`                           |
+| 11  | WorkerPlaceCommand     | ServerID | 1        | Positions: `[{0,2},{0,3},{0,4}...{6,6}]`             |
+| 12  | WorkerPlaceCommand     | 1        | ServerID | Positions: `[{1,1},{3,3}]`                           |
 
 This schema is also valid for three players, just imagine to add an extra step to pick gods and place workers.
 With three players the start command is not necessary, because the match has reached the max player count and automatically start.
