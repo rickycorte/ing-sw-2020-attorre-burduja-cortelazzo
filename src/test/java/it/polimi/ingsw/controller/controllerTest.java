@@ -324,7 +324,7 @@ public class controllerTest {
         assertEquals(CommandType.PICK_GOD,controller.getLastSent().getType());
 
         controller.getLastSent().Serialize();
-        FilterGodCommand cmd = controller.getLastSent().getCommand(FilterGodCommand.class);
+        PickGodCommand cmd = controller.getLastSent().getCommand(PickGodCommand.class);
         assertEquals(3,cmd.getGodID().length);
     }
 

@@ -67,6 +67,7 @@ public class Cli implements ICommandReceiver {
                 for (Integer i : colors.keySet())
                     stream.print(i + " ");
                 stream.println();
+                stream.println("Select first player for this game: ");
                 int[] firstPlayer;
                 firstPlayer = getIntFromLine(1);
                 virtualServer.Send(SERVER_ID, new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(idPlayer,SERVER_ID,firstPlayer[0])));
@@ -83,7 +84,7 @@ public class Cli implements ICommandReceiver {
                 virtualServer.Send(SERVER_ID,new CommandWrapper(CommandType.PLACE_WORKERS,new WorkerPlaceCommand(idPlayer,SERVER_ID,selectedPositions)));
                 break;
             case ACTION_TIME:
-
+                    stream.println("ACTION TIME : currently not available  BUT VERY GOOD WORK ");
 
                 break;
             case END_GAME:

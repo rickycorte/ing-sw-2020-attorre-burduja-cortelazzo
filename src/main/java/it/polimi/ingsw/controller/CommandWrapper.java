@@ -36,7 +36,7 @@ public class CommandWrapper
      */
     public <T extends BaseCommand> T getCommand(Class<T> type)
     {
-        if(cachedCommand != null)
+            if(cachedCommand == null)
         {
             Gson gson = new Gson();
             cachedCommand = gson.fromJson(data, type);
