@@ -1,8 +1,12 @@
 package it.polimi.ingsw.view.cli;
 
 import it.polimi.ingsw.controller.*;
+import it.polimi.ingsw.game.Player;
 import it.polimi.ingsw.game.Vector2;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class CliTest {
@@ -59,4 +63,23 @@ public class CliTest {
         cli.onCommand(serializer(new CommandWrapper(CommandType.END_GAME,new EndGameCommand(-1111,1,true))));
     }
      */
+
+
+    @Test
+    void shouldSendID(){
+        Cli cli = new Cli(null);
+
+        List<Player> connectedPlayers = new ArrayList<>();
+        Player p1 = new Player(1,"kekko");
+        Player p2 = new Player(2,"vlad");
+        Player p3 = new Player(3,"ricky");
+        connectedPlayers.add(p1);
+        connectedPlayers.add(p2);
+        connectedPlayers.add(p3);
+
+        cli.onCommand(serializer(new CommandWrapper(CommandType.START,new StartCommand(-1111,1,connectedPlayers))));
+
+        cli.onCommand(serializer((new CommandWrapper(CommandType.FILTER_GODS,new FilterGodCommand(-1111,1)))));
+
+    }
 }
