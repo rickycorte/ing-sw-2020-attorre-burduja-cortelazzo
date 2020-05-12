@@ -48,8 +48,6 @@ public class Cli implements ICommandReceiver {
     }
 
     public void onCommand(CommandWrapper cmdWrapper){
-        BaseCommand baseCommand = cmdWrapper.getCommand(BaseCommand.class);
-
         switch (cmdWrapper.getType()){
             case START:
                 StartCommand startCommand = cmdWrapper.getCommand(StartCommand.class);
@@ -72,6 +70,16 @@ public class Cli implements ICommandReceiver {
                 firstPlayer = getIntFromLine(1);
                 virtualServer.Send(SERVER_ID, new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(idPlayer,SERVER_ID,firstPlayer[0])));
                 break;
+            case PICK_GOD:
+                PickGodCommand pickGodCommand = cmdWrapper.getCommand(PickGodCommand.class);
+                stream.print("Available god ID for this game : ");
+                for (int i : pickGodCommand.getGodID()){
+                    stream.print(i + ", ");
+                }
+                stream.println();
+                stream.println("Pick a god by selecting id : ");
+                int[] god = getIntFromLine(1);
+                virtualServer.Send(SERVER_ID,new CommandWrapper(CommandType.PICK_GOD,new PickGodCommand(idPlayer,SERVER_ID,god[0])));
             case PLACE_WORKERS:
                 WorkerPlaceCommand cmd = cmdWrapper.getCommand(WorkerPlaceCommand.class);
                 for(int i = 0; i<cmd.getPositions().length;i++){
