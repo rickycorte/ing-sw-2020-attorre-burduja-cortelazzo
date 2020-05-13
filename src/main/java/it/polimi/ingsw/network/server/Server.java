@@ -20,13 +20,11 @@ import java.util.concurrent.Executors;
  */
 public class Server implements INetworkAdapter {
     private static int server_id;                           //server id
-    //private static int port;                                //the port on which the server will listen
     private ServerSocket s_socket;                          //the socket on which the server will read/write
     private static ExecutorService pool;                    //pool to execute a different thread
     private final Object outLock;                           //lock for out stream
     private final Object mapLock;                           //lock for clientHandlerMao
     private Map<Integer, Client_Handler> clientHandlerMap;  //Hash map to map a client_id to a ClientHandler
-    private ArrayList<String> inGameUsernames;                           //list containing usernames of all connected clients
     private ICommandReceiver controller;                    //Controller to handle commands
 
 
@@ -38,21 +36,16 @@ public class Server implements INetworkAdapter {
         mapLock = new Object();
         outLock = new Object();
 
-        inGameUsernames = new ArrayList<>();
-
         synchronized (mapLock) {
             clientHandlerMap = new HashMap<>();
         }
-
         pool = Executors.newCachedThreadPool();
-
     }
 
     @Override
     public void StartServer(int port) {
         System.out.println("Welcome to the Santorini server!");
         System.out.println("[SERVER] Starting...");
-        //this.port = port;
 
         ServerSocket listener = null;
         try {
@@ -103,7 +96,7 @@ public class Server implements INetworkAdapter {
         }
     }
 
-    //Methods used to pass to handle interactions between client handlers and controller
+                  //Methods used to pass to handle interactions between client handlers and controller
 
     /**
      * Handle join type commands
@@ -139,31 +132,22 @@ public class Server implements INetworkAdapter {
     }
 
 
-    //INetworkAdapter method implementations
+                             //INetworkAdapter method implementations
+
 
     /**
-     * Send a command to all the clients
-     * @param cmd command to send
+     * Send a command to all clients, only command's target can handle it
+     * @param cmd represents the message to send
      */
     @Override
-    public void SendBroadcast(CommandWrapper cmd) {
+    public void Send( CommandWrapper cmd) {
         System.out.println("[SERVER] Sending " + cmd.getType().name() + " command on broadcast");
         synchronized (mapLock) {
             clientHandlerMap.forEach((id, clientHandler) -> {
                 clientHandlerMap.get(id).sendMessage(cmd);
             });
-        }
-    }
-    /**
-     * Send a command to a client
-     * @param id client_id
-     * @param cmd represents the message to send
-     */
-    @Override
-    public void Send(int id, CommandWrapper cmd) {
-        synchronized (mapLock) {
-            System.out.println("[SERVER] Sending " + cmd.getType().name() + " command to id: " + id);
-            clientHandlerMap.get(id).sendMessage(cmd);
+
+
         }
     }
 

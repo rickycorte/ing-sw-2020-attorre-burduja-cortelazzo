@@ -69,9 +69,7 @@ public class Client_Handler implements Runnable {
 
                     if (command.getType() == CommandType.BASE) {
                         //System.out.println("[CLIENT_HANDLER] Disconnection timer reset");
-                        disconnectTimer.cancel();
-                        disconnectTimer = new Timer();
-                        disconnectTimer.schedule(new DisconnectTask(this), 9000);
+                        rescheduleTimer();
                     } else if (command.getType() == CommandType.JOIN) {
                         server.onConnect(command);
                     } else if (command.getType() == CommandType.LEAVE) {
@@ -85,6 +83,16 @@ public class Client_Handler implements Runnable {
                 disconnect();
             }
         }
+    }
+
+
+    /**
+     * Reschedules the disconnection timer
+     */
+    private void rescheduleTimer(){
+        disconnectTimer.cancel();
+        disconnectTimer = new Timer();
+        disconnectTimer.schedule(new DisconnectTask(this), 9000);
     }
 
     /**

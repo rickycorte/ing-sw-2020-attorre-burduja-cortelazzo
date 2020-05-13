@@ -114,7 +114,7 @@ public class ServerConnection implements Runnable, INetworkAdapter {
      */
     public void readLoop() {
         String serverResponse = null;
-        Send(getServerID(), new CommandWrapper(CommandType.JOIN, new JoinCommand(this.id, getServerID(), username, true)));
+        Send(new CommandWrapper(CommandType.JOIN, new JoinCommand(this.id, getServerID(), username, true)));
 
         boolean condition = true;
         while (condition) {
@@ -122,18 +122,48 @@ public class ServerConnection implements Runnable, INetworkAdapter {
                 serverResponse = in.readLine();
                 if (serverResponse == null) break;
                 CommandWrapper cmd = Deserialize(serverResponse);
-                System.out.println(serverResponse);
-                if (cmd.getType() == CommandType.JOIN)
-                    commandReceiver.onConnect(cmd);
-                else if (cmd.getType() == CommandType.LEAVE)
-                    commandReceiver.onDisconnect(cmd);
-                else
-                    commandReceiver.onCommand(cmd);
+                //System.out.println(serverResponse);
+                //System.out.println("[SERVER_CONNECTION] Received a message");
+                if(itsForMe(cmd)) {
+                    //System.out.println("[SERVER_CONNECTION] Message was directed to me");
+                    if (cmd.getType() == CommandType.JOIN)
+                        commandReceiver.onConnect(cmd);
+                    else if (cmd.getType() == CommandType.LEAVE)
+                        commandReceiver.onDisconnect(cmd);
+                    else
+                        commandReceiver.onCommand(cmd);
+                }else {
+                    //System.out.println("[SERVER_CONNECTION] But it wasn't for me");
+                }
             } catch (IOException e) {
                 System.out.println("[SERVER_CONNECTION] Couldn't read from the socket, closing connection");
                 Disconnect();
             }
         }
+    }
+
+
+    /**
+     * Checks if the incoming message it's for me
+     * @param commandWrapper received message
+     * @return true if it's for me or broadcast
+     */
+    private boolean itsForMe(CommandWrapper commandWrapper){
+        int command_target = getCommandTarget(commandWrapper);
+        int my_id = getId();
+        int broadcast_id = getBroadCastID();
+
+        if(command_target == my_id || command_target == broadcast_id) return true;
+        return false;
+    }
+
+    /**
+     * Gets command's target id
+     * @param cmd command
+     * @return command's target id
+     */
+    private int getCommandTarget(CommandWrapper cmd){
+        return cmd.getCommand(BaseCommand.class).getTarget();
     }
 
     /**
@@ -210,17 +240,12 @@ public class ServerConnection implements Runnable, INetworkAdapter {
 
 
     @Override
-    public void Send(int id, CommandWrapper packet) {
+    public void Send(CommandWrapper packet) {
         if(out != null) {
-            if(packet.getType() != CommandType.BASE) System.out.println("[SERVER_CONNECTION] Sending " + packet.getType().name() + " command to id: "+ id);
+            if(packet.getType() != CommandType.BASE) System.out.println("[SERVER_CONNECTION] Sending " + packet.getType().name() + " command");
             out.println(packet.Serialize());
             out.flush();
         }
-    }
-
-    @Override
-    public void SendBroadcast(CommandWrapper packet) {
-        //do nothing, client can't broadcast
     }
 
     @Override

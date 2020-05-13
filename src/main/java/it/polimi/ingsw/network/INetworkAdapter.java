@@ -57,17 +57,10 @@ public interface INetworkAdapter
     void RemoveReceiver();
 
     /**
-     * Send a packet to a specific client
-     * @param id client id
+     * Send a packet to all clients, only command's target can handle the command
      * @param packet packet to send
      */
-    void Send(int id, CommandWrapper packet);
-
-    /**
-     * Send a packet to all the clients
-     * @param packet packet to send
-     */
-    void SendBroadcast(CommandWrapper packet);
+    void Send(CommandWrapper packet);
 
     int getServerID();
 

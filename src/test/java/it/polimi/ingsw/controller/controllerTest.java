@@ -51,14 +51,10 @@ public class controllerTest {
             }
 
             @Override
-            public void Send(int id, CommandWrapper packet) {
+            public void Send( CommandWrapper packet) {
 
             }
 
-            @Override
-            public void SendBroadcast(CommandWrapper packet) {
-
-            }
 
             @Override
             public int getServerID() {

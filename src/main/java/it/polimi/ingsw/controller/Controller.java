@@ -100,7 +100,7 @@ public class Controller implements ICommandReceiver {
         }
 
         if(joinCommand.getUsername() == null || !joinCommand.isJoin()){
-            ackJoin(joinCommand,false);
+            ackJoin(joinCommand,false, false); // reason 2, username not valid
             return;
         }
 
@@ -110,17 +110,17 @@ public class Controller implements ICommandReceiver {
 
             if(match.join(p)){
                 connectedPlayers.add(p);
-                ackJoin(joinCommand,true); //player connected to current game
+                ackJoin(joinCommand,true,true); //player connected to current game
                 if(match.getPlayers().size() == MAX_PLAYERS ){
                     match.start(getPlayer(host));
-                    virtualProxy.SendBroadcast(new CommandWrapper(CommandType.START,new StartCommand(SERVER_ID,BROADCAST_ID,connectedPlayers)));
+                    virtualProxy.Send(new CommandWrapper(CommandType.START,new StartCommand(SERVER_ID,BROADCAST_ID,connectedPlayers)));
                     sendNextCommand(new CommandWrapper(CommandType.FILTER_GODS,new FilterGodCommand(SERVER_ID,host))); //first command
                 }
             }else
-                ackJoin(joinCommand,false); //connection failed
+                ackJoin(joinCommand,false, true); //reason 1, connection problem
 
         }else
-            ackJoin(joinCommand,false); //can be fixed with return a usernameError value
+            ackJoin(joinCommand,false, false); //can be fixed with return a usernameError value, reason 2, username not valid
     }
 
     /**
@@ -174,7 +174,7 @@ public class Controller implements ICommandReceiver {
 
         LeaveCommand cmd = leaveWrapper.getCommand(LeaveCommand.class);
 
-        //System.out.println("Disconnect "+ cmd.getSender());
+        System.out.println("[CONTROLLER] Disconnect "+ cmd.getSender());
         match.left(getPlayer(cmd.getSender()));
 
         if(match.getCurrentState() == END)
@@ -321,12 +321,12 @@ public class Controller implements ICommandReceiver {
      * Create and send a command with correct information for acknowledgment
      * @param cmd JOIN command received
      * @param successfulJoining true if player joined the game, false if player could't join
+     * @param reason 0 - if join is successful, 1 - if can't join match, 2 - if username is unavailable
      */
-    private void ackJoin(JoinCommand cmd, Boolean successfulJoining){
-        int id = cmd.getSender();
-        CommandWrapper next = new CommandWrapper(CommandType.JOIN,new JoinCommand(cmd.getTarget(), cmd.getSender(),successfulJoining));
+    private void ackJoin(JoinCommand cmd, Boolean successfulJoining, boolean reason){
+        CommandWrapper next = new CommandWrapper(CommandType.JOIN,new JoinCommand(cmd.getTarget(), cmd.getSender(),successfulJoining, reason));
         lastSent = next;
-        virtualProxy.Send(id,next);
+        virtualProxy.Send(next);
     }
 
     /**
@@ -352,7 +352,7 @@ public class Controller implements ICommandReceiver {
     private void sendUpdate(CommandWrapper lastCommand){
         if(lastCommand.getType() == CommandType.PLACE_WORKERS || lastCommand.getType() == CommandType.ACTION_TIME) {
             CommandWrapper next = new CommandWrapper(CommandType.UPDATE, new UpdateCommand(SERVER_ID, BROADCAST_ID,match.getCurrentMap()));
-            virtualProxy.SendBroadcast(next);
+            virtualProxy.Send(next);
         }
     }
 
@@ -363,7 +363,7 @@ public class Controller implements ICommandReceiver {
      */
     private void metLoseCondition(int player){
         CommandWrapper cmd = new CommandWrapper(CommandType.END_GAME,new EndGameCommand(SERVER_ID,player,false));
-        virtualProxy.Send(player,cmd);
+        virtualProxy.Send(cmd);
     }
 
     /**
@@ -373,7 +373,7 @@ public class Controller implements ICommandReceiver {
     private void sendNextCommand(CommandWrapper cmdWrap){
         if(cmdWrap != null){
             lastSent = cmdWrap;
-            virtualProxy.Send(match.getCurrentPlayer().getId(),cmdWrap);
+            virtualProxy.Send(cmdWrap);
         }
     }
 }

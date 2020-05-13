@@ -29,20 +29,33 @@ public class Cli implements ICommandReceiver {
         virtualServer = adapter;
     }
 
-    public void onConnect(CommandWrapper cmdWrapper){
-        if(cmdWrapper.getType() == CommandType.JOIN){
+    public void onConnect(CommandWrapper cmdWrapper) {
+        stream.println("[CLI] Received " + cmdWrapper.getType().name() + " command on onConnect");
+        if (cmdWrapper.getType() == CommandType.JOIN) {
             JoinCommand cmd = cmdWrapper.getCommand(JoinCommand.class);
 
-            if(cmd.isJoin()){
-                idPlayer = cmd.getTarget();
+            idPlayer = cmd.getTarget();
+
+            if (cmd.isJoin()) {
+                stream.println("[CLI] Join successful");
                 stream.println("Connected to game, wait to start...");
-            }else
-                stream.println("Can't join a game.");
+            } else {
+                if (cmd.isValidUsername()) {
+                    stream.println("Can't join a game right now, try another time.");
+                } else {
+                    stream.println("Your username is not valid, choose another one");
+                    String newUsername = null;
+                    if (scanner.hasNext()) newUsername = scanner.next();
+                    CommandWrapper newJoinCommand = new CommandWrapper(CommandType.JOIN, new JoinCommand(idPlayer, virtualServer.getServerID(), newUsername, true));
+                    virtualServer.Send(newJoinCommand);
+                }
+                //System.out.println("[Cli] Received "+ cmdWrapper.getType());
+                //stream.println("Can't join a game.");
+            }
         }
 
 
     }
-
     public void onDisconnect(CommandWrapper cmdWrapper){
         //never here ?
     }
@@ -62,7 +75,7 @@ public class Cli implements ICommandReceiver {
                 intData = getIntFromLine(playersNumber);
 
                 CommandWrapper cmw = new CommandWrapper(CommandType.FILTER_GODS,new FilterGodCommand(idPlayer,SERVER_ID,intData));
-                virtualServer.Send(SERVER_ID, cmw);
+                virtualServer.Send(cmw);
                 break;
             case SELECT_FIRST_PLAYER:
                 for (Integer i : colors.keySet())
@@ -71,7 +84,7 @@ public class Cli implements ICommandReceiver {
                 stream.println("Select first player for this game: ");
                 int[] firstPlayer;
                 firstPlayer = getIntFromLine(1);
-                virtualServer.Send(SERVER_ID, new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(idPlayer,SERVER_ID,firstPlayer[0])));
+                virtualServer.Send(new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(idPlayer,SERVER_ID,firstPlayer[0])));
                 break;
             case PICK_GOD:
                 PickGodCommand pickGodCommand = cmdWrapper.getCommand(PickGodCommand.class);
@@ -82,7 +95,7 @@ public class Cli implements ICommandReceiver {
                 stream.println();
                 stream.println("Pick a god by selecting id : ");
                 int[] god = getIntFromLine(1);
-                virtualServer.Send(SERVER_ID,new CommandWrapper(CommandType.PICK_GOD,new PickGodCommand(idPlayer,SERVER_ID,god[0])));
+                virtualServer.Send(new CommandWrapper(CommandType.PICK_GOD,new PickGodCommand(idPlayer,SERVER_ID,god[0])));
                 break;
             case PLACE_WORKERS:
                 WorkerPlaceCommand cmd = cmdWrapper.getCommand(WorkerPlaceCommand.class);
@@ -93,7 +106,7 @@ public class Cli implements ICommandReceiver {
                 stream.println("Select 2 available positions by its identifiers: ");
                 Vector2[] selectedPositions;
                 selectedPositions = getVector2FromLine(cmd.getPositions(),N_WORKER);
-                virtualServer.Send(SERVER_ID,new CommandWrapper(CommandType.PLACE_WORKERS,new WorkerPlaceCommand(idPlayer,SERVER_ID,selectedPositions)));
+                virtualServer.Send(new CommandWrapper(CommandType.PLACE_WORKERS,new WorkerPlaceCommand(idPlayer,SERVER_ID,selectedPositions)));
                 break;
             case ACTION_TIME:
                     stream.println("ACTION TIME : currently not available  BUT VERY GOOD WORK ");
