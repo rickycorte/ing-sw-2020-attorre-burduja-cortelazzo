@@ -50,6 +50,7 @@ public class Cli implements ICommandReceiver {
     public void onCommand(CommandWrapper cmdWrapper){
         switch (cmdWrapper.getType()){
             case START:
+                //System.out.println("Received start command");
                 StartCommand startCommand = cmdWrapper.getCommand(StartCommand.class);
                 playersNumber = startCommand.getPlayersID().length;
                 initPlayers(startCommand);
@@ -59,7 +60,9 @@ public class Cli implements ICommandReceiver {
                 stream.println("Select "+playersNumber+" IDs you want to be allowed for this game :");
                 int[] intData;
                 intData = getIntFromLine(playersNumber);
-                virtualServer.Send(SERVER_ID,new CommandWrapper(CommandType.FILTER_GODS,new FilterGodCommand(idPlayer,SERVER_ID,intData)));
+
+                CommandWrapper cmw = new CommandWrapper(CommandType.FILTER_GODS,new FilterGodCommand(idPlayer,SERVER_ID,intData));
+                virtualServer.Send(SERVER_ID, cmw);
                 break;
             case SELECT_FIRST_PLAYER:
                 for (Integer i : colors.keySet())
@@ -80,6 +83,7 @@ public class Cli implements ICommandReceiver {
                 stream.println("Pick a god by selecting id : ");
                 int[] god = getIntFromLine(1);
                 virtualServer.Send(SERVER_ID,new CommandWrapper(CommandType.PICK_GOD,new PickGodCommand(idPlayer,SERVER_ID,god[0])));
+                break;
             case PLACE_WORKERS:
                 WorkerPlaceCommand cmd = cmdWrapper.getCommand(WorkerPlaceCommand.class);
                 for(int i = 0; i<cmd.getPositions().length;i++){
@@ -114,7 +118,7 @@ public class Cli implements ICommandReceiver {
     private Vector2[] getVector2FromLine(Vector2[] available, int size){
         Vector2[] positions = new Vector2[size];
 
-        scanner.nextLine();
+        //scanner.nextLine();
         for(int i = 0; i<size; i++){
             if(scanner.hasNextInt()) positions[i] = available[scanner.nextInt()];
             else return positions;
@@ -125,7 +129,7 @@ public class Cli implements ICommandReceiver {
 
     private int[] getIntFromLine(int size){
         int[] intData = new int[size];
-        scanner.nextLine();
+        //scanner.nextLine();
         for(int i = 0; i<size; i++){
             if(scanner.hasNextInt()) intData[i] = scanner.nextInt();
             else return intData;
@@ -135,8 +139,8 @@ public class Cli implements ICommandReceiver {
 
     private void show(UpdateCommand updateCommand){
         Vector2[] workerPos = updateCommand.getV2Data().clone();
-        int[] pairOwnerWorker = new int[playersNumber*2*2];
-        System.arraycopy(updateCommand.getIntData(),48,pairOwnerWorker,0,playersNumber*2*2);
+        int[] pairOwnerWorker = new int[1*2*2];
+        System.arraycopy(updateCommand.getIntData(),48,pairOwnerWorker,0,1*2*2);
 
         /*
         int[][] map = new int[LENGTH][HEIGHT];

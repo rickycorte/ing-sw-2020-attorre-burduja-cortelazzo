@@ -45,12 +45,16 @@ public interface INetworkAdapter
     void AddReceiver(ICommandReceiver receiver);
 
 
+    /**
+     * gets ICommandReceiver
+     * @return receiver
+     */
     ICommandReceiver getReceiver();
+
     /**
      * Remove a receiver for packers
-     * @param receiver packet receiver to remove
      */
-    void RemoveReceiver(ICommandReceiver receiver);
+    void RemoveReceiver();
 
     /**
      * Send a packet to a specific client

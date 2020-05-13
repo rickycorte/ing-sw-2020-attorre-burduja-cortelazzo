@@ -21,35 +21,37 @@ import java.util.Timer;
 
 public class ServerConnection implements Runnable, INetworkAdapter {
 
-    private String host;   //server's ip address
-    private int id;
-    private Socket s_socket;
-    private int port;
-    private BufferedReader in;
-    private PrintWriter out;
-    BufferedReader keyboard;
-    private Timer pingTimer;
-    private String username;
-    //private Cli cli;
-    private ICommandReceiver commandReceiver;
-    //private Gui gui;
+    private int id;                                 //this client's id
+    private String username;                        //this client's username
+
+    private String host;                            //server's ip address
+    private Socket s_socket;                        //server socket used to read/write
+    private int port;                               //port on which to connect to
+
+    private BufferedReader in;                      //used to receive messages from server
+    private PrintWriter out;                        //used to send messages to the server
+
+    BufferedReader keyboard;                        //used to interract with the client
+
+    private Timer pingTimer;                        //ping timer used to inform the server i'm still alive
+    private ICommandReceiver commandReceiver;       //representing the cli/gui based on client's choice
 
     /**
      * ServerConnection constructor
      * @param server_socket server's socket to connect to
      */
-    ServerConnection(Socket server_socket, String host){
+    ServerConnection(Socket server_socket, String host) {
+        this.host = host;
+        s_socket = server_socket;
+        this.port = server_socket.getPort();
+        pingTimer = new Timer();
+        this.username = null;
         try {
-            this.host = host;
-            s_socket = server_socket;
-            this.port = server_socket.getPort();
-            in = new BufferedReader(new InputStreamReader(s_socket.getInputStream()));   // used to receive messages
-            out = new PrintWriter(s_socket.getOutputStream(), true);            //used to send messages
-            keyboard = new BufferedReader(new InputStreamReader(System.in));               //handle user input
-            pingTimer = new Timer();
-            this.username = null;
-        }catch (IOException e){
-            System.out.println("unhandled exception in ServerConnection constructor");
+            in = new BufferedReader(new InputStreamReader(s_socket.getInputStream()));
+            out = new PrintWriter(s_socket.getOutputStream(), true);
+            keyboard = new BufferedReader(new InputStreamReader(System.in));
+        } catch (IOException e) {
+            System.out.println("[SERVER_CONNECTION] Couldn't create read/write streams");
         }
     }
 
@@ -59,66 +61,60 @@ public class ServerConnection implements Runnable, INetworkAdapter {
      */
     @Override
     public void run() {
-
         String serverResponse = null;
 
         try {
-            serverResponse = in.readLine(); // this is the client_id given to me by the server
+            serverResponse = in.readLine(); //client_id given to me by the server
         } catch (IOException e) {
             Disconnect();
         }
-        System.out.println("My client_id is "+ serverResponse);
+        System.out.println("[SERVER_CONNECTION] My client id is: " + serverResponse);
         int id = Integer.parseInt(serverResponse);
         setId(id);
 
-        pingTimer.cancel();
-        pingTimer = new Timer();
-        pingTimer.scheduleAtFixedRate(new PingTask(this), 1000, 3000);
+        setUPTimer();
 
         System.out.println("[SERVER_CONNECTION] Enter username");
         try {
             username = keyboard.readLine();
-
-        }catch (IOException e){
-            System.out.println("Err keyboard");
+        } catch (IOException e) {
+            System.out.println("[SERVER_CONNECTION] ERR! Couldn't read keyboard input");
         }
-
-
 
         int interface_choice = 0;
         try {
+
             do {
                 System.out.println("Choose an interface\n");
                 System.out.println(("Type 1 for CLI, 2 for GUI\n"));
                 interface_choice = Integer.parseInt(keyboard.readLine());
             } while (interface_choice != 1 && interface_choice != 2);
-
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("[SERVER_CONNECTION] ERR! wrong input");
         }
-
-        if(interface_choice == 1){
+        if (interface_choice == 1) {
             commandReceiver = new Cli(this);
-        }
-        else{
+        } else {
             //Start the GUI with this adapter
-
         }
         readLoop();
     }
 
-
-
+    /**
+     * Sets up a task to send ping messages to server every 3 seconds after 1 second delay
+     */
+    void setUPTimer(){
+        pingTimer.cancel();
+        pingTimer = new Timer();
+        pingTimer.scheduleAtFixedRate(new PingTask(this), 1000, 3000);
+    }
 
     /**
-     * This method is a client read loop
-     * it will receive messages from the server and pass them to the graphic interface
+     * Goes on a read loop, will receive messages from the server and pass them to the ICommandReceiver
      */
-    public void readLoop(){
+    public void readLoop() {
         String serverResponse = null;
-        //TODO Start command receiver
-
-        Send(getServerID(),new CommandWrapper(CommandType.JOIN, new JoinCommand(this.id, getServerID() , username, true )));
+        Send(getServerID(), new CommandWrapper(CommandType.JOIN, new JoinCommand(this.id, getServerID(), username, true)));
 
         boolean condition = true;
         while (condition) {
@@ -126,39 +122,47 @@ public class ServerConnection implements Runnable, INetworkAdapter {
                 serverResponse = in.readLine();
                 if (serverResponse == null) break;
                 CommandWrapper cmd = Deserialize(serverResponse);
+                System.out.println(serverResponse);
                 if (cmd.getType() == CommandType.JOIN)
                     commandReceiver.onConnect(cmd);
                 else if (cmd.getType() == CommandType.LEAVE)
                     commandReceiver.onDisconnect(cmd);
                 else
                     commandReceiver.onCommand(cmd);
-
-
-            }catch (IOException e){
+            } catch (IOException e) {
                 System.out.println("[SERVER_CONNECTION] Couldn't read from the socket, closing connection");
                 Disconnect();
             }
         }
-
     }
 
-
-
-
-
+    /**
+     * Setts the id for this connection
+     * @param client_id client's id given to me by the server
+     */
     void setId(int client_id){
         this.id = client_id;
     }
 
+    /**
+     * Gets client's id
+     * @return client's id
+     */
     public int getId(){
         return id;
     }
 
+    /**
+     * Deserializes a message received from the server
+     * @param message received from the server
+     * @return deserialized message to ClientWrapper
+     */
     public CommandWrapper Deserialize(String message){
         Gson gson = new Gson();
         return gson.fromJson(message, CommandWrapper.class);
     }
 
+    //Methods that implement INetworkAdapter
 
     @Override
     public void StartServer(int port) {
@@ -181,15 +185,16 @@ public class ServerConnection implements Runnable, INetworkAdapter {
             in.close();
             out.close();
             s_socket.close();
-            System.out.println("connection was closed");
+            System.out.println("[SERVER_CONNECTION] Connection was closed");
         }catch (IOException e){
-            System.out.println("[SERVERCONNECTION] error in closing the connection");
+            System.out.println("[SERVER_CONNECTION] Error in closing the connection");
         }
 
     }
 
     @Override
     public void AddReceiver(ICommandReceiver receiver) {
+        this.commandReceiver = receiver;
 
     }
 
@@ -199,13 +204,15 @@ public class ServerConnection implements Runnable, INetworkAdapter {
     }
 
     @Override
-    public void RemoveReceiver(ICommandReceiver receiver) {
-
+    public void RemoveReceiver() {
+        this.commandReceiver = null;
     }
+
 
     @Override
     public void Send(int id, CommandWrapper packet) {
         if(out != null) {
+            if(packet.getType() != CommandType.BASE) System.out.println("[SERVER_CONNECTION] Sending " + packet.getType().name() + " command to id: "+ id);
             out.println(packet.Serialize());
             out.flush();
         }
@@ -223,6 +230,6 @@ public class ServerConnection implements Runnable, INetworkAdapter {
 
     @Override
     public int getBroadCastID() {
-        return 0;
+        return -2222;
     }
 }

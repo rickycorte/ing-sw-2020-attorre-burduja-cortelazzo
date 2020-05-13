@@ -3,6 +3,7 @@ package it.polimi.ingsw.controller;
 import it.polimi.ingsw.game.*;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
+import jdk.swing.interop.SwingInterOpUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +88,8 @@ public class Controller implements ICommandReceiver {
      * @param cmdWrapper wrapped join command
      */
     public void onConnect(CommandWrapper cmdWrapper) {
+        //System.out.println("Controller got "+ cmdWrapper.getType().name() + "command in onConnect");
+
         JoinCommand joinCommand;
         if(cmdWrapper == null) return;
         else joinCommand = cmdWrapper.getCommand(JoinCommand.class);
@@ -130,12 +133,15 @@ public class Controller implements ICommandReceiver {
         CommandWrapper nextCmd;
         Game.GameState prevGameState = match.getCurrentState();
 
+        //System.out.println("Controller got "+ cmdWrapper.getType().name() + "command in onCommand");
 
         if(!filterCommandType(cmdWrapper)) return; //command not expected
 
+        //System.out.println("entering try");
         try {
 
             if (runCommand(cmdWrapper)) {
+                //System.out.println("command executed");
                 //command executed
                 if (prevGameState != match.getCurrentState()) {
                     //different state
@@ -168,6 +174,7 @@ public class Controller implements ICommandReceiver {
 
         LeaveCommand cmd = leaveWrapper.getCommand(LeaveCommand.class);
 
+        //System.out.println("Disconnect "+ cmd.getSender());
         match.left(getPlayer(cmd.getSender()));
 
         if(match.getCurrentState() == END)
@@ -218,15 +225,20 @@ public class Controller implements ICommandReceiver {
      * @throws NotAllowedOperationException if a not allowed command is run, it's not sender turn
      */
     private boolean runCommand(CommandWrapper cmd) throws NotAllowedOperationException {
+        //System.out.println("about to get the base command");
         BaseCommand baseCommand = cmd.getCommand(BaseCommand.class);
+        //System.out.println("got base command");
         Player p = getPlayer(baseCommand.getSender());
         nextPlayer = baseCommand.getSender();
 
         switch (cmd.getType()) {
             case START:
+                //System.out.println("RUNNING START COMMAND");
                 return match.start(p);
             case FILTER_GODS:
+                //System.out.println("RUNNING FILTER GOD COMMAND");
                 FilterGodCommand filterGodCommand = cmd.getCommand(FilterGodCommand.class);
+                //System.out.println("DONE RUNNING FILTER GOD");
                 return match.applyGodFilter(p, filterGodCommand.getGodID());
             case PICK_GOD:
                 PickGodCommand pickGodCommand = cmd.getCommand(PickGodCommand.class);
@@ -361,7 +373,7 @@ public class Controller implements ICommandReceiver {
     private void sendNextCommand(CommandWrapper cmdWrap){
         if(cmdWrap != null){
             lastSent = cmdWrap;
-            virtualProxy.Send(nextPlayer,cmdWrap);
+            virtualProxy.Send(match.getCurrentPlayer().getId(),cmdWrap);
         }
     }
 }

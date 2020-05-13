@@ -46,7 +46,7 @@ public class controllerTest {
             }
 
             @Override
-            public void RemoveReceiver(ICommandReceiver receiver) {
+            public void RemoveReceiver() {
 
             }
 

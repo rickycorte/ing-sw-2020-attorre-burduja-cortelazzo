@@ -11,14 +11,11 @@ public class Client {
     private static final String SERVER_IP = "127.0.0.1";
     private static final int PORT = 16000;
     private static ServerConnection serverConnection;
-    //public String username;
-    //private BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
-
 
 
     /**
-     * Method used to create a connection between a server and a client
-     * Starts a ServerConnection class in a new thread taht will listen for incoming messages
+     * Method used to connect to a server
+     * Starts a ServerConnection class in a new thread that will listen for incoming messages
      * @param server_ip server's address
      * @param port      server's listening port
      */
@@ -29,7 +26,6 @@ public class Client {
             s_socket = new Socket(SERVER_IP, PORT);
             System.out.println("[CLIENT] Connection to server established");
             serverConnection = new ServerConnection(s_socket, SERVER_IP);
-            //username = askUsername();
             new Thread(serverConnection).start();
 
         } catch (IOException e) {
@@ -40,18 +36,6 @@ public class Client {
     public ServerConnection getServerConnection(){
         return serverConnection;
     }
-    /*
-
-    public String askUsername() throws IOException {
-        System.out.println("[CLIENT] Username?");
-        return keyboard.readLine();
-
-    }
-
-     */
-
-
-
 
 }
 

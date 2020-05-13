@@ -16,25 +16,24 @@ import java.util.Timer;
  */
 public class Client_Handler implements Runnable {
 
-    private boolean connected;
-
-    private Server server;              //server will handle the commands
+    private Server server;              //server will handling the commands commands
     private Socket c_socket;            //client_socket used to communicate with the client
     private int id;                     //client_id
+    private boolean connected;          //connection flag
 
-    private BufferedReader in;
-    private PrintWriter out;
+    private BufferedReader in;          //in stream
+    private PrintWriter out;            //out stream
 
-    private Timer disconnectTimer;      //disconnection timer in case i dont receive a ping message in 9 seconds
-    private final Object outLock;
+    private Timer disconnectTimer;      //9 seconds timer - receiving a Base command resets the timer
+    private final Object outLock;       //out stream lock
 
 
     /**
      * Constructs a Client Handler that will read from / write to a client
-     *
      * @param clientSocket socket to a client
      * @param client_id unique identifier for a client
      * @param server server to handle the messages
+     * @param outLock out stream lock to synchronize to
      */
     Client_Handler(Socket clientSocket, int client_id, Server server, Object outLock) {
         this.connected = true;
@@ -52,32 +51,29 @@ public class Client_Handler implements Runnable {
         this.disconnectTimer = new Timer();
     }
 
-
     /**
      * This method is the entry point for the Client_Handler class
-     * It will receive incoming messages from the Client
-     * we assume the base command as a ping, so when i receive a base command i reschedule the disconnection timer
-     * else i pass it to the server
+     * It will receive incoming messages from the client and pass them to the server
+     * We assume the Base command as a ping
      */
     @Override
     public void run() {
         out.println(id);
-
+        disconnectTimer.schedule(new DisconnectTask(this), 9000); // schedule a disconnection task in 9 seconds
         while (!Thread.currentThread().isInterrupted()) {
-
             try {
                 String serialized_command = in.readLine();
-
                 if (serialized_command != null) {
                     CommandWrapper command = Deserialize(serialized_command);
+                    //System.out.println(serialized_command);
 
                     if (command.getType() == CommandType.BASE) {
-                        //System.out.println("disconnection timer reset");
+                        //System.out.println("[CLIENT_HANDLER] Disconnection timer reset");
                         disconnectTimer.cancel();
                         disconnectTimer = new Timer();
-                        disconnectTimer.schedule(new DisconnectTask(this), 9000); // schedule a disconnection task in 9 seconds
+                        disconnectTimer.schedule(new DisconnectTask(this), 9000);
                     } else if (command.getType() == CommandType.JOIN) {
-                        server.handleJoin(command);
+                        server.onConnect(command);
                     } else if (command.getType() == CommandType.LEAVE) {
                         server.onDisconnect(this);
                     } else {
@@ -101,7 +97,7 @@ public class Client_Handler implements Runnable {
                     c_socket.close();
                 }
             } catch (IOException e) {
-                System.out.println("[CLIENT_HANDLER] Error while trying to close the connection");
+                System.out.println("[CLIENT_HANDLER] ERR! While trying to close the connection");
             }
             connected = false;
             server.onDisconnect(this);
@@ -123,7 +119,6 @@ public class Client_Handler implements Runnable {
         }
     }
 
-
     /**
      * Method used to deserialize messages send over the network
      * @param message send over the network
@@ -135,25 +130,16 @@ public class Client_Handler implements Runnable {
     }
 
     /**
-     * @return connection status
+     * gets this client's id
+     * @return client's id
      */
-    public boolean isConnected(){
-        return connected;
+    public int getId(){
+        return this.id;
     }
-
 
     void checkDisconnect(){
         if(this.c_socket.isOutputShutdown())
             System.out.println("[CLIENTHANDLER] Client "+ id +" is not connected anymore");
 
     }
-
-    public int getId(){
-        return this.id;
-    }
-
-
-
-
-
 }
