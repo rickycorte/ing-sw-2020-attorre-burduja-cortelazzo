@@ -29,7 +29,7 @@ Please notice that it seems that our interface leaks `Game` internal implementat
 
 ## Server is Absolute
 
-We decided to make the client as light as possible, for this reason the server has full power over everything. 
+We decided to make the client light as possible, for this reason the server has full power over everything. 
 Clients are just a "fancy switches" that let the user chose what to do only from a pre calculated list of actions.
 
 This decision requires that the server is able to calculate exactly what to do. Our model and controller were designed to make this task as simple as possible, a single function call is able to calculate all the valid moves for a player!

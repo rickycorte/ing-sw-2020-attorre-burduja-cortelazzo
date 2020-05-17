@@ -3,7 +3,6 @@ package it.polimi.ingsw.controller;
 import it.polimi.ingsw.game.*;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
-import jdk.swing.interop.SwingInterOpUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,6 +104,8 @@ public class Controller implements ICommandReceiver {
         }
 
         String username = joinCommand.getUsername();
+
+        System.out.println("Player "+username+" wants to join");
         if(usernameAvailability(username)) {
             Player p = new Player(joinCommand.getSender(),username);
 
@@ -113,7 +114,7 @@ public class Controller implements ICommandReceiver {
                 ackJoin(joinCommand,true,true); //player connected to current game
                 if(match.getPlayers().size() == MAX_PLAYERS ){
                     match.start(getPlayer(host));
-                    virtualProxy.Send(new CommandWrapper(CommandType.START,new StartCommand(SERVER_ID,BROADCAST_ID,connectedPlayers)));
+                    virtualProxy.send(new CommandWrapper(CommandType.START,new StartCommand(SERVER_ID,BROADCAST_ID,connectedPlayers)));
                     sendNextCommand(new CommandWrapper(CommandType.FILTER_GODS,new FilterGodCommand(SERVER_ID,host))); //first command
                 }
             }else
@@ -326,7 +327,8 @@ public class Controller implements ICommandReceiver {
     private void ackJoin(JoinCommand cmd, Boolean successfulJoining, boolean reason){
         CommandWrapper next = new CommandWrapper(CommandType.JOIN,new JoinCommand(cmd.getTarget(), cmd.getSender(),successfulJoining, reason));
         lastSent = next;
-        virtualProxy.Send(next);
+        System.out.println("Player joined:" + successfulJoining);
+        virtualProxy.send(next);
     }
 
     /**
@@ -352,7 +354,9 @@ public class Controller implements ICommandReceiver {
     private void sendUpdate(CommandWrapper lastCommand){
         if(lastCommand.getType() == CommandType.PLACE_WORKERS || lastCommand.getType() == CommandType.ACTION_TIME) {
             CommandWrapper next = new CommandWrapper(CommandType.UPDATE, new UpdateCommand(SERVER_ID, BROADCAST_ID,match.getCurrentMap()));
-            virtualProxy.Send(next);
+
+            System.out.println("Sending map update to everyone");
+            virtualProxy.send(next);
         }
     }
 
@@ -363,7 +367,8 @@ public class Controller implements ICommandReceiver {
      */
     private void metLoseCondition(int player){
         CommandWrapper cmd = new CommandWrapper(CommandType.END_GAME,new EndGameCommand(SERVER_ID,player,false));
-        virtualProxy.Send(cmd);
+        System.out.println("Sending lose notification for player: "+ player);
+        virtualProxy.send(cmd);
     }
 
     /**
@@ -373,7 +378,8 @@ public class Controller implements ICommandReceiver {
     private void sendNextCommand(CommandWrapper cmdWrap){
         if(cmdWrap != null){
             lastSent = cmdWrap;
-            virtualProxy.Send(cmdWrap);
+            System.out.println("Sending command "+ cmdWrap.getType() +" to: "+ match.getCurrentPlayer().getId());
+            virtualProxy.send(cmdWrap);
         }
     }
 }

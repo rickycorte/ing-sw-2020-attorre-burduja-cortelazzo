@@ -1,6 +1,5 @@
 package it.polimi.ingsw.network.server;
 
-import java.util.Timer;
 import java.util.TimerTask;
 
 
@@ -9,15 +8,16 @@ import java.util.TimerTask;
  */
 public class DisconnectTask extends TimerTask {
 
-    private Client_Handler client_handler;
+    private ClientHandler client_handler;
 
-    DisconnectTask(Client_Handler client_handler){
+    DisconnectTask(ClientHandler client_handler){
         super();
         this.client_handler = client_handler;
     }
+    
     @Override
     public void run() {
+        System.out.println("[TIMER] Timeout reached for client " + client_handler.getId());
         client_handler.disconnect();
-
     }
 }

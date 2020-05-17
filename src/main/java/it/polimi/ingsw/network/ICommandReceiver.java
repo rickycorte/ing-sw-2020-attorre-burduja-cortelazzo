@@ -1,6 +1,5 @@
 package it.polimi.ingsw.network;
 
-import it.polimi.ingsw.controller.Command;
 import it.polimi.ingsw.controller.CommandWrapper;
 
 public interface ICommandReceiver

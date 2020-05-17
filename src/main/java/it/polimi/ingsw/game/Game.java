@@ -99,7 +99,10 @@ public final class Game
      * @return current player that needs to perform an action of any kind
      */
     public Player getCurrentPlayer(){
-        return players.get(currentPlayer);
+        if(playerCount() == 0)
+            return null;
+        else
+            return players.get(currentPlayer);
     }
 
     /**
@@ -122,7 +125,7 @@ public final class Game
      * @return the current map state
      */
     public Map getCurrentMap(){
-        return game_map; //TODO: swap to copy constructor
+        return game_map;
     }
 
 
@@ -413,7 +416,10 @@ public final class Game
             return false;
 
         players.remove(sender);
-        playerLost(sender);
+
+        // only make a player lose if the match is running
+        if(gameState != GameState.WAIT)
+            playerLost(sender);
 
         return true;
     }
@@ -655,7 +661,7 @@ public final class Game
             nextPlayer(); //if we are two and i lost the winner is the next player... "the other player"
             endGame(players.get(currentPlayer));
         }
-        else{
+        else {
             game_map.removeWorkers(loser);
         }
     }

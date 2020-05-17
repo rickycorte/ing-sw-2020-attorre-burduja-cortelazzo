@@ -42,7 +42,8 @@ jobs:
     
     - name: Release Generation
       run: | 
-        mv target/AM44-1.0-SNAPSHOT.jar deliverables/
+        mv target/AM44-Client-jar-with-dependencies.jar deliverables/AM44-Client.jar
+        mv target/AM44-Server-jar-with-dependencies.jar deliverables/AM44-Server.jar
         mkdir apidocs
         mv target/site/apidocs apidocs
         mv target/site/jacoco coverage

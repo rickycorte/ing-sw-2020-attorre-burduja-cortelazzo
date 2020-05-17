@@ -16,6 +16,7 @@ public class CommandWrapper
     {
         this.type = type;
         this.cachedCommand = command;
+        this.data = "";
     }
 
     /**

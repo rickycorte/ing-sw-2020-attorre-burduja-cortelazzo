@@ -8,33 +8,36 @@ import it.polimi.ingsw.controller.CommandWrapper;
 public interface INetworkAdapter
 {
 
+    void startServer();
+
     /* server */
 
     /**
      * Start a server
      * @param port port where the server should listen
      */
-    void StartServer(int port);
+    void startServer(int port);
 
     /**
      * Stop the current running server
      */
-    void StopServer();
+    void stopServer();
 
-    /* client */
+    /* clientDELETE */
 
     /**
      * Connect to a running server
      * @param ip server ip
      * @param port server port
      * @param username username to use
+     * @return true on success
      */
-    void Connect(String ip, int port, String username);
+    boolean connect(String ip, int port, String username);
 
     /**
      * Disconnect from a server
      */
-    void Disconnect();
+    void disconnect();
 
     /* common */
 
@@ -42,27 +45,35 @@ public interface INetworkAdapter
      * Add a receiver for packets sent over the network
      * @param receiver packet receiver to add
      */
-    void AddReceiver(ICommandReceiver receiver);
+    void setReceiver(ICommandReceiver receiver);
 
-
-    /**
-     * gets ICommandReceiver
-     * @return receiver
-     */
-    ICommandReceiver getReceiver();
 
     /**
      * Remove a receiver for packers
      */
-    void RemoveReceiver();
+    void removeReceiver();
 
     /**
      * Send a packet to all clients, only command's target can handle the command
      * @param packet packet to send
      */
-    void Send(CommandWrapper packet);
+    void send(CommandWrapper packet);
 
+    /**
+     * Return default server ID
+     * @return server ID
+     */
     int getServerID();
 
+    /**
+     * Return default broadcast ID
+     * @return broadcast ID
+     */
     int getBroadCastID();
+
+    /**
+     * Return default server port
+     * @return default server port
+     */
+    int getDefaultPort();
 }

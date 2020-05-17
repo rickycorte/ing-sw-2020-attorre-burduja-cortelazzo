@@ -52,6 +52,30 @@ class GameTest
     }
 
     @Test
+    void shouldKeepWaitingIfLobbyLosesPlayers()
+    {
+        game.join(p1);
+        game.join(p2);
+        game.join(p3);
+
+        assertEquals(Game.GameState.WAIT, game.getCurrentState());
+        assertEquals(p1, game.getCurrentPlayer());
+
+        game.left(p2);
+
+        assertEquals(Game.GameState.WAIT, game.getCurrentState());
+        assertEquals(p1, game.getCurrentPlayer());
+
+        game.left(p3);
+        assertEquals(Game.GameState.WAIT, game.getCurrentState());
+        assertEquals(p1, game.getCurrentPlayer());
+
+        game.left(p1);
+        assertEquals(Game.GameState.WAIT, game.getCurrentState());
+        assertEquals(null, game.getCurrentPlayer());
+    }
+
+    @Test
     void shouldNotJoinIfGameStarted() {
         game.join(p1);
         game.join(p2);
@@ -806,6 +830,8 @@ class GameTest
 
         game.getCurrentMap().setWorkers(player1);
         game.getCurrentMap().setWorkers(player2);
+
+        game.start(p1);
 
         game.gameJsonToFile("game.txt");
 

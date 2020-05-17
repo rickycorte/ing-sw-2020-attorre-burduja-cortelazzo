@@ -2,7 +2,6 @@ package it.polimi.ingsw.network.server;
 
 import it.polimi.ingsw.controller.*;
 import it.polimi.ingsw.network.ICommandReceiver;
-import it.polimi.ingsw.network.INetworkAdapter;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -12,212 +11,224 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-
-
 /**
  * This class is the main server which starts a socket
  * Handles the clients
  */
-public class Server implements INetworkAdapter {
-    private static int server_id;                           //server id
-    private ServerSocket s_socket;                          //the socket on which the server will read/write
-    private static ExecutorService pool;                    //pool to execute a different thread
-    private final Object outLock;                           //lock for out stream
-    private final Object mapLock;                           //lock for clientHandlerMao
-    private Map<Integer, Client_Handler> clientHandlerMap;  //Hash map to map a client_id to a ClientHandler
+public class Server {
+
+    static final public int SERVER_ID = -1111;
+    static final public int BROADCAST_ID = -2222;
+
+    ServerSocket listener;
+    private ExecutorService pool;                    //pool to execute a different thread
+    private int port;
+    private Map<Integer, ClientHandler> syncClientHandlerMap;  //Hash map to map a client_id to a ClientHandler
     private ICommandReceiver controller;                    //Controller to handle commands
+
+    private int last_client_id;
+
+    private boolean shouldStop;
 
 
     /**
      * Server constructor
+     * @param port where the server should bind
      */
-    public Server(){
-        server_id = -1111;
-        mapLock = new Object();
-        outLock = new Object();
-
-        synchronized (mapLock) {
-            clientHandlerMap = new HashMap<>();
-        }
+    public Server(int port)
+    {
+        shouldStop = false;
+        this.port = port;
+        syncClientHandlerMap = Collections.synchronizedMap(new HashMap<>()); // sync operations NOT iteration thank you java for half made things :L
         pool = Executors.newCachedThreadPool();
     }
 
-    @Override
-    public void StartServer(int port) {
-        System.out.println("Welcome to the Santorini server!");
-        System.out.println("[SERVER] Starting...");
 
-        ServerSocket listener = null;
-        try {
+    /**
+     * Get should stop background accept loop
+     * This function is used by the loop to check is should stop in synchronized way
+     * @return
+     */
+    private synchronized boolean getShouldStop()
+    {
+        return shouldStop;
+    }
+
+
+    /**
+     * Set should stop to true to stop the accept loop in a synchronized way to avoid race conditions
+     * and gracefully stop background accept thread
+     * @param shouldStop set to true to stop accept loop
+     */
+    private synchronized void setShouldStop(boolean shouldStop)
+    {
+        this.shouldStop = shouldStop;
+    }
+
+
+    /**
+     * Start the server in background leaving the control of the current thread to the caller
+     */
+    public void startInBackground()
+    {
+        new Thread(this::start).start();
+    }
+
+    /**
+     * Start the server
+     * This function hooks to the calling thread and "grab" its control to create the accept loop for incoming connections
+     */
+    public void start()
+    {
+        System.out.println("[SERVER] Starting server on port " + port + " ...");
+        try
+        {
             listener = new ServerSocket(port);
-        } catch (IOException e) {
-            System.out.println("[SERVER] ERR! Couldn't start ServerSocket");
+
+            System.out.println("[SERVER] Waiting for connections...");
+            runServerLoop(listener);
         }
-
-        System.out.println("[SERVER] Started!");
-        System.out.println("[SERVER] Listening on: " + port + " port");
-
-        if (listener != null) {
-            try {
-                acceptConnections(listener);
-            } catch (Throwable e) {
-                System.out.println("[SERVER] ERR! couldn't start accepting connections");
-            } finally {
-                System.out.println("[SERVER] Shutting down...");
-                StopServer();
-            }
-        } else {
-            System.out.println("Error in setting the listener");
-            StopServer();
+        catch (IOException e)
+        {
+            System.out.println("[SERVER] Unable to bind to port: "+ port);
+        }
+        catch (Throwable e)
+        {
+            System.out.println("[SERVER] Something when wrong in server loop: "+e.getMessage());
         }
     }
+
 
     /**
      * Represents the behaviour of the server
      * Waits on clients to connect and handles each connection in a different thread
      */
-    private void acceptConnections(ServerSocket listener) {
-        int id = -1;
-        System.out.println("[SERVER] Waiting for clients...");
-        while (true) {
+    private void runServerLoop(ServerSocket listener) {
+
+        while (!getShouldStop())
+        {
             Socket client_socket;
-            try {
+            try
+            {
+                last_client_id++; // increment client id
+
+                // accept connection
                 client_socket = listener.accept();
-                id++;
-                Client_Handler clientHandler = new Client_Handler(client_socket, id, this, outLock);
-                synchronized (mapLock) {
-                    clientHandlerMap.put(id, clientHandler);
-                }
+
+                // run connection handler in background
+                ClientHandler clientHandler = new ClientHandler(client_socket, last_client_id, this);
                 pool.execute(clientHandler);
-                System.out.println("[SERVER] Connected to client no: " + id);
-            } catch (IOException e) {
-                System.out.println("[SERVER] ERR! couldn't accept");
+
+                // track connected clients
+                syncClientHandlerMap.put(last_client_id, clientHandler);
+
+                System.out.println("[SERVER] New connection, assigned id: " + last_client_id);
+            }
+            catch (IOException e)
+            {
+                System.out.println("[SERVER] Could not accept connection: "+e.getMessage());
             }
         }
     }
 
-                  //Methods used to pass to handle interactions between client handlers and controller
+    //Methods used to pass to handle interactions between client handlers and controller
 
     /**
      * Handle join type commands
      * @param cmd join type command
      */
-    void onConnect(CommandWrapper cmd){
+    public synchronized void onConnectEvent(CommandWrapper cmd){
         System.out.println("[SERVER] Received " + cmd.getType().name()+ " command");
-        controller.onConnect(cmd);
+        if(controller != null)
+            controller.onConnect(cmd);
+        else
+            System.out.println("[SERVER] Missing controller handler");
     }
 
     /**
      * Handle a leaving client
      * @param client_handler leaving
      */
-    void onDisconnect(Client_Handler client_handler){
-        CommandWrapper leave_command = new CommandWrapper(CommandType.LEAVE, new LeaveCommand(client_handler.getId(), -1111));
+    public synchronized void onDisconnectEvent(ClientHandler client_handler){
+        CommandWrapper leave_command = new CommandWrapper(CommandType.LEAVE, new LeaveCommand(client_handler.getId(), SERVER_ID));
         leave_command.Serialize();
-        controller.onDisconnect(leave_command);
+        if(controller != null)
+            controller.onDisconnect(leave_command);
+        else
+            System.out.println("[SERVER] Missing controller handler");
 
         //remove both id and client handler from the mapped ones
-        synchronized (mapLock) {
-            clientHandlerMap.remove(client_handler.getId());
-        }
+        syncClientHandlerMap.remove(client_handler.getId());
     }
 
     /**
      * Handle all other commands
      * @param cmd command
      */
-    void onCommand(CommandWrapper cmd){
+    public synchronized void onCommandEvent(CommandWrapper cmd){
         System.out.println("[SERVER] Received " + cmd.getType().name()+ " command");
-        controller.onCommand(cmd);
+        if(controller != null)
+            controller.onCommand(cmd);
+        else
+            System.out.println("[SERVER] Missing controller handler");
     }
 
-
-                             //INetworkAdapter method implementations
 
 
     /**
      * Send a command to all clients, only command's target can handle it
      * @param cmd represents the message to send
      */
-    @Override
-    public void Send( CommandWrapper cmd) {
-        System.out.println("[SERVER] Sending " + cmd.getType().name() + " command on broadcast");
-        synchronized (mapLock) {
-            clientHandlerMap.forEach((id, clientHandler) -> {
-                clientHandlerMap.get(id).sendMessage(cmd);
-            });
+    public void send(CommandWrapper cmd) {
+        System.out.println("[SERVER] Sending " + cmd.getType().name() + " command");
 
-
+        //explicit lock for iteration
+        synchronized (syncClientHandlerMap)
+        {
+            syncClientHandlerMap.forEach( (id, clientHandler) -> {
+                syncClientHandlerMap.get(id).sendMessage(cmd);
+            } );
         }
     }
 
     /**
      * Method used to close the server, closes the socket
      */
-    @Override
-    public void StopServer(){
-        try {
-            s_socket.close();
-        }catch (IOException e){
-            System.out.println("[SERVER] Shutting down...");
-            System.exit(0);
+    public void stop()
+    {
+        try
+        {
+            if(listener != null)
+            {
+                setShouldStop(true);
+                listener.close();
+            }
         }
+        catch (IOException e)
+        {
+            System.out.println("[SERVER] [FATAL] Error closing server: "+e.getMessage());
+            System.exit(1);
+        }
+        System.out.println("[SERVER] Server closed");
     }
 
-    @Override
-    public void Connect(String ip, int port, String username) {
-        //do nothing here, client method
-    }
-
-    @Override
-    public void Disconnect() {
-        //do nothing here, client method
-    }
 
     /**
      * Adds a receiver to this server
      * @param receiver packet receiver to add
      */
-    @Override
-    public void AddReceiver(ICommandReceiver receiver) {
-        this.controller = receiver;
-    }
-
-    /**
-     * Return this server's command receiver
-     * @return this server's command receiver
-     */
-    @Override
-    public ICommandReceiver getReceiver() {
-        return this.controller;
+    public synchronized void setReceiver(ICommandReceiver receiver)
+    {
+        if(receiver != null)
+            this.controller = receiver;
     }
 
     /**
      * Removes this server's receiver
      */
-    @Override
-    public void RemoveReceiver() {
+    public synchronized void removeReceiver() {
         this.controller = null;
     }
-
-    /**
-     * returns this server's id
-     * @return server's id
-     */
-    @Override
-    public int getServerID() {
-        return server_id;
-    }
-
-    /**
-     * gets broadcast id
-     * @return broadcast id
-     */
-    @Override
-    public int getBroadCastID() {
-        return -2222;
-    }
-
 
 
 }

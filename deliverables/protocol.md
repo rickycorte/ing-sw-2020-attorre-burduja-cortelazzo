@@ -15,6 +15,7 @@ The protocol we created is based on the idea that the server has full control ov
 
 This choice serves to have a light client with almost no logic that receives instructions (we call them commands) from the server on what to do. We could imagine the client as a fancy switch that let the user chose what to do.
 
+All commands are sent in broadcast and filtered by the client based on it's ID.
 
 ## Serialization
 Every command is send as a JSON into a `CommandWrapper` class. This wrapper has the function to help the code to easily understand the type of command received.
@@ -38,7 +39,7 @@ Every command is also serialized as a JSON and encapsulated in CommandWrapper as
 
 
 ### Types of Commands
-This are all possible values of `CommandType` and they represent all possible commands sent between server and client.
+This are all possible values of `CommandType` and they represent all possible commands sent between server and clientDELETE.
 
 | Type                | Client | Server | 
 |---------------------|---------------------|---------------------|
@@ -53,7 +54,7 @@ This are all possible values of `CommandType` and they represent all possible co
 | UPDATE              | Update on the new map status | --
 | END_GAME            | Win/Lose notification | --
 
-Note that all the commands "order" to do something but this "forced actions" can also be game updates that the client should process, for example a map change.
+Note that all the commands "order" to do something but this "forced actions" can also be game updates that the clientDELETE should process, for example a map change.
 
 ## Errors
 
@@ -69,6 +70,8 @@ No explicit `ACK` mechanism was implemented because the connections are all base
 
 ClientIDs are highly variable positive integers that depend at what time the client first joined the game, in the next sections we put example ids and data.
 ServerID is a negative number that is always static, is this schemas its presented as a string instead of a static number.
+
+All the next schemas don't show broadcast interactions, we display only meaningful communications to keep everything clean ad simple.
 
 ## Join
 

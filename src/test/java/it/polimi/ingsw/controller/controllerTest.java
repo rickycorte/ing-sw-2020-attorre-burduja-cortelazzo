@@ -16,42 +16,50 @@ public class controllerTest {
     void setUp() {
         INetworkAdapter adapter = new INetworkAdapter() {
             @Override
-            public void StartServer(int port) {
+            public void startServer(int port) {
 
             }
 
             @Override
-            public void StopServer() {
+            public void stopServer() {
 
             }
 
             @Override
-            public void Connect(String ip, int port, String username) {
+            public boolean connect(String ip, int port, String username) {
+
+                return false;
+            }
+
+            @Override
+            public void disconnect() {
 
             }
 
             @Override
-            public void Disconnect() {
+            public void setReceiver(ICommandReceiver receiver) {
 
             }
 
             @Override
-            public void AddReceiver(ICommandReceiver receiver) {
+            public void startServer()
+            {
 
             }
 
             @Override
-            public ICommandReceiver getReceiver() {
-                return null;
+            public int getDefaultPort()
+            {
+                return 0;
             }
 
             @Override
-            public void RemoveReceiver() {
+            public void removeReceiver() {
 
             }
 
             @Override
-            public void Send( CommandWrapper packet) {
+            public void send(CommandWrapper packet) {
 
             }
 

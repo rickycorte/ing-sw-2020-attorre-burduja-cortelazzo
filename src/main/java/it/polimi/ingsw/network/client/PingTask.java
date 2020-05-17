@@ -11,11 +11,11 @@ import java.util.TimerTask;
  */
 public class PingTask extends TimerTask {
 
-    private ServerConnection serverConnection;
+    private Client client;
 
-    PingTask(ServerConnection serverConnection){
+    PingTask(Client client){
         super();
-        this.serverConnection = serverConnection;
+        this.client = client;
     }
 
 
@@ -24,6 +24,6 @@ public class PingTask extends TimerTask {
      */
     @Override
     public void run() {
-        serverConnection.Send(new CommandWrapper(CommandType.BASE, null));
+        client.send(new CommandWrapper(CommandType.BASE, null));
     }
 }

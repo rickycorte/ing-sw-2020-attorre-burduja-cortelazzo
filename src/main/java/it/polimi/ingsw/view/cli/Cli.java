@@ -2,16 +2,19 @@ package it.polimi.ingsw.view.cli;
 
 import it.polimi.ingsw.controller.*;
 import it.polimi.ingsw.game.Vector2;
-import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
+import it.polimi.ingsw.view.IHumanInterface;
 
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-
-public class Cli implements ICommandReceiver {
+/**
+ * Old cli adapted to use some network changes
+ */
+public class Cli implements IHumanInterface
+{
     private static final int HEIGHT = 7;
     private static final int LENGTH = 7;
     private static final int DOME_VALUE = 128;
@@ -20,7 +23,7 @@ public class Cli implements ICommandReceiver {
 
     private INetworkAdapter virtualServer;
     private int playersNumber;
-    private int idPlayer;
+    private int idPlayer = -1;
     private Map<Integer,Color> colors = new HashMap<>();
     private PrintStream stream = new PrintStream(System.out,true);
     private Scanner scanner = new Scanner(System.in);
@@ -30,8 +33,10 @@ public class Cli implements ICommandReceiver {
     }
 
     public void onConnect(CommandWrapper cmdWrapper) {
+        int targetID = cmdWrapper.getCommand(BaseCommand.class).getTarget();
+
         stream.println("[CLI] Received " + cmdWrapper.getType().name() + " command on onConnect");
-        if (cmdWrapper.getType() == CommandType.JOIN) {
+        if (cmdWrapper.getType() == CommandType.JOIN && idPlayer == -1) {
             JoinCommand cmd = cmdWrapper.getCommand(JoinCommand.class);
 
             idPlayer = cmd.getTarget();
@@ -47,20 +52,48 @@ public class Cli implements ICommandReceiver {
                     String newUsername = null;
                     if (scanner.hasNext()) newUsername = scanner.next();
                     CommandWrapper newJoinCommand = new CommandWrapper(CommandType.JOIN, new JoinCommand(idPlayer, virtualServer.getServerID(), newUsername, true));
-                    virtualServer.Send(newJoinCommand);
+                    virtualServer.send(newJoinCommand);
                 }
-                //System.out.println("[Cli] Received "+ cmdWrapper.getType());
+                System.out.println("[Cli] Received "+ cmdWrapper.getType());
                 //stream.println("Can't join a game.");
             }
         }
+    }
 
+    @Override
+    public void start()
+    {
+        Scanner scn = new Scanner(System.in);
+        System.out.println("Insert your username: ");
+
+        if(virtualServer.connect("127.0.0.1", virtualServer.getDefaultPort(), scn.nextLine()))
+        {
+            try
+            {
+                // we still have control and we must keep main alive
+                while (true) Thread.sleep(10000);
+            }catch (Exception ignored){}
+        }
+        else
+        {
+            System.out.println("Connection refused");
+        }
 
     }
+
     public void onDisconnect(CommandWrapper cmdWrapper){
         //never here ?
     }
 
     public void onCommand(CommandWrapper cmdWrapper){
+        int targetID = cmdWrapper.getCommand(BaseCommand.class).getTarget();
+
+        if(targetID != idPlayer && targetID != virtualServer.getBroadCastID())
+        {
+            System.out.println("Skipped command for "+ targetID+" because i'm "+ idPlayer);
+            return; // skip command not mine
+        }
+
         switch (cmdWrapper.getType()){
             case START:
                 //System.out.println("Received start command");
@@ -75,7 +108,7 @@ public class Cli implements ICommandReceiver {
                 intData = getIntFromLine(playersNumber);
 
                 CommandWrapper cmw = new CommandWrapper(CommandType.FILTER_GODS,new FilterGodCommand(idPlayer,SERVER_ID,intData));
-                virtualServer.Send(cmw);
+                virtualServer.send(cmw);
                 break;
             case SELECT_FIRST_PLAYER:
                 for (Integer i : colors.keySet())
@@ -84,7 +117,7 @@ public class Cli implements ICommandReceiver {
                 stream.println("Select first player for this game: ");
                 int[] firstPlayer;
                 firstPlayer = getIntFromLine(1);
-                virtualServer.Send(new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(idPlayer,SERVER_ID,firstPlayer[0])));
+                virtualServer.send(new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(idPlayer,SERVER_ID,firstPlayer[0])));
                 break;
             case PICK_GOD:
                 PickGodCommand pickGodCommand = cmdWrapper.getCommand(PickGodCommand.class);
@@ -95,7 +128,7 @@ public class Cli implements ICommandReceiver {
                 stream.println();
                 stream.println("Pick a god by selecting id : ");
                 int[] god = getIntFromLine(1);
-                virtualServer.Send(new CommandWrapper(CommandType.PICK_GOD,new PickGodCommand(idPlayer,SERVER_ID,god[0])));
+                virtualServer.send(new CommandWrapper(CommandType.PICK_GOD,new PickGodCommand(idPlayer,SERVER_ID,god[0])));
                 break;
             case PLACE_WORKERS:
                 WorkerPlaceCommand cmd = cmdWrapper.getCommand(WorkerPlaceCommand.class);
@@ -106,7 +139,7 @@ public class Cli implements ICommandReceiver {
                 stream.println("Select 2 available positions by its identifiers: ");
                 Vector2[] selectedPositions;
                 selectedPositions = getVector2FromLine(cmd.getPositions(),N_WORKER);
-                virtualServer.Send(new CommandWrapper(CommandType.PLACE_WORKERS,new WorkerPlaceCommand(idPlayer,SERVER_ID,selectedPositions)));
+                virtualServer.send(new CommandWrapper(CommandType.PLACE_WORKERS,new WorkerPlaceCommand(idPlayer,SERVER_ID,selectedPositions)));
                 break;
             case ACTION_TIME:
                     stream.println("ACTION TIME : currently not available  BUT VERY GOOD WORK ");
