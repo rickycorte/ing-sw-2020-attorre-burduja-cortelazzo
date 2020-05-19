@@ -38,14 +38,12 @@ class BuildDomeActionTest
         t -> p2 workers
         @ -> dome
 
-        xy  00 01 02 03 04 05 06
-        00 |--|--|-3|t-|-1|--|--|
-        01 |--|--|@-|k-|-2|--|--|
-        02 |--|--|--|-2|@4|--|--|
-        03 |--|--|--|--|--|--|--|
-        04 |--|--|--|--|--|--|--|
-        05 |--|--|--|--|--|--|--|
-        06 |--|--|--|--|--|--|--|
+        xy  00 01 02 03 04
+        00 |--|--|-3|t-|-1|
+        01 |--|--|@-|k-|-2|
+        02 |--|--|--|-2|@4|
+        03 |--|--|--|--|--|
+        04 |--|--|--|--|--|
 
         All later tests are based on this map, it's recommend to draw a copy on the paper
         to easily follow the moves and the checks done

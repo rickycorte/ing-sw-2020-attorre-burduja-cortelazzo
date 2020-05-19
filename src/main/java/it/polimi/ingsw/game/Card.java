@@ -18,20 +18,36 @@ public class Card {
         this.graph = graph;
     }
 
+    /**
+     * Return the card ID
+     * @return card ID
+     */
     public int getId()
     {
         return id;
     }
 
+    /**
+     * Return the card name
+     * @return card name
+     */
     public String getName()
     {
         return name;
     }
 
+    /**
+     * Return card behaviour graph
+     * @return behaviour graph
+     */
     public BehaviourGraph getGraph()
     {
         return graph;
     }
 
+    /**
+     * Set the card behaviour graph
+     * @param graph new behaviour graph
+     */
     public void setGraph(BehaviourGraph graph) { this.graph = graph; }
 }

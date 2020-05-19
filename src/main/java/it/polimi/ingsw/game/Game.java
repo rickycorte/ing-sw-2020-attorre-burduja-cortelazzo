@@ -22,15 +22,38 @@ public final class Game
 
     /**
      * Enum that represent all the possible phases of a game:
-     *   WAIT - wait players before start
-     *   GOD_SELECTION - game creator select gods allowed in this game
-     *   GOD_PICK - players chose their god from selected ones
-     *   FIRST_PLAYER_PICK - game creator chose who starts first (no self, skipped if two), then players place workers
-     *   WORKER_PLACE - place the workers starting from first player
-     *   GAME - normal game
-     *   END - game ended due to finish of game or insufficient player
      */
-    public enum GameState{WAIT, GOD_FILTER, GOD_PICK, FIRST_PLAYER_PICK, WORKER_PLACE, GAME, END}
+    public enum GameState
+    {
+        /**
+         * Wait players before start
+         */
+        WAIT,
+        /**
+         * Game creator select gods allowed in this game
+         */
+        GOD_FILTER,
+        /**
+         * Players chose their god from selected ones
+         */
+        GOD_PICK,
+        /**
+         * Game creator chose who starts first (no self, skipped if two), then players place workers
+         */
+        FIRST_PLAYER_PICK,
+        /**
+         * Place the workers starting from first player
+         */
+        WORKER_PLACE,
+        /**
+         *Normal game
+         */
+        GAME,
+        /**
+         * Game ended due to finish of game or insufficient player
+         */
+        END
+    }
 
     private List<Player> players;
     private transient List<Card> allowedCards;
@@ -65,6 +88,7 @@ public final class Game
 
 
     /**
+     * Check if the game is started
      * @return true if game is started and not waiting for more players
      */
     public boolean isStarted() {
@@ -72,6 +96,7 @@ public final class Game
     }
 
     /**
+     * Check if the game is ended
      * @return true if game is ended
      */
     public boolean isEnded() {
@@ -80,6 +105,7 @@ public final class Game
 
 
     /**
+     * Return the current game state
      * @return current game state
      */
     public GameState getCurrentState()
@@ -88,6 +114,7 @@ public final class Game
     }
 
     /**
+     * Return the player that is "hosting" this match
      * @return the game host aka the challenger who created the match
      */
     public Player getHost(){
@@ -96,6 +123,7 @@ public final class Game
 
 
     /**
+     * Return the current player that needs to perform an action
      * @return current player that needs to perform an action of any kind
      */
     public Player getCurrentPlayer(){
@@ -106,6 +134,7 @@ public final class Game
     }
 
     /**
+     * Return all the players in the match
      * @return list of all the players in this match
      */
     public List<Player> getPlayers()
@@ -115,6 +144,7 @@ public final class Game
 
 
     /**
+     * Return the player count
      * @return number of players in this game
      */
     public int playerCount() {
@@ -122,6 +152,7 @@ public final class Game
     }
 
     /**
+     * Return the current map
      * @return the current map state
      */
     public Map getCurrentMap(){
@@ -130,6 +161,7 @@ public final class Game
 
 
     /**
+     * Return a list of available card ids for this match
      * @return list of available god cards by id
      */
     public int[] getCardIds()
@@ -139,6 +171,7 @@ public final class Game
 
 
     /**
+     * Return current list of usable cards
      * @return current pickable cards for this match
      */
     public int[] getAllowedCardIDs(){
@@ -314,11 +347,6 @@ public final class Game
         return false;
     }
 
-    @Deprecated
-    public boolean runAction(Player sender, int worker, int actionId, Vector2 target) throws NotAllowedOperationException
-    {
-        return executeAction(sender, worker, actionId, target) >= 0;
-    }
 
     /**
      * Command handler to execute an action in the current turn

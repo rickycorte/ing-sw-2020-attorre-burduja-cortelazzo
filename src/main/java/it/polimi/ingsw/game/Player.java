@@ -24,24 +24,48 @@ public class Player
         this.workers = new ArrayList<>();
     }
 
+    /**
+     * Return current player id
+     * @return player id
+     */
     public int getId() { return id; }
 
+    /**
+     * Set player god that will be used in the game
+     * @param god got do use
+     */
     public void setGod(Card god){
         this.god = god;
     }
 
+    /**
+     * Return the current player god
+     * @return current selected god
+     */
     public Card getGod(){
         return this.god;
     }
 
+    /**
+     * Return player username
+     * @return player username
+     */
     public String getUsername(){
         return this.username;
     }
 
+    /**
+     * Return player workers
+     * @return list of player workers
+     */
     public ArrayList<Worker> getWorkers(){
         return this.workers;
     }
 
+    /**
+     * Add a worker to this player
+     * @param worker worker to add
+     */
     public void addWorker(Worker worker) {
         this.workers.add(worker);
     }

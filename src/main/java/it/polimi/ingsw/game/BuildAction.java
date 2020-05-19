@@ -30,7 +30,7 @@ public class BuildAction extends Action
     }
 
     /**
-     *
+     * Apply build action to a cell and update game state
      * @param w target worker used in this action
      * @param target target position where the action should take place
      * @param m map where the action is executed

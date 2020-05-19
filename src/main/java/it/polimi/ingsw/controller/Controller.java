@@ -59,12 +59,6 @@ public class Controller implements ICommandReceiver {
         lastSent = null;
     }
 
-    @Deprecated
-    public Controller(){
-        connectedPlayers = new ArrayList<>();
-        lastSent = null;
-    }
-
     // **********************************************************************************************
     // Getter (for tests only)
     // **********************************************************************************************

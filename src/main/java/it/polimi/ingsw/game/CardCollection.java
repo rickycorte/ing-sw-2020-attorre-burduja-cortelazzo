@@ -104,6 +104,7 @@ public class CardCollection {
     }
 
     /**
+     * Return the number of cards in the collection
      * @return number of cards in this collection
      */
     public int size()
@@ -157,6 +158,8 @@ public class CardCollection {
 
 
     /**
+     * Return the default turn made of a Move and a Build
+     * This can be used to make matches without workers
      * @return the default god game turn behaviour without any god
      */
     public Card getNoGodCard()

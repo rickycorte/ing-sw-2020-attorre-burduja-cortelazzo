@@ -40,14 +40,17 @@ public class MoveActionTest {
         t -> p2 workers
         @ -> dome
 
-        xy  00 01 02 03 04 05 06
-        00 |--|@4|-1|t-|-1|--|--|
-        01 |@4|@4|@-|k-|-1|t1|--|
-        02 |--|--|--|-2|t1|--|--|
-        03 |--|--|-1|-3|--|--|--|
-        04 |--|--|--|@4|--|--|--|
-        05 |--|--|--|--|--|--|--|
-        06 |--|--|--|--|--|--|--|
+        xy  00 01 02 03 04
+        00 |--|@4|-1|t-|-1|
+        01 |@4|@4|@-|k-|-1|
+        02 |--|--|--|-2|t1|
+        03 |--|--|-1|-3|--|
+        04 |t-|--|--|@4|--|
+
+        w1p1 == k (1,3)
+        w1p2 == (0,3)
+        w2p2 == (2,4)
+        w3p2 == (0,4)
 
      */
 
@@ -78,7 +81,6 @@ public class MoveActionTest {
         buildPos(m, 0,2,1);
         buildPos(m,0,4,1);
         buildPos(m,1,4,1);
-        buildPos(m,1,5,1);
         buildPos(m,2,3,2);
         buildPos(m,2,4,1);
         buildPos(m,3,2,1);
@@ -93,7 +95,7 @@ public class MoveActionTest {
         w1p1.setPosition(new Vector2(1,3));
         w1p2.setPosition(new Vector2(0,3));
         w2p2.setPosition(new Vector2(2,4));
-        w3p2.setPosition(new Vector2(1,5));
+        w3p2.setPosition(new Vector2(4,0));
 
         m.setWorkers(p1);
         m.setWorkers(p2);
@@ -390,10 +392,11 @@ public class MoveActionTest {
     void shouldNotPushWithUsedCell()
     {
         moveAct = new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
-        w1p2.setPosition(new Vector2(1,6));
-        assertFalse(moveAct.possibleCells(w1p2, m, null).contains(new Vector2(1,5)));
+        w1p2.setPosition(new Vector2(4,3));
+        w2p2.setPosition(new Vector2(4,2));
+        assertFalse(moveAct.possibleCells(w1p2, m, null).contains(new Vector2(4,2)));
 
-        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w1p2, new Vector2(1,5),m, gc); });
+        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w1p2, new Vector2(4,2),m, gc); });
     }
 
     @Test
@@ -409,16 +412,18 @@ public class MoveActionTest {
     void shouldNotPushMyOtherWorker()
     {
         moveAct = new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
-        assertFalse(moveAct.possibleCells(w2p2, m, null).contains(new Vector2(1,5)));
-        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w2p2, new Vector2(1,5),m, gc); });
+        w3p2.setPosition(new Vector2(1,4));
+        assertFalse(moveAct.possibleCells(w3p2, m, null).contains(new Vector2(2,4)));
+        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w3p2, new Vector2(2,4),m, gc); });
     }
 
     @Test
     void shouldNotSwapMyOtherWorker()
     {
         moveAct = new MoveAction(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT);
-        assertFalse(moveAct.possibleCells(w2p2, m, null).contains(new Vector2(1,5)));
-        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w2p2, new Vector2(1,5),m, gc); });
+        w3p2.setPosition(new Vector2(1,4));
+        assertFalse(moveAct.possibleCells(w3p2, m, null).contains(new Vector2(2,4)));
+        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w3p2, new Vector2(2,4),m, gc); });
     }
 
     @Test
@@ -459,11 +464,12 @@ public class MoveActionTest {
     {
         moveAct = new MoveAction(GameConstraints.Constraint.WIN_BY_GOING_DOWN);
 
-        //check height diff == 1 does nothing
-        w1p1.setPosition(new Vector2(0,4));
         try
         {
-            assertEquals(0,moveAct.run(w1p1, new Vector2(0,5), m, gc)); // 1 to 0
+
+            //check height diff == 1 does nothing
+            w1p1.setPosition(new Vector2(3,2));
+            assertEquals(0,moveAct.run(w1p1, new Vector2(3,1), m, gc)); // 1 to 0
 
             w1p1.setPosition(new Vector2(2,3));
             assertEquals(0,moveAct.run(w1p1, new Vector2(3,2), m, gc)); // 2 to 1

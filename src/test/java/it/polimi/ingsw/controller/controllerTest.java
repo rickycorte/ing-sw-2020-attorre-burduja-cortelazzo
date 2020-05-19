@@ -579,7 +579,7 @@ public class controllerTest {
         //first worker place command is sent to client with every position of the map
         controller.getLastSent().Serialize();
         WorkerPlaceCommand cmd = controller.getLastSent().getCommand(WorkerPlaceCommand.class);
-        assertEquals(7*7,cmd.getPositions().length);
+        assertEquals(Map.HEIGHT * Map.LENGTH, cmd.getPositions().length);
         //sent to the correct first player chosen
         assertEquals(2,cmd.getTarget());
     }
@@ -602,7 +602,7 @@ public class controllerTest {
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(WorkerPlaceCommand.class);
         assertEquals(3,cmd.getTarget());
-        assertEquals((7*7)-2,cmd.getPositions().length);
+        assertEquals((Map.LENGTH * Map.HEIGHT)-2,cmd.getPositions().length);
         //correct value of possible positions are updated, and command is sent to next player
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(availablePos[1]));
@@ -623,7 +623,7 @@ public class controllerTest {
         WorkerPlaceCommand cmd = controller.getLastSent().getCommand(WorkerPlaceCommand.class);
         //player 3 has to repeat the entire worker placement
         assertEquals(3,cmd.getTarget());
-        assertEquals((7*7)-2,cmd.getPositions().length);
+        assertEquals((Map.LENGTH * Map.HEIGHT)-2,cmd.getPositions().length);
         //player 3 selection are both discarded
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
         assertTrue(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(3,3)));
@@ -642,7 +642,7 @@ public class controllerTest {
         controller.getLastSent().Serialize();
         WorkerPlaceCommand cmd = controller.getLastSent().getCommand(WorkerPlaceCommand.class);
 
-        assertEquals(7*7,cmd.getPositions().length);
+        assertEquals(Map.LENGTH * Map.HEIGHT,cmd.getPositions().length);
         assertTrue(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
 
     }
@@ -673,7 +673,7 @@ public class controllerTest {
         //3 players correctly place their workers
         controller.onCommand(createWorkerPlaceCommand(2,new Vector2[]{new Vector2(0,0),new Vector2(0,1)}));
         controller.onCommand(createWorkerPlaceCommand(3,new Vector2[]{new Vector2(0,2),new Vector2(0,3)}));
-        controller.onCommand(createWorkerPlaceCommand(1,new Vector2[]{new Vector2(0,4),new Vector2(0,5)}));
+        controller.onCommand(createWorkerPlaceCommand(1,new Vector2[]{new Vector2(1,1),new Vector2(1,2)}));
         //get to action phase for first player
         assertEquals(CommandType.ACTION_TIME,controller.getLastSent().getType());
         controller.getLastSent().Serialize();
@@ -733,23 +733,19 @@ public class controllerTest {
     }
 
     /* 3 players
-        | 2 | 2 | 3 | 3 | 1 | 1 |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
+        | 2 | 2 | 3 | 3 |   |
+        | 1 | 1 |   |   |   |
+        |   |   |   |   |   |
+        |   |   |   |   |   |
+        |   |   |   |   |   |
      */
 
     /* 2 players
-        | 2 | 2 | 1 | 1 |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
-        |   |   |   |   |   |   |   |
+        | 2 | 2 | 1 | 1 |   |
+        |   |   |   |   |   |
+        |   |   |   |   |   |
+        |   |   |   |   |   |
+        |   |   |   |   |   |
      */
 
     @Test
@@ -766,9 +762,9 @@ public class controllerTest {
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
 
         //2 player can move with 2 worker in 2 and 3 possible cell (total of 5 available cell)
-        assertEquals(5,cmd.getAvailablePos().length);
+        assertEquals(3,cmd.getAvailablePos().length);
         assertEquals(1,cmd.getAvailablePos()[0].getX());
-        assertEquals(0,cmd.getAvailablePos()[0].getY());
+        assertEquals(1,cmd.getAvailablePos()[0].getY());
         assertEquals(1,cmd.getAvailablePos()[1].getX());
         assertEquals(1,cmd.getAvailablePos()[1].getY());
     }

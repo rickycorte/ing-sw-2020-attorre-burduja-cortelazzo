@@ -31,6 +31,10 @@ public class BehaviourNode
         this.parent = parent;
     }
 
+    /**
+     * Return current node children
+     * @return children list
+     */
     public List<BehaviourNode> getChildNodes() {
         return childNodes;
     }

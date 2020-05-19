@@ -36,14 +36,14 @@ public class MapTest {
     @Test
     void shouldBeInsideMap()
     {
-        //map is 7x7 starting from 0
+        //map is 5x5 starting from 0
         assertTrue(map.isInsideMap(new Vector2(0,0)));
 
         assertTrue(map.isInsideMap(new Vector2(4,0)));
 
-        assertTrue(map.isInsideMap(new Vector2(5,6)));
+        assertTrue(map.isInsideMap(new Vector2(4,4)));
 
-        assertTrue(map.isInsideMap(new Vector2(6,6)));
+        assertTrue(map.isInsideMap(new Vector2(1,3)));
     }
 
     @Test
@@ -51,7 +51,7 @@ public class MapTest {
     {
         assertFalse(map.isInsideMap(new Vector2(-1,0))); // x < 0
 
-        assertFalse(map.isInsideMap(new Vector2(7,0))); // x > 6
+        assertFalse(map.isInsideMap(new Vector2(5,0))); // x > 6
 
         assertFalse(map.isInsideMap(new Vector2(5,-1))); // y < 0
 
@@ -157,7 +157,7 @@ public class MapTest {
 
         Player p = new Player(1, "FirstPlayer");
         Worker w1 = new Worker(0, p, new Vector2(0,0));
-        Worker w2 = new Worker(1, p, new Vector2(6,6));
+        Worker w2 = new Worker(1, p, new Vector2(4,4));
         p.addWorker(w1);
         p.addWorker(w2);
 
@@ -180,7 +180,7 @@ public class MapTest {
     {
         Player p = new Player(1, "FirstPlayer");
         Worker w1 = new Worker(0, p, new Vector2(0,0));
-        Worker w2 = new Worker(1, p, new Vector2(6,6));
+        Worker w2 = new Worker(1, p, new Vector2(4,4));
         p.addWorker(w1);
         p.addWorker(w2);
 
@@ -215,7 +215,7 @@ public class MapTest {
     {
         Player p = new Player(1, "FirstPlayer");
         Worker w1 = new Worker(0, p, new Vector2(0,0));
-        Worker w2 = new Worker(1, p, new Vector2(6,6));
+        Worker w2 = new Worker(1, p, new Vector2(4,4));
         p.addWorker(w1);
         p.addWorker(w2);
 
@@ -227,7 +227,7 @@ public class MapTest {
         map.setWorkers(p2);
 
         assertEquals(w1, map.getWorker(new Vector2(0,0)));
-        assertEquals(w2, map.getWorker(new Vector2(6,6)));
+        assertEquals(w2, map.getWorker(new Vector2(4,4)));
         assertEquals(w3, map.getWorker(new Vector2(3,3)));
     }
 
@@ -236,7 +236,7 @@ public class MapTest {
     {
         Player p = new Player(1, "FirstPlayer");
         Worker w1 = new Worker(0, p, new Vector2(0,0));
-        Worker w2 = new Worker(1, p, new Vector2(6,6));
+        Worker w2 = new Worker(1, p, new Vector2(4,4));
         p.addWorker(w1);
         p.addWorker(w2);
 
@@ -249,7 +249,7 @@ public class MapTest {
 
 
         assertFalse(map.isCellEmpty(new Vector2(0,0)));
-        assertFalse(map.isCellEmpty(new Vector2(6,6)));
+        assertFalse(map.isCellEmpty(new Vector2(4,4)));
         assertFalse(map.isCellEmpty(new Vector2(3,3)));
     }
 
@@ -264,7 +264,7 @@ public class MapTest {
         p.addWorker(w1);
         map.setWorkers(p);
         map.build(new Vector2(0,0));
-        map.buildDome(new Vector2(0,5));
+        map.buildDome(new Vector2(0,4));
 
         Map newMap = new Map(map);
 
@@ -272,8 +272,8 @@ public class MapTest {
 
         assertArrayEquals(map.getMap(),newMap.getMap());
 
-        for (int i = 0; i<7 ; i++)
-            for (int j = 0; j<7; j++)
+        for (int i = 0; i < Map.LENGTH ; i++)
+            for (int j = 0; j < Map.HEIGHT; j++)
                 assertEquals(map.getLevel(new Vector2(i,j)),newMap.getLevel(new Vector2(i,j)));
 
     }

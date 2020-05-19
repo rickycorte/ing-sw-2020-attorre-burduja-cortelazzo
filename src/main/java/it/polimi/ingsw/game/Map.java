@@ -6,9 +6,18 @@ import java.util.ArrayList;
  */
 public class Map
 {
-    private static final int HEIGHT = 7;
-    private static final int LENGTH = 7;
-    private static final int DOME_VALUE = 128;
+    /**
+     * Map height
+     */
+    public static final int HEIGHT = 5;
+    /**
+     * Map width
+     */
+    public static final int LENGTH = 5;
+    /**
+     * Dome representation value, useful for client's
+     */
+    public static final int DOME_VALUE = 128;
 
     private int[][] map = new int[HEIGHT][LENGTH];
 

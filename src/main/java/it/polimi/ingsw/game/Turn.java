@@ -2,6 +2,9 @@ package it.polimi.ingsw.game;
 
 import java.util.ArrayList;
 
+/**
+ * This class represent a turn in the match and holds his current state of progression
+ */
 public class Turn
 {
     private Player player;
@@ -10,7 +13,7 @@ public class Turn
     private int possible_move;
 
     /**
-     * make a turn and reset the graph status for player's graph
+     * Make a turn and reset the graph status for player's graph
      * @param p player owner of the turn
      */
     public Turn(Player p) {

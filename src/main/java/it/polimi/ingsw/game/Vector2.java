@@ -10,14 +10,27 @@ public class Vector2 {
         set(x, y);
     }
 
+    /**
+     * Return x coordinate
+     * @return x
+     */
     public int getX() {
         return x;
     }
 
+    /**
+     * Return y coordinate
+     * @return y
+     */
     public int getY() {
         return y;
     }
 
+    /**
+     * Set vector value
+     * @param x new x value
+     * @param y new y value
+     */
     public void set(int x, int y) {
         this.x = x;
         this.y = y;

@@ -4,8 +4,6 @@ import it.polimi.ingsw.game.Map;
 import it.polimi.ingsw.game.Vector2;
 
 public class UpdateCommand extends BaseCommand {
-    private static final int HEIGHT = 7;
-    private static final int LENGTH = 7;
     private int[] mapWorkerPair;
     private Vector2[] workerPos;
 
@@ -30,15 +28,15 @@ public class UpdateCommand extends BaseCommand {
      * @return first [HEIGHT*LENGTH] are map int value, then pairs (worker owner id, worker id)
      */
     private int[] mapToArray(Map map){
-        int[] intMap = new int[(HEIGHT * LENGTH)+(map.getWorkers().size()*2)];
-        for(int x = 0, i = 0; i < LENGTH; i++){
-            for(int j = 0; j < HEIGHT ; j++){
+        int[] intMap = new int[(Map.LENGTH * Map.LENGTH)+(map.getWorkers().size()*2)];
+        for(int x = 0, i = 0; i < Map.LENGTH; i++){
+            for(int j = 0; j < Map.HEIGHT ; j++){
                 intMap[x] = map.getMap()[i][j];
                 x++;
             }
         }
 
-        for(int i = HEIGHT * LENGTH,j = 0; j<map.getWorkers().size();i=i+2,j++){
+        for(int i = Map.HEIGHT * Map.LENGTH, j = 0; j<map.getWorkers().size();i=i+2,j++){
             intMap[i] = map.getWorkers().get(j).getOwner().getId();
             intMap[i+1] = map.getWorkers().get(j).getId();
         }
