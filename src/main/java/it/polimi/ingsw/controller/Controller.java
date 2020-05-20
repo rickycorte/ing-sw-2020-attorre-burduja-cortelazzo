@@ -173,7 +173,10 @@ public class Controller implements ICommandReceiver {
         match.left(getPlayer(cmd.getSender()));
 
         if(match.getCurrentState() == END)
-            sendNextCommand(new CommandWrapper(CommandType.END_GAME,new EndGameCommand(SERVER_ID,match.getCurrentPlayer().getId(),true)));
+        {
+            var winner = match.getWinner();
+            sendNextCommand(new CommandWrapper(CommandType.END_GAME, new EndGameCommand(SERVER_ID, virtualProxy.getBroadCastID(), winner == null ? EndGameCommand.INTERRUPTED_GAME : winner.getId())));
+        }
 
     }
 
@@ -283,7 +286,8 @@ public class Controller implements ICommandReceiver {
             case WORKER_PLACE:
                 return new CommandWrapper(CommandType.ACTION_TIME, new ActionCommand(SERVER_ID, match.getCurrentPlayer().getId(),match.getNextActions(match.getCurrentPlayer())));
             case GAME:
-                return new CommandWrapper(CommandType.END_GAME, new EndGameCommand(SERVER_ID,match.getCurrentPlayer().getId(),true));
+                var winner = match.getWinner();
+                return new CommandWrapper(CommandType.END_GAME, new EndGameCommand(SERVER_ID, virtualProxy.getBroadCastID(),  winner == null ? EndGameCommand.INTERRUPTED_GAME : winner.getId() ));
         }
 
         return null; //never here
@@ -360,7 +364,7 @@ public class Controller implements ICommandReceiver {
      * @param player loser player
      */
     private void metLoseCondition(int player){
-        CommandWrapper cmd = new CommandWrapper(CommandType.END_GAME,new EndGameCommand(SERVER_ID,player,false));
+        CommandWrapper cmd = new CommandWrapper(CommandType.END_GAME,new EndGameCommand(SERVER_ID, player, EndGameCommand.TARGET_LOST));
         System.out.println("Sending lose notification for player: "+ player);
         virtualProxy.send(cmd);
     }
@@ -372,7 +376,6 @@ public class Controller implements ICommandReceiver {
     private void sendNextCommand(CommandWrapper cmdWrap){
         if(cmdWrap != null){
             lastSent = cmdWrap;
-            System.out.println("Sending command "+ cmdWrap.getType() +" to: "+ match.getCurrentPlayer().getId());
             virtualProxy.send(cmdWrap);
         }
     }

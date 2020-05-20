@@ -147,7 +147,7 @@ public class Cli implements IHumanInterface
                 break;
             case END_GAME:
                 EndGameCommand endGameCommand = cmdWrapper.getCommand(EndGameCommand.class);
-                if(endGameCommand.isWinner())
+                if(idPlayer == endGameCommand.getWinnerID())
                     stream.println("\nYOU WIN !");
                     //TODO : disconnect ? (and in loser)
                 else

@@ -3,6 +3,8 @@ package it.polimi.ingsw.controller;
 import it.polimi.ingsw.game.*;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
+import it.polimi.ingsw.network.TPCNetwork;
+import it.polimi.ingsw.network.server.Server;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,10 +13,11 @@ public class controllerTest {
     private static final int SERVER_ID = -11111;
 
     private Controller controller;
+    private INetworkAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        INetworkAdapter adapter = new INetworkAdapter() {
+        adapter = new INetworkAdapter() {
             @Override
             public void startServer(int port) {
 
@@ -1033,10 +1036,12 @@ public class controllerTest {
         //player 2 disconnect from game
         controller.onDisconnect(createLeaveCommand(2));
 
-        //game goes on with remaining 2 players
-        assertFalse(controller.getMatch().isEnded());
-
-        assertEquals(CommandType.ACTION_TIME,controller.getLastSent().getType());
+        // game is killed when a player disconnects
+        assertTrue(controller.getMatch().isEnded());
+        controller.getLastSent().Serialize();
+        EndGameCommand cmd = controller.getLastSent().getCommand(EndGameCommand.class);
+        assertEquals(adapter.getBroadCastID(), cmd.getTarget());
+        assertEquals(EndGameCommand.INTERRUPTED_GAME, cmd.getWinnerID());
     }
 
     @Test
@@ -1053,8 +1058,8 @@ public class controllerTest {
 
         controller.getLastSent().Serialize();
         EndGameCommand cmd = controller.getLastSent().getCommand(EndGameCommand.class);
-        assertEquals(1,cmd.getTarget());
-        assertTrue(cmd.isWinner());
+        assertEquals(adapter.getBroadCastID() , cmd.getTarget());
+        assertEquals(EndGameCommand.INTERRUPTED_GAME, cmd.getWinnerID());
 
         assertTrue(controller.getMatch().isEnded());
     }

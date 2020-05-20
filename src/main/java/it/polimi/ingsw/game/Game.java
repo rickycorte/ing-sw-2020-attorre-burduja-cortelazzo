@@ -64,6 +64,7 @@ public final class Game
     private int stateProgress;
     private GameState gameState;
     private transient CardCollection cardCollection;
+    private Player winner;
 
 
     public Game()
@@ -79,6 +80,7 @@ public final class Game
         stateProgress = 0;
         gameState = GameState.WAIT;
         cardCollection = new CardCollection();
+        winner = null;
     }
 
 
@@ -168,6 +170,14 @@ public final class Game
     {
         return cardCollection.getCardIDs();
     }
+
+    /**
+     * Return current game winner if there is any
+     * Winner can be null if game is not ended
+     * if current phase is ended and winner is still null this match was interrupted
+     * @return null if not ended or interrupted otherwise winner player
+     */
+    public Player getWinner() { return winner; }
 
 
     /**
@@ -445,82 +455,12 @@ public final class Game
 
         players.remove(sender);
 
-        // only make a player lose if the match is running
+        // kill the game if match is started and someone leave
+        // requested by specification
         if(gameState != GameState.WAIT)
-            playerLost(sender);
+            endGame(null);
 
         return true;
-    }
-
-    /**
-     * Save Game to json file
-     * @param fileName name of json file
-     */
-    public void gameJsonToFile(String fileName) {
-        Gson gson = new Gson();
-        String json = gson.toJson(this);
-        String path = "src/test/resources";
-        File file = new File(path);
-        String absolutePath = file.getAbsolutePath();
-        try (OutputStream outputStream = new FileOutputStream(absolutePath + "/" + fileName)) {
-            outputStream.write(json.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Load Game from json file
-     * players must have same order as before saving
-     * can't be called before initial phases of game set, only in game phase
-     * create turn for current player
-     * @param fileName name of json file
-     * @return Game or null if can't load
-     */
-    public Game gameJsonFromFile(String fileName){
-        //allowed_car and cardCollection not saved - saving after starting phase of game
-
-        Game newGame; //TODO: fix con this ?
-        String path = "src/test/resources";
-        File file = new File(path);
-        String absolutePath = file.getAbsolutePath();
-
-        try (InputStreamReader inputStream = new InputStreamReader(new FileInputStream(absolutePath + "/" + fileName))) {
-            BufferedReader bufferedReader = new BufferedReader(inputStream);
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
-
-            while((line = bufferedReader.readLine()) != null){
-                stringBuilder.append(line);
-            }
-
-            String json = stringBuilder.toString();
-            Gson gson = new Gson();
-            newGame = gson.fromJson(json,Game.class);
-        } catch (IOException e) {
-            return null;
-        }
-
-        for (Player player : newGame.getPlayers()) {
-            player.playerAfterSave();
-            for (Worker w : newGame.getCurrentMap().getWorkers()) {
-                if (w.getOwner().getId() == player.getId()) {
-                    player.addWorker(w);
-                    w.setOwner(player);
-                }
-            }
-
-            try {
-                // graph is assigned by god'player identifier
-                player.getGod().setGraph(cardCollection.getCard(player.getGod().getId()).getGraph());
-            } catch (CardNotExistsException e) {
-                return null;
-            }
-        }
-
-        newGame.makeTurn(currentPlayer);
-
-        return newGame;
     }
 
 
@@ -675,6 +615,7 @@ public final class Game
      */
     private void endGame(Player winner)
     {
+        this.winner = winner;
         gameState = GameState.END;
     }
 

@@ -794,64 +794,32 @@ class GameTest
         }
     }
 
+    @Test
+    void shouldReturnNullWinnerIfNotStarted()
+    {
+        assertNull(game.getWinner());
+    }
 
     @Test
-    void shouldSaveAndReloadGame(){
-        // create save
-        CardCollection cardCollection = new CardCollection();
-        Player player1 = new Player(0,"firstPlayer");
-        Player player2 = new Player(1,"secondPlayer");
-
-        game.join(player1);
-        game.join(player2);
-
-        //player1 has a worker
-        Vector2 pos = new Vector2(0,0);
-        Worker w = new Worker(player1);
-        w.setPosition(pos);
-
-        player1.addWorker(w);
-
-        //player2 has a worker
-        Vector2 pos1 = new Vector2(1,1);
-        Worker w1 = new Worker(player2);
-        w1.setPosition(pos1);
-
-        player2.addWorker(w1);
-
-        try {
-            Card card1 = cardCollection.getCard(1);
-            Card card2 = cardCollection.getCard(2);
-            player1.setGod(card1);
-            player2.setGod(card2);
-        } catch (CardNotExistsException e) {
-            e.printStackTrace();
-        }
-
-        game.getCurrentMap().setWorkers(player1);
-        game.getCurrentMap().setWorkers(player2);
-
-        game.start(p1);
-
-        game.gameJsonToFile("game.txt");
-
-        // reload and check if save was correct
-        Game newGame = new Game();
-        newGame = newGame.gameJsonFromFile("game.txt");
-
-        assertEquals(game.getPlayers().size(),newGame.getPlayers().size());
-        assertEquals(game.getPlayers().get(0).getId(),newGame.getPlayers().get(0).getId());
-        assertEquals(game.getPlayers().get(1).getId(),newGame.getPlayers().get(1).getId());
-        assertEquals(game.getPlayers().get(0).getGod().getId(),newGame.getPlayers().get(0).getGod().getId());
-        assertEquals(game.getPlayers().get(1).getGod().getId(),newGame.getPlayers().get(1).getGod().getId());
-
-        assertEquals(game.getPlayers().get(0).getId(),newGame.getPlayers().get(0).getId());
-        assertEquals(game.getPlayers().get(1).getId(),newGame.getPlayers().get(1).getId());
-
-        assertTrue(game.getCurrentMap().getWorkers().get(0).equals(newGame.getCurrentMap().getWorkers().get(0)));
-        assertTrue(game.getCurrentMap().getWorkers().get(1).equals(newGame.getCurrentMap().getWorkers().get(1)));
-
-        // check graph is assigned correctly based on god's player identifier
-        // TODO : correct graph assigned
+    void shouldNotEndIfWaiting()
+    {
+        game.join(p1);
+        game.join(p2);
+        // left when started
+        game.left(p2);
+        assertEquals(Game.GameState.WAIT, game.getCurrentState());
     }
+
+    @Test
+    void shouldReturnNullWinnerWhenGameIsInterrupt()
+    {
+        game.join(p1);
+        game.join(p2);
+        game.start(p1);
+        // left when started
+        game.left(p2);
+        assertNull(game.getWinner());
+        assertEquals(Game.GameState.END, game.getCurrentState());
+    }
+
 }

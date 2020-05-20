@@ -2,6 +2,10 @@ package it.polimi.ingsw.network;
 
 import it.polimi.ingsw.controller.CommandWrapper;
 
+/**
+ * Interface that defines what type of callback can be received from network layer
+ * when an event occur
+ */
 public interface ICommandReceiver
 {
     /**
