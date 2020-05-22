@@ -148,7 +148,9 @@ public class Controller implements ICommandReceiver {
                 sendUpdate(cmdWrapper);
             } else {
                 //command failed
-                nextCmd = lastSent;
+                if(cmdWrapper.getType() == CommandType.START) nextCmd = null;
+                else nextCmd = lastSent;
+
             }
 
             sendNextCommand(nextCmd);
@@ -275,7 +277,7 @@ public class Controller implements ICommandReceiver {
 
         switch (previousGameState) {
             case WAIT:
-                //virtualProxy.SendBroadcast(new CommandWrapper(CommandType.START,new StartCommand(BROADCAST_ID,SERVER_ID,connectedPlayers))) ;
+                virtualProxy.send(new CommandWrapper(CommandType.START,new StartCommand(virtualProxy.getServerID(),BROADCAST_ID,connectedPlayers))) ;
                 return new CommandWrapper(CommandType.FILTER_GODS, new FilterGodCommand(SERVER_ID, match.getCurrentPlayer().getId()));
             case GOD_FILTER:
                 return new CommandWrapper(CommandType.PICK_GOD,new PickGodCommand(SERVER_ID, match.getCurrentPlayer().getId(), match.getAllowedCardIDs()));
@@ -323,7 +325,7 @@ public class Controller implements ICommandReceiver {
      * @param reason 0 - if join is successful, 1 - if can't join match, 2 - if username is unavailable
      */
     private void ackJoin(JoinCommand cmd, Boolean successfulJoining, boolean reason){
-        CommandWrapper next = new CommandWrapper(CommandType.JOIN,new JoinCommand(cmd.getTarget(), cmd.getSender(),successfulJoining, reason));
+        CommandWrapper next = new CommandWrapper(CommandType.JOIN,new JoinCommand(cmd.getTarget(), cmd.getSender(),successfulJoining, reason,host));
         lastSent = next;
         System.out.println("Player joined:" + successfulJoining);
         virtualProxy.send(next);

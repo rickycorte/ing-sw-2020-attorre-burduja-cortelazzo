@@ -74,21 +74,21 @@ public class CardCollection {
                         .getRoot()
         )));
         // Minotaur
-        cardCollection.add(new Card(7, "Minotaur", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+        cardCollection.add(new Card(8, "Minotaur", BehaviourGraph.makeEmptyGraph().appendSubGraph(
                 BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT))
                         .setNext(new BuildAction())
                         .setNext(new EndTurnAction())
                         .getRoot()
         )));
         // Pan
-        cardCollection.add(new Card(8, "Pan", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+        cardCollection.add(new Card(9, "Pan", BehaviourGraph.makeEmptyGraph().appendSubGraph(
                 BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.WIN_BY_GOING_DOWN))
                         .setNext(new BuildAction())
                         .setNext(new EndTurnAction())
                         .getRoot()
         )));
         // Prometheus
-        cardCollection.add(new Card(9, "Prometheus ", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+        cardCollection.add(new Card(10, "Prometheus ", BehaviourGraph.makeEmptyGraph().appendSubGraph(
                 BehaviourNode.makeRootNode(new MoveAction())
                         .setNext(new BuildAction())
                         .setNext(new EndTurnAction())
