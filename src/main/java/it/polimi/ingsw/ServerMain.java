@@ -5,6 +5,7 @@ import it.polimi.ingsw.controller.Controller;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.network.TPCNetwork;
+import it.polimi.ingsw.network.matchmaking.VirtualMatchmaker;
 
 import java.util.Scanner;
 
@@ -15,13 +16,9 @@ public class ServerMain {
 
     public static void main(String[] args)
     {
+        VirtualMatchmaker matchmaker = new VirtualMatchmaker();
+        matchmaker.start();
 
-        INetworkAdapter tcpNetwork = new TPCNetwork();
-        ICommandReceiver my_controller = new Controller(tcpNetwork);
-
-        tcpNetwork.setReceiver(my_controller);
-
-        tcpNetwork.startServer();
         String input;
         Scanner scn = new Scanner(System.in);
         System.out.println("Type 'q' to kill the server!");
@@ -30,7 +27,7 @@ public class ServerMain {
             input = scn.nextLine();
             if(input.equals("q"))
             {
-                tcpNetwork.stopServer();
+                matchmaker.stop();
                 break;
             }
         } while (true);

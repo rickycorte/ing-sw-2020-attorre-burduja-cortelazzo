@@ -4,7 +4,10 @@ package it.polimi.ingsw.network.server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import it.polimi.ingsw.controller.CommandType;
 import it.polimi.ingsw.controller.CommandWrapper;
+import it.polimi.ingsw.controller.LeaveCommand;
+import it.polimi.ingsw.network.ICommandReceiver;
 
 import java.io.*;
 import java.net.Socket;
@@ -16,7 +19,7 @@ import java.util.Timer;
  */
 public class ClientHandler implements Runnable {
 
-    private final int DISCONNECT_TIMER = 9000;
+    private static final int DISCONNECT_TIMER = 9000;
 
     private Server server;              //server will handling the commands commands
     private Socket c_socket;            //client_socket used to communicate with the client
@@ -28,6 +31,7 @@ public class ClientHandler implements Runnable {
 
     private Timer disconnectTimer;      //9 seconds timer - receiving a Base command resets the timer
 
+    private final Object lckSend;
 
     /**
      * Constructs a Client Handler that will read from / write to a client
@@ -41,6 +45,7 @@ public class ClientHandler implements Runnable {
         this.c_socket = clientSocket;
         this.id = client_id;
         this.disconnectTimer = new Timer();
+        lckSend = new Object();
 
         try
         {
@@ -59,7 +64,8 @@ public class ClientHandler implements Runnable {
      * We assume the Base command as a ping
      */
     @Override
-    public void run() {
+    public void run()
+    {
         out.println(id);
         disconnectTimer.schedule(new DisconnectTask(this), 9000); // schedule a disconnection task in 9 seconds
         while (!Thread.currentThread().isInterrupted() && connected)
@@ -73,8 +79,9 @@ public class ClientHandler implements Runnable {
             }
             catch (IOException e)
             {
-                System.out.println("[CLIENT_HANDLER] Client " + 1 + " error: "+e.getMessage());
+                System.out.println("[CLIENT_HANDLER] Client " + id + " error: " + e.getMessage());
                 disconnect();
+                server.getReceiver().onDisconnect(new CommandWrapper(CommandType.LEAVE, new LeaveCommand(id, Server.SERVER_ID)));
             }
         }
     }
@@ -87,29 +94,42 @@ public class ClientHandler implements Runnable {
     private void handleCommand(String data)
     {
         CommandWrapper command = Deserialize(data);
+        ICommandReceiver receiver = server.getReceiver();
+
         //System.out.println("[CLIENT_HANDLER "+id+"] Got: "+data);
         if(command == null) return; // broken command found
 
+        //check for ping command (separate from other handlers)
+        if(command.getType() == CommandType.BASE)
+        {
+            rescheduleTimer();
+            return;
+        }
+
+
+        // handle command
+        if(receiver == null) return; // no receiver
+
         switch (command.getType())
         {
-            case BASE:
-                rescheduleTimer();
-                break;
             case JOIN:
-                server.onConnectEvent(command);
+                receiver.onConnect(command);
                 break;
             case LEAVE:
-                server.onDisconnectEvent(this);
+                disconnect();
+                //notify later that the client is disconnected
+                receiver.onDisconnect(command);
                 break;
             default:
-                server.onCommandEvent(command);
+                receiver.onCommand(command);
         }
     }
 
     /**
      * Reschedules the disconnection timer
      */
-    private void rescheduleTimer(){
+    private void rescheduleTimer()
+    {
         //System.out.println("[CLIENT_HANDLER] Ping Ok");
         disconnectTimer.cancel();
         disconnectTimer = new Timer();
@@ -119,7 +139,8 @@ public class ClientHandler implements Runnable {
     /**
      * This method closes the socket to the client, informs the server and stops the current thread
      */
-    public void disconnect() {
+    public void disconnect()
+    {
         if (connected)
         {
             System.out.println("[CLIENT_HANDLER] Disconnecting client "+ id);
@@ -134,22 +155,27 @@ public class ClientHandler implements Runnable {
             {
                 System.out.println("[CLIENT_HANDLER] Error while trying to close the connection");
             }
+            disconnectTimer.cancel();
             connected = false;
-            server.onDisconnectEvent(this);
+            server.removeClient(id);
             Thread.currentThread().interrupt();
         }
     }
 
     /**
-     * Method used to send a message to the client
+     * (Thread safe) Method used to send a message to the client
      * @param packet is the message to send
      */
-    public void sendMessage(CommandWrapper packet){
-        if(connected)
+    public void sendMessage(CommandWrapper packet)
+    {
+        synchronized (lckSend)
         {
-            System.out.println("[CLIENT_HANDLER] Sending to "+ id+": " + packet.Serialize());
-            out.println(packet.Serialize());
-            out.flush();
+            if (connected)
+            {
+                System.out.println("[CLIENT_HANDLER] Sending to " + id + ": " + packet.Serialize());
+                out.println(packet.Serialize());
+                out.flush();
+            }
         }
     }
 
@@ -158,7 +184,8 @@ public class ClientHandler implements Runnable {
      * @param message send over the network
      * @return deserialized command wrapper
      */
-    public CommandWrapper Deserialize(String message){
+    public CommandWrapper Deserialize(String message)
+    {
         try
         {
             Gson gson = new Gson();
@@ -175,7 +202,8 @@ public class ClientHandler implements Runnable {
      * gets this client's id
      * @return client's id
      */
-    public int getId(){
+    public int getId()
+    {
         return this.id;
     }
 }

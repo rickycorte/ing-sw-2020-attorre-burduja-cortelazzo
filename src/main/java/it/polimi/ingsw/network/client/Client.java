@@ -192,10 +192,12 @@ public class Client {
     {
         try
         {
+            //TODO: send diconnect msg maybe split function to disconnect without sending message
             setShouldStop(true);
             in.close();
             out.close();
             s_socket.close();
+            pingTimer.cancel();
             System.out.println("[CLIENT] Disconnected");
         }
         catch (IOException e)

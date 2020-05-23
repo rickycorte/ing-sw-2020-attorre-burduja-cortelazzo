@@ -3,6 +3,7 @@ package it.polimi.ingsw.controller;
 import it.polimi.ingsw.game.*;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
+import it.polimi.ingsw.network.INetworkForwarder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public class Controller implements ICommandReceiver {
 
     private List<Player> connectedPlayers;
     private Game match;
-    private INetworkAdapter virtualProxy;
+    private INetworkForwarder virtualProxy;
     private CommandWrapper lastSent;
     private int host;
     private  int nextPlayer;
@@ -53,7 +54,7 @@ public class Controller implements ICommandReceiver {
     LeaveCommand = no payload , sender want to leave the game (voluntary and involuntary)
      */
 
-    public Controller (INetworkAdapter adapter){
+    public Controller (INetworkForwarder adapter){
         connectedPlayers = new ArrayList<>();
         virtualProxy = adapter;
         lastSent = null;

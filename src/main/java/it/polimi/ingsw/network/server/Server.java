@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -19,16 +20,19 @@ public class Server {
 
     static final public int SERVER_ID = -1111;
     static final public int BROADCAST_ID = -2222;
+    static final public int DEFAULT_SERVER_PORT = 0xDED; // aka 3565
 
     ServerSocket listener;
     private ExecutorService pool;                    //pool to execute a different thread
     private int port;
-    private Map<Integer, ClientHandler> syncClientHandlerMap;  //Hash map to map a client_id to a ClientHandler
-    private ICommandReceiver controller;                    //Controller to handle commands
+    private final Map<Integer, ClientHandler> syncClientHandlerMap;  //Hash map to map a client_id to a ClientHandler
+    private ICommandReceiver receiver;                    //Controller to handle commands
 
     private int last_client_id;
 
-    private boolean shouldStop;
+    private AtomicBoolean shouldStop;
+
+    private final Object lckController;
 
 
     /**
@@ -37,33 +41,13 @@ public class Server {
      */
     public Server(int port)
     {
-        shouldStop = false;
+        shouldStop = new AtomicBoolean(false);
         this.port = port;
         syncClientHandlerMap = Collections.synchronizedMap(new HashMap<>()); // sync operations NOT iteration thank you java for half made things :L
         pool = Executors.newCachedThreadPool();
+        lckController = new Object();
     }
 
-
-    /**
-     * Get should stop background accept loop
-     * This function is used by the loop to check is should stop in synchronized way
-     * @return
-     */
-    private synchronized boolean getShouldStop()
-    {
-        return shouldStop;
-    }
-
-
-    /**
-     * Set should stop to true to stop the accept loop in a synchronized way to avoid race conditions
-     * and gracefully stop background accept thread
-     * @param shouldStop set to true to stop accept loop
-     */
-    private synchronized void setShouldStop(boolean shouldStop)
-    {
-        this.shouldStop = shouldStop;
-    }
 
 
     /**
@@ -105,7 +89,7 @@ public class Server {
      */
     private void runServerLoop(ServerSocket listener) {
 
-        while (!getShouldStop())
+        while (!shouldStop.get())
         {
             Socket client_socket;
             try
@@ -134,46 +118,13 @@ public class Server {
     //Methods used to pass to handle interactions between client handlers and controller
 
     /**
-     * Handle join type commands
-     * @param cmd join type command
+     * Remove a client
+     * @param id
      */
-    public synchronized void onConnectEvent(CommandWrapper cmd){
-        System.out.println("[SERVER] Received " + cmd.getType().name()+ " command");
-        if(controller != null)
-            controller.onConnect(cmd);
-        else
-            System.out.println("[SERVER] Missing controller handler");
+    public void removeClient(int id)
+    {
+        syncClientHandlerMap.remove(id);
     }
-
-    /**
-     * Handle a leaving client
-     * @param client_handler leaving
-     */
-    public synchronized void onDisconnectEvent(ClientHandler client_handler){
-        CommandWrapper leave_command = new CommandWrapper(CommandType.LEAVE, new LeaveCommand(client_handler.getId(), SERVER_ID));
-        leave_command.Serialize();
-        if(controller != null)
-            controller.onDisconnect(leave_command);
-        else
-            System.out.println("[SERVER] Missing controller handler");
-
-        //remove both id and client handler from the mapped ones
-        syncClientHandlerMap.remove(client_handler.getId());
-    }
-
-    /**
-     * Handle all other commands
-     * @param cmd command
-     */
-    public synchronized void onCommandEvent(CommandWrapper cmd){
-        System.out.println("[SERVER] Received " + cmd.getType().name()+ " command");
-        if(controller != null)
-            controller.onCommand(cmd);
-        else
-            System.out.println("[SERVER] Missing controller handler");
-    }
-
-
 
     /**
      * Send a command to all clients, only command's target can handle it
@@ -181,7 +132,7 @@ public class Server {
      */
     public void send(CommandWrapper cmd) {
         System.out.println("[SERVER] Sending " + cmd.getType().name() + " command");
-
+        
         //explicit lock for iteration
         synchronized (syncClientHandlerMap)
         {
@@ -189,6 +140,12 @@ public class Server {
                 syncClientHandlerMap.get(id).sendMessage(cmd);
             } );
         }
+    }
+
+    public void send(int target, CommandWrapper cmd)
+    {
+        System.out.println("[SERVER] Sending " + cmd.getType().name() + " command to " + target);
+        syncClientHandlerMap.get(target).sendMessage(cmd);
     }
 
     /**
@@ -200,7 +157,7 @@ public class Server {
         {
             if(listener != null)
             {
-                setShouldStop(true);
+                shouldStop.set(true);
                 listener.close();
             }
         }
@@ -214,20 +171,38 @@ public class Server {
 
 
     /**
-     * Adds a receiver to this server
+     * (Thread safe) Adds a receiver to this server
      * @param receiver packet receiver to add
      */
-    public synchronized void setReceiver(ICommandReceiver receiver)
+    public void setReceiver(ICommandReceiver receiver)
     {
-        if(receiver != null)
-            this.controller = receiver;
+        synchronized (lckController)
+        {
+            if (receiver != null)
+                this.receiver = receiver;
+        }
     }
 
     /**
-     * Removes this server's receiver
+     * (Thread safe) Removes this server's receiver
      */
-    public synchronized void removeReceiver() {
-        this.controller = null;
+    public void removeReceiver() {
+        synchronized (lckController)
+        {
+            this.receiver = null;
+        }
+    }
+
+    /**
+     * (Thread safe) Return the current receiver in use by the server (can be null)
+     * @return receiver handler for commands
+     */
+    public ICommandReceiver getReceiver()
+    {
+        synchronized (lckController)
+        {
+            return receiver;
+        }
     }
 
 

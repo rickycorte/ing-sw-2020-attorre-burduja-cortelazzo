@@ -16,7 +16,8 @@ public class CommandWrapper
     {
         this.type = type;
         this.cachedCommand = command;
-        this.data = "";
+        var gson = new Gson();
+        this.data =  gson.toJson(cachedCommand);
     }
 
     /**
@@ -38,9 +39,8 @@ public class CommandWrapper
     public <T extends BaseCommand> T getCommand(Class<T> type)
     {
         Gson gson = new Gson();
-        cachedCommand = gson.fromJson(data, type);
 
-        return type.cast(cachedCommand);
+        return type.cast(gson.fromJson(data, type));
     }
 
 
@@ -52,8 +52,12 @@ public class CommandWrapper
     public String Serialize()
     {
         Gson gson = new Gson();
-        data = gson.toJson(cachedCommand);
-
         return gson.toJson(this);
+    }
+
+    @Override
+    public String toString()
+    {
+        return  String.format("{ type: %s; data: %s}", getType(), data);
     }
 }

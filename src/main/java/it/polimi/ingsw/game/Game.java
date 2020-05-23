@@ -16,8 +16,8 @@ import java.io.*;
  */
 public final class Game
 {
-    private static final int MIN_PLAYERS = 2;
-    private static final int MAX_PLAYERS = 3;
+    public static final int MIN_PLAYERS = 2;
+    public static final int MAX_PLAYERS = 3;
     private static final int WORKERS_PER_PLAYER = 2;
 
     /**

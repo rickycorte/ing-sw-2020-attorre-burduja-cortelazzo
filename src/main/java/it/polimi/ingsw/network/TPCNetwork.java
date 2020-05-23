@@ -13,7 +13,7 @@ import it.polimi.ingsw.network.server.Server;
  */
 public class TPCNetwork implements INetworkAdapter
 {
-    static final public int DEFAULT_SERVER_PORT = 0xDED; // aka 3565
+
 
     boolean isRunning = false;
     Server server;
@@ -27,7 +27,7 @@ public class TPCNetwork implements INetworkAdapter
     @Override
     public void startServer()
     {
-        startServer(DEFAULT_SERVER_PORT);
+        startServer(Server.DEFAULT_SERVER_PORT);
     }
 
     /**
@@ -39,7 +39,7 @@ public class TPCNetwork implements INetworkAdapter
     {
         if(isRunning) return;
 
-        if(port < 1024 || port > 65535) port = DEFAULT_SERVER_PORT;
+        if(port < 1024 || port > 65535) port = Server.DEFAULT_SERVER_PORT;
         isRunning = true;
 
         server = new Server(port);
@@ -171,6 +171,6 @@ public class TPCNetwork implements INetworkAdapter
     @Override
     public int getDefaultPort()
     {
-        return DEFAULT_SERVER_PORT;
+        return Server.DEFAULT_SERVER_PORT;
     }
 }
