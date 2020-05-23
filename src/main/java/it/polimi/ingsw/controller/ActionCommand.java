@@ -4,6 +4,7 @@ import it.polimi.ingsw.game.NextAction;
 import it.polimi.ingsw.game.Vector2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ActionCommand extends BaseCommand {
@@ -39,7 +40,6 @@ public class ActionCommand extends BaseCommand {
     public String[] getActionName() {
         return actionName;
     }
-
 
     /**
      * utility method
@@ -91,5 +91,105 @@ public class ActionCommand extends BaseCommand {
         return newList.toArray(new Vector2[0]);
     }
 
+    /**
+     *
+     * @return worker id that can be selected for this turn
+     */
+    public List<Integer> getAvailableWorker(){
+        List<Integer> availableWorkers = new ArrayList<>();
+        for(int i = 0; i<idWorkerNMove.length; i=i+2){
+            Integer x = idWorkerNMove[i];
+            if(!availableWorkers.contains(x)){
+                availableWorkers.add(x);
+            }
+        }
+        return availableWorkers;
+    }
+
+    /**
+     *
+     * @param workerId id of selected worker
+     * @return all possible action that can be executed with workerId
+     */
+    public List<String> getActionForWorker(int workerId){
+        List<String> actionForWorker = new ArrayList<>();
+        for(int workerCounter = 0,actionCounter=0; workerCounter<idWorkerNMove.length && actionCounter<actionName.length; workerCounter=workerCounter+2, actionCounter++){
+            if(idWorkerNMove[workerCounter] == workerId){
+                actionForWorker.add(actionName[actionCounter]);
+            }
+        }
+        return actionForWorker;
+    }
+
+
+    /**
+     *
+     * @param workerId (baseIndex + selectedId) selected worker from client
+     * @return index of first element can be selected (e.g. if selected 0, then baseIndex + 0 get action from list correspondent to first element selected)
+     */
+    public int getBaseIndexForAction(int workerId){
+        for(int workerCounter = 0,actionCounter=0; workerCounter<idWorkerNMove.length; workerCounter=workerCounter+2, actionCounter++){
+            if(idWorkerNMove[workerCounter] == workerId){
+                return actionCounter;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     *
+     * @param actionID (baseIndex + selectedId) selected action (internal rep)
+     * @return available cells to perform the selected action
+     */
+    public List<Vector2> getPositionsForAction(int actionID){
+        List<Vector2> availablePositions = new ArrayList<>();
+        int index;
+        if(actionID == 0) {
+            index = actionID + 1;
+            for(int i = 0 ; i<idWorkerNMove[index] ; i++){
+                availablePositions.add(availablePos[i]);
+            }
+        }
+        else {
+            index = (actionID * 2)+1;
+            int i,j;
+            for(i=1,j=0; i<index; i=i+2){
+                j=j+idWorkerNMove[i];
+            }
+            for(int k=0; k<idWorkerNMove[i] && j<availablePos.length;j++,k++){
+                availablePositions.add(availablePos[j]);
+            }
+        }
+        return availablePositions;
+    }
+
+    /**
+     *
+     * @param actionID selected action id
+     * @return action identifier already summed to the selected one (it is the positions of internal array representation)
+     */
+    public int getBaseIndexForPositions(int actionID){
+
+        if(actionID == 0) {
+            return 0;
+        }
+        else {
+            int index = (actionID * 2)+1;
+            int i,j;
+            for(i=1,j=0; i<index; i=i+2){
+                j=j+idWorkerNMove[i];
+            }
+            return j;
+        }
+    }
+
+    /**
+     *
+     * @param positionIndex (baseIndex + selectedId) selected target (internal rep)
+     * @return Vector2 position where action want to be executed
+     */
+    public Vector2 getTargetPosition(int positionIndex){
+        return availablePos[positionIndex];
+    }
 
 }

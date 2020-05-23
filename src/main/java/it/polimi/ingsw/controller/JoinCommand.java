@@ -4,13 +4,15 @@ public class JoinCommand extends BaseCommand {
     private String username;
     private boolean isJoin;
     private boolean validUsername;         //Flag in case username is not valid
+    private int hostPlayerID;
 
-    public JoinCommand(int sender, int target, boolean isSuccess, boolean validUsername){
+    public JoinCommand(int sender, int target, boolean isSuccess, boolean validUsername, int hostPlayerID){
         //UPDATE FROM SERVER
         super(sender,target);
         this.username = null;
         this.isJoin = isSuccess;
         this.validUsername = validUsername;
+        this.hostPlayerID = hostPlayerID;
     }
 
     public JoinCommand(int sender, int target, String username,boolean isJoin) {
@@ -29,6 +31,7 @@ public class JoinCommand extends BaseCommand {
         return isJoin;
     }
 
-    public boolean isValidUsername(){ return validUsername;
-    }
+    public boolean isValidUsername(){ return validUsername; }
+
+    public int getHostPlayerID() { return hostPlayerID; }
 }

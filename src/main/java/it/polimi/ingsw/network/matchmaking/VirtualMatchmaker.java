@@ -113,7 +113,7 @@ public class VirtualMatchmaker implements ICommandReceiver
             // duplicate username notify client
             server.send(jcm.getSender(),
                     new CommandWrapper(CommandType.JOIN,
-                            new JoinCommand(Server.SERVER_ID, jcm.getSender(), false, false)
+                            new JoinCommand(Server.SERVER_ID, jcm.getSender(), jcm.getUsername(), false)
                     ));
             System.out.printf("[MATCHMAKER] Rejected login from user: [%d] %s\n", jcm.getSender(), jcm.getUsername());
         }
