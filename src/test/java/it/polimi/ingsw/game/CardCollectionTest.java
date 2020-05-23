@@ -48,7 +48,7 @@ public class CardCollectionTest {
     void shouldHaveNoDuplicateID() {
         int[] ids = coll.getCardIDs();
 
-        boolean[] bitmap = new boolean[ids.length +1];
+        boolean[] bitmap = new boolean[100]; // we dont have 100 cards so its good enough for future updates
 
         for (int id : ids) {
             bitmap[id] ^= true;

@@ -26,3 +26,9 @@ comment:
   layout: "reach,diff,flags,tree"
   behavior: default
   require_changes: no
+
+ignore:
+  - "src/main/java/it/polimi/ingsw/network/**/*"
+  - "src/main/java/it/polimi/ingsw/view/**/*"
+  - "src/main/java/it/polimi/ingsw/ClientMain.java"
+  - "src/main/java/it/polimi/ingsw/ServerMain.java"

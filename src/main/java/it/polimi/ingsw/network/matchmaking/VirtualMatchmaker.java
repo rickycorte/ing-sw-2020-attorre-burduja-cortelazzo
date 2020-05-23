@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.matchmaking;
 
 import it.polimi.ingsw.controller.*;
 import it.polimi.ingsw.network.ICommandReceiver;
+import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.network.server.Server;
 
 import java.util.*;
@@ -24,7 +25,7 @@ public class VirtualMatchmaker implements ICommandReceiver
 
     //
     // Lost of function has a CommandWrapper as parameter to pass a cached reference
-    // creating commands is ugly and booring
+    // creating commands is ugly and boring
     //
 
 
@@ -53,7 +54,7 @@ public class VirtualMatchmaker implements ICommandReceiver
 
     /**
      * Start the matchmaking
-     * @param port
+     * @param port port where server should start
      */
     public void start(int port)
     {
@@ -79,10 +80,13 @@ public class VirtualMatchmaker implements ICommandReceiver
 
 
     /**
-     * Send data to all the clients connected to a virtual match
-     * @param vm
-     * @param cmd
-     * @param gameEnded
+     * Send data to all the clients connected to a virtual match,
+     * broadcast sent is emulated only for clients connected to the virtual match
+     * no other client connected will receive a message of a different match.
+     * This function also detects when a match ends and clear up its resources
+     * @param vm virtual match that whats to send commands
+     * @param cmd command to send
+     * @param gameEnded true if virtual match ended
      */
     public void send(VirtualMatch vm, CommandWrapper cmd, boolean gameEnded)
     {
@@ -102,6 +106,11 @@ public class VirtualMatchmaker implements ICommandReceiver
     //-----------------------------------------------------------------------
     // Command Receiver interface
 
+    /**
+     * Handle onConnect events from network
+     * This function also generates and fill lobby
+     * @param cmd join command
+     */
     @Override
     public void onConnect(CommandWrapper cmd)
     {
@@ -130,6 +139,11 @@ public class VirtualMatchmaker implements ICommandReceiver
 
     }
 
+    /**
+     * Handle a disconnect event
+     * This function also clear unused lobbies
+     * @param cmd disconnect command
+     */
     @Override
     public void onDisconnect(CommandWrapper cmd)
     {
@@ -152,6 +166,10 @@ public class VirtualMatchmaker implements ICommandReceiver
     }
 
 
+    /**
+     * Handle command events and redirect them to the correct match
+     * @param cmd command to process
+     */
     @Override
     public void onCommand(CommandWrapper cmd)
     {
@@ -170,9 +188,9 @@ public class VirtualMatchmaker implements ICommandReceiver
 
     /**
      * Join a waiting match or create a new one
-     * @param jcm
-     * @param cmd
-     * @return
+     * @param jcm join command
+     * @param cmd command wrapper of jcm used as cache
+     * @return match joined by the player or null if there was an error (example unable to login)
      */
     private VirtualMatch joinMatch(JoinCommand jcm, CommandWrapper cmd)
     {
@@ -205,8 +223,8 @@ public class VirtualMatchmaker implements ICommandReceiver
 
     /**
      * Check if a user can login into the game
-     * @param cmd
-     * @return
+     * @param cmd join command
+     * @return true if player logged in correctly
      */
     boolean login(JoinCommand cmd)
     {
@@ -233,7 +251,7 @@ public class VirtualMatchmaker implements ICommandReceiver
 
     /**
      * Remove a client session
-     * @param lcm
+     * @param lcm leave command
      */
     void logout(LeaveCommand lcm)
     {
@@ -243,7 +261,7 @@ public class VirtualMatchmaker implements ICommandReceiver
 
     /**
      * Remove a match that is ended
-     * @param vm
+     * @param vm virtual match that has to be removed
      */
     void removeEndedMatch(VirtualMatch vm)
     {

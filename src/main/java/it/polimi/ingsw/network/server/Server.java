@@ -119,7 +119,7 @@ public class Server {
 
     /**
      * Remove a client
-     * @param id
+     * @param id client id to remove
      */
     public void removeClient(int id)
     {
@@ -171,7 +171,7 @@ public class Server {
 
 
     /**
-     * (Thread safe) Adds a receiver to this server
+     * Adds a receiver to this server
      * @param receiver packet receiver to add
      */
     public void setReceiver(ICommandReceiver receiver)
@@ -184,7 +184,7 @@ public class Server {
     }
 
     /**
-     * (Thread safe) Removes this server's receiver
+     * Removes this server's receiver
      */
     public void removeReceiver() {
         synchronized (lckController)
@@ -194,7 +194,7 @@ public class Server {
     }
 
     /**
-     * (Thread safe) Return the current receiver in use by the server (can be null)
+     * Return the current receiver in use by the server (can be null)
      * @return receiver handler for commands
      */
     public ICommandReceiver getReceiver()

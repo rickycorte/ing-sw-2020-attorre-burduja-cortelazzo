@@ -62,6 +62,9 @@ The main purpose of this interface is to listen to network event from any object
 
 With this interfaces we archived a good abstraction where the Network Layer and the above layers knows nothing of their respective internal representation but they can still interact with each other in a simple and common way achieving different results.
 
+Later we added a new network interfaces called `INetworkForwarded` that is a parent of `INetworkAdapter` and is used split "send/receive" functions from "connectors/starter" functions.
+This interface is used to provide a more compact way of interacting with the network layer if no "start" function is required.
+
 ## Gods are Graphs
 
 When designing Gods behaviour we had an hard time deciding what was the best way to create them.
@@ -86,3 +89,15 @@ BehaviourGraph.makeEmptyGraph().appendSubGraph(
 
 It's important to understand that Actions are stateless and execute the moves based on the game state data passed to them. 
 Graphs are not stateless and keep a state to know what the player should do next! This state can be imagined as the current turn point of execution.
+
+# Virtual Matches
+
+Virtual matches are an alternative way to execute the server code. The main class is `VirtualMatchamaker` and replaces `TCPNetwork` only on server side. These two are fully compatible (example: A `TCPNetwork` client can communicate with the matchmaker without changes) but not interchangeable.
+Matchmaking is designed to run only on server and should never be run on client, with this in mind we decided that this class should not implement `INetworkAdapter`.
+
+The matchmaker introduce a new concept "virtual games", basically both the Controller and the game Model run in a virtual container managed by a new layer that emulates network behaviour and filtering data between the real network and the matches.
+Controller and Model have no idea that they are not using the network layer directly.
+
+![Virtual Matches](img/VirtualMatches.png)
+
+With the matchmaker update we also introduced "fine locks" that lock only little parts of the running games to provide truly parallelism with great performance. 

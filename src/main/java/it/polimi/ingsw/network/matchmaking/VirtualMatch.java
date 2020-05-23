@@ -29,6 +29,10 @@ public class VirtualMatch implements INetworkForwarder
     private AtomicBoolean isStarted, isEnded;
 
 
+    /**
+     * Create a virtual match bind to a matchmaking
+     * @param matchmaker matchmaker to bind to
+     */
     public VirtualMatch(VirtualMatchmaker matchmaker)
     {
         this.matchmaker = matchmaker;
@@ -42,6 +46,10 @@ public class VirtualMatch implements INetworkForwarder
     // Interface for Controller class
     // it wont notice that it's running in a virtual environment and not directly on the network layer
 
+    /**
+     * Receiver for controller commands
+     * @param packet packet to send
+     */
     @Override
     public void send(CommandWrapper packet)
     {
@@ -79,8 +87,8 @@ public class VirtualMatch implements INetworkForwarder
     /**
      * Add a player to the game
      * This can be seen as a way to join the virtual game
-     * @param id
-     * @param cmd
+     * @param id id of the player to add
+     * @param cmd command cache to forward
      */
     public synchronized void addPlayer(int id, CommandWrapper cmd)
     {
@@ -93,7 +101,7 @@ public class VirtualMatch implements INetworkForwarder
 
     /**
      * Request a command execution on this game
-     * @param cmd
+     * @param cmd command to forward
      */
     public void execAction(CommandWrapper cmd)
     {
@@ -106,8 +114,8 @@ public class VirtualMatch implements INetworkForwarder
     /**
      * Remove a player from this game
      * This function can be seen as a "disconnect" from the virtual game
-     * @param id
-     * @param cmd
+     * @param id id of the player to remove
+     * @param cmd command cache to forward
      */
     public void removePlayer(int id, CommandWrapper cmd)
     {
@@ -123,7 +131,7 @@ public class VirtualMatch implements INetworkForwarder
     /**
      * Return an array of connected player ids
      * useful to filter command forwarding
-     * @return
+     * @return array of player ids
      */
     public int[] getPlayerIDs()
     {
@@ -139,7 +147,7 @@ public class VirtualMatch implements INetworkForwarder
 
     /**
      * Return true if the match is full
-     * @return
+     * @return true is match is full
      */
     public boolean isFull()
     {
@@ -151,13 +159,13 @@ public class VirtualMatch implements INetworkForwarder
 
     /**
      * Return if the match is in wait state or not
-     * @return
+     * @return true is match is a waiting lobby
      */
     public boolean isWaiting() { return !isEnded.get() && !isStarted.get(); }
 
     /**
      * Return the current player count of this match
-     * @return
+     * @return player count
      */
     public int playerCount() {
         synchronized (controller)

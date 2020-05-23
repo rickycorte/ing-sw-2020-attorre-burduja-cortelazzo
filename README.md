@@ -39,5 +39,7 @@ After cloning this repo you can:
 - Build and run tests with `mvn package`
 - Build docs with `mvn javadoc:javadoc`
 
-You can also download the leatest build with up-to-date docs from branch `release`. That branch is automatically updated by Github Actions and should not be changed manually.
+You can also download the latest build with up-to-date docs from branch `release`. That branch is automatically updated by Github Actions and should not be changed manually.
 
+Notice: Codecov badge shows only Controller and Model coverage.
+Network and view tests are not required by specification thus the packages are skipped.
