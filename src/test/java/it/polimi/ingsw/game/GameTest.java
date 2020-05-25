@@ -299,6 +299,25 @@ class GameTest
     }
 
     @Test
+    void shouldNotApplyGodFilterWithNotExistentCards()
+    {
+        Game.GameState prevState = game.getCurrentState();
+        game.join(p1);
+        game.join(p2);
+
+        try
+        {
+            assertFalse(game.applyGodFilter(p1, new int[]{-451,821}));
+            assertEquals(prevState, game.getCurrentState());
+
+        }
+        catch (NotAllowedOperationException e)
+        {
+            fail("Unexpected exception thrown");
+        }
+    }
+
+    @Test
     void shouldNotApplyGodFilterIfDuplicateCardID()
     {
         Game.GameState prevState = game.getCurrentState();
@@ -820,6 +839,134 @@ class GameTest
         game.left(p2);
         assertNull(game.getWinner());
         assertEquals(Game.GameState.END, game.getCurrentState());
+    }
+
+    @Test
+    void shouldEndGameIfPlayerWin() throws NotAllowedOperationException
+    {
+        game.join(p1);
+        game.join(p2);
+        game.start(p1);
+        game.applyGodFilter(p1, new int[]{1,2});
+        game.selectGod(p2, 1);
+        game.selectFirstPlayer(p1, p1);
+        game.placeWorkers(p1, new Vector2[]{new Vector2(0,0), new Vector2(0,2)});
+        game.placeWorkers(p2, new Vector2[]{new Vector2(1,0), new Vector2(1,2)});
+
+        // game is ready to be played
+        // but we cheat a bit
+        // build level 2 under worker
+        game.getCurrentMap().build(new Vector2(0,0));
+        game.getCurrentMap().build(new Vector2(0,0));
+
+        // build 3 next to worker
+        game.getCurrentMap().build(new Vector2(0,1));
+        game.getCurrentMap().build(new Vector2(0,1));
+        game.getCurrentMap().build(new Vector2(0,1));
+
+        // move worker from 2 to 3 -> we should win
+        assertTrue(game.executeAction(p1, 0, 0, new Vector2(0,1)) > 0);
+        assertEquals(p1, game.getWinner());
+
+    }
+
+    @Test
+    void shouldContinueGameIfOneLoseInThreePlayers()  throws NotAllowedOperationException
+    {
+        game.join(p1);
+        game.join(p2);
+        game.join(p3);
+        game.start(p1);
+        game.applyGodFilter(p1, new int[]{1,2,3});
+        game.selectGod(p2, 1);
+        game.selectGod(p3, 2);
+        game.selectFirstPlayer(p1, p1);
+        game.placeWorkers(p1, new Vector2[]{new Vector2(0,0), new Vector2(0,1)});
+        game.placeWorkers(p2, new Vector2[]{new Vector2(1,0), new Vector2(1,1)});
+        game.placeWorkers(p3, new Vector2[]{new Vector2(2,0), new Vector2(2,1)});
+
+        //game is ready
+        //we cheat a bit and lock player 2 with a building
+        //lock horizontal
+        game.getCurrentMap().build(new Vector2(0,2));
+        game.getCurrentMap().build(new Vector2(0,2));
+        //lock diagonal
+        game.getCurrentMap().build(new Vector2(1,2));
+        game.getCurrentMap().build(new Vector2(1,2));
+        // map:
+        // w1 | w2 | X
+        // A1 | A2 | X
+
+        assertEquals(0, game.executeAction(p1,1,0, new Vector2(0,0)));
+        assertEquals(Game.GameState.GAME, game.getCurrentState());
+        assertEquals(p2, game.getCurrentPlayer());
+        //ensure cells a freed when a player loses
+        assertTrue(game.getCurrentMap().isCellEmpty(new Vector2(0,0)));
+        assertTrue(game.getCurrentMap().isCellEmpty(new Vector2(0,1)));
+    }
+
+
+    @Test
+    void shouldWinIfOtherPlayerHasNoMoreMoves() throws NotAllowedOperationException
+    {
+        game.join(p1);
+        game.join(p2);
+        game.start(p1);
+        game.applyGodFilter(p1, new int[]{1,2});
+        game.selectGod(p2, 1);
+        game.selectFirstPlayer(p1, p1);
+        game.placeWorkers(p1, new Vector2[]{new Vector2(0,0), new Vector2(0,1)});
+        game.placeWorkers(p2, new Vector2[]{new Vector2(1,0), new Vector2(1,1)});
+
+        //game is ready
+        //we cheat a bit and lock player 2 with a building
+        //lock horizontal
+        game.getCurrentMap().build(new Vector2(0,2));
+        game.getCurrentMap().build(new Vector2(0,2));
+        //lock diagonal
+        game.getCurrentMap().build(new Vector2(1,2));
+        game.getCurrentMap().build(new Vector2(1,2));
+        // map:
+        // w1 | w2 | X
+        // A1 | A2 | X
+
+        assertEquals(0, game.executeAction(p1,1,0, new Vector2(0,0)));
+        assertEquals(Game.GameState.END, game.getCurrentState());
+        assertEquals(p2, game.getCurrentPlayer());
+        assertEquals(p2, game.getWinner());
+    }
+
+    @Test
+    void shouldRemovePlayerIfHasNoMoreActionsOnTurnCreation() throws NotAllowedOperationException
+    {
+        game.join(p1);
+        game.join(p2);
+        game.start(p1);
+        game.applyGodFilter(p1, new int[]{1,2});
+        game.selectGod(p2, 1);
+        game.selectFirstPlayer(p1, p1);
+        game.placeWorkers(p1, new Vector2[]{new Vector2(0,0), new Vector2(0,1)});
+
+        //we cheat a bit and lock player 2 with a building
+        //lock horizontal
+        game.getCurrentMap().build(new Vector2(0,2));
+        game.getCurrentMap().build(new Vector2(0,2));
+        //lock diagonal
+        game.getCurrentMap().build(new Vector2(1,2));
+        game.getCurrentMap().build(new Vector2(1,2));
+        // map:
+        // w1 | w2 | X
+        // A1 | A2 | X
+
+        // by blocking before the player before the turn is created we can trigger the "no more moves at turn creation"
+
+        game.placeWorkers(p2, new Vector2[]{new Vector2(1,0), new Vector2(1,1)});
+
+        //turn should have been created ad gave error
+
+        assertEquals(Game.GameState.END, game.getCurrentState());
+        assertEquals(p2, game.getCurrentPlayer());
+        assertEquals(p2, game.getWinner());
     }
 
 }

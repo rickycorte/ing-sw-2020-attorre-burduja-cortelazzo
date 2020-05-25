@@ -25,7 +25,7 @@ We traded the "controller knows nothing abound the model" to a half-way design. 
 Our model exposes the bare minimum getters to let the user (our controller) to know what game is doing and what to do to continue the match!
 
 Please notice that it seems that our interface leaks `Game` internal implementation but is not, with the interface only common types are passed, no internal data is exposed!
-`Game` public interface is like asking two people playing "how is going the match?". They both now about the map, the current player, ecc.
+Using `Game` public interface is like asking two people "how is going the match?". They both now about the map, the current player, ecc.
 
 ## Server is Absolute
 

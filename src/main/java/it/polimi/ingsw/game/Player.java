@@ -20,10 +20,6 @@ public class Player
         god = null;
     }
 
-    public void playerAfterSave (){
-        this.workers = new ArrayList<>();
-    }
-
     /**
      * Return current player id
      * @return player id

@@ -261,4 +261,13 @@ class BehaviourGraphTest
             fail("Unexpected not allowed move");
         }
     }
+
+    @Test
+    void shouldNotRunSameNodeTwice() throws OutOfGraphException, NotAllowedMoveException
+    {
+        testSeq.selectAction(0);
+        assertTrue(testSeq.runSelectedAction(null,null, null, null ) > 0);
+        assertTrue(testSeq.runSelectedAction(null,null, null, null ) < 0);
+
+    }
 }

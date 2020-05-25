@@ -45,9 +45,4 @@ public class Card {
         return graph;
     }
 
-    /**
-     * Set the card behaviour graph
-     * @param graph new behaviour graph
-     */
-    public void setGraph(BehaviourGraph graph) { this.graph = graph; }
 }

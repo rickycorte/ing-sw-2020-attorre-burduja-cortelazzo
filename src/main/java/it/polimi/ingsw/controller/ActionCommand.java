@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This command is used to request/run action during a turn and contains all possible actions that a client can do
+ */
 public class ActionCommand extends BaseCommand {
     private  int[] idWorkerNMove;
     private Vector2[] availablePos;

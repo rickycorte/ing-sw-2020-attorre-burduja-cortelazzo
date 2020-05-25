@@ -21,7 +21,7 @@ public class CommandWrapper
     }
 
     /**
-     *
+     * Return command type
      * @return command type
      */
     public CommandType getType()
@@ -55,6 +55,13 @@ public class CommandWrapper
         return gson.toJson(this);
     }
 
+    /**
+     * Print command to string
+     * This function must not be confused with Serialize() because
+     * here no json serialization is done thus using this function to serialize the data
+     * will cause errors
+     * @return command as string
+     */
     @Override
     public String toString()
     {

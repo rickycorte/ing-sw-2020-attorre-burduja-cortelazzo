@@ -3,6 +3,10 @@ package it.polimi.ingsw.controller;
 import it.polimi.ingsw.game.Map;
 import it.polimi.ingsw.game.Vector2;
 
+/**
+ * This command is used only as an information method
+ * that updates the clients with a new state of the game map is calculated
+ */
 public class UpdateCommand extends BaseCommand {
     private int[] mapWorkerPair;
     private Vector2[] workerPos;

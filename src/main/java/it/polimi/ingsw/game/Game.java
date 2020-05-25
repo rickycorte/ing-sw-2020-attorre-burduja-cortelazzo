@@ -72,7 +72,7 @@ public final class Game
         players = new ArrayList<>();
         allowedCards = new ArrayList<>();
         globalConstraints = new GameConstraints();
-        game_map = new Map(); // TODO: load prev state
+        game_map = new Map();
         lastTurn = null;
         currentTurn = null;
         currentPlayer = 0;
@@ -524,7 +524,7 @@ public final class Game
      */
     private boolean isCurrentPlayer(Player target)
     {
-        if(players.size() <= 0)
+        if(players.size() == 0)
             return false;
         else
             return target.equals(players.get(currentPlayer));
@@ -625,6 +625,7 @@ public final class Game
      */
     private void playerLost(Player loser)
     {
+        players.remove(loser);
         if(players.size() < 2)
         {
             nextPlayer(); //if we are two and i lost the winner is the next player... "the other player"

@@ -9,7 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class controllerTest {
+public class ControllerTest
+{
     private static final int SERVER_ID = -11111;
 
     private Controller controller;

@@ -67,4 +67,25 @@ class WorkerTest
         assertNotEquals(w1, w2);
     }
 
+    @Test
+    void shouldNotBeEquals()
+    {
+        Player p = new Player(0,"shish");
+        Player p2 = new Player(0,"fish");
+        Worker w1 = new Worker(0, p, new Vector2(0,0));
+        Worker w2 = new Worker(1, p2, new Vector2(0,1));
+        assertNotEquals(w1, w2);
+    }
+
+    @Test
+    void shouldSetOwner()
+    {
+        Player p = new Player(0,"shish");
+        Player p2 = new Player(0,"shish");
+
+        Worker w1 = new Worker(p);
+        w1.setOwner(p2);
+        assertEquals(p2, w1.getOwner());
+    }
+
 }
