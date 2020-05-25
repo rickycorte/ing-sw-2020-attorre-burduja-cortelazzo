@@ -1,16 +1,12 @@
-package it.polimi.ingsw.ViewGui;
+package it.polimi.ingsw.view.gui;
 
 import it.polimi.ingsw.controller.CommandType;
 import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.FirstPlayerPickCommand;
-import it.polimi.ingsw.controller.PickGodCommand;
-import it.polimi.ingsw.network.client.Client;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 
 import java.net.URL;
 import java.util.ResourceBundle;

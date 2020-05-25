@@ -1,18 +1,12 @@
-package it.polimi.ingsw.ViewGui;
+package it.polimi.ingsw.view.gui;
 
-import it.polimi.ingsw.controller.CommandWrapper;
-import it.polimi.ingsw.network.ICommandReceiver;
-import it.polimi.ingsw.network.INetworkAdapter;
-import it.polimi.ingsw.network.client.Client;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 import java.io.InputStream;
-import java.net.URL;
 
 public class Gui extends Application {
 

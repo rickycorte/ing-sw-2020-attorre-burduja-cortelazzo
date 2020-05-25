@@ -1,4 +1,4 @@
-package it.polimi.ingsw.ViewGui;
+package it.polimi.ingsw.view.gui;
 
 import it.polimi.ingsw.controller.CommandType;
 import it.polimi.ingsw.controller.CommandWrapper;

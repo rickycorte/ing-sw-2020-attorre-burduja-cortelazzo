@@ -1,6 +1,6 @@
 package it.polimi.ingsw;
 
-import it.polimi.ingsw.ViewGui.GuiInterface;
+import it.polimi.ingsw.view.gui.GuiInterface;
 import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.network.TPCNetwork;
 import it.polimi.ingsw.view.IHumanInterface;

@@ -1,21 +1,18 @@
-package it.polimi.ingsw.ViewGui;
+package it.polimi.ingsw.view.gui;
 
 import it.polimi.ingsw.controller.CommandType;
 import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.FilterGodCommand;
 import it.polimi.ingsw.controller.PickGodCommand;
-import it.polimi.ingsw.network.client.Client;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,20 +1,15 @@
-package it.polimi.ingsw.ViewGui;
+package it.polimi.ingsw.view.gui;
 
-import it.polimi.ingsw.controller.CommandType;
 import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.JoinCommand;
-import it.polimi.ingsw.network.INetworkAdapter;
-import it.polimi.ingsw.network.client.Client;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 
 
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
 
 public class LogInSceneController {
 

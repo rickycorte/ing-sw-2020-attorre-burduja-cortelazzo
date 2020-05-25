@@ -1,4 +1,4 @@
-package it.polimi.ingsw.ViewGui;
+package it.polimi.ingsw.view.gui;
 
 import it.polimi.ingsw.controller.*;
 import it.polimi.ingsw.game.Vector2;
@@ -368,7 +368,7 @@ public class GameSceneController implements Initializable {
             gameLabel.setText("Click on a Worker then click on a tile");
         } else {
             currentPlayerID = cmd.getCommand(ActionCommand.class).getTarget();
-            gameLabel.setText("Wait, it's" + idsUsernamesMap.get(currentPlayerID) + "'s turn");
+            gameLabel.setText("Wait, it's " + idsUsernamesMap.get(currentPlayerID) + "'s turn");
         }
     }
 
