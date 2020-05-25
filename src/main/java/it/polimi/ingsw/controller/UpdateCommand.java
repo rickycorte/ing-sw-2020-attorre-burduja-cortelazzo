@@ -6,12 +6,14 @@ import it.polimi.ingsw.game.Vector2;
 public class UpdateCommand extends BaseCommand {
     private int[] mapWorkerPair;
     private Vector2[] workerPos;
+    private int[] workersInfo;
 
     //to client
     public UpdateCommand(int sender, int target, Map map){
         super(sender,target);
         this.mapWorkerPair = mapToArray(map);
         this.workerPos = workerToArray(map);
+        this.workersInfo = workersInfo(map);
     }
 
     public int[] getIntData() {
@@ -21,6 +23,8 @@ public class UpdateCommand extends BaseCommand {
     public Vector2[] getV2Data() {
         return workerPos;
     }
+
+    public int[] getWorkersInfo(){return workersInfo;}
 
     /**
      * utility method
@@ -55,5 +59,23 @@ public class UpdateCommand extends BaseCommand {
             vector[i] = map.getWorkers().get(i).getPosition();
 
         return vector;
+    }
+
+    /**
+     * Utility method, gets all the information about the workers of a given map and puts it in an array
+     * @param map map to get the worker's info from
+     * @return an array of ints. interpret as blocks of 4 [worker_owner_id, worker_id, worker_x_pos, worker_y_pos]
+     */
+    private int[] workersInfo(Map map){
+        int[] workers_info = new int[map.getWorkers().size() * 4];
+        int nHandledWorker = 0;
+        for(int i = 0; i < (map.getWorkers().size() * 4) ; i = i + 4){
+            workers_info[i] = map.getWorkers().get(nHandledWorker).getOwner().getId();
+            workers_info[i + 1] = map.getWorkers().get(nHandledWorker).getId();
+            workers_info[i + 2] = map.getWorkers().get(nHandledWorker).getPosition().getX();
+            workers_info[i + 3] = map.getWorkers().get(nHandledWorker).getPosition().getY();
+            nHandledWorker++;
+        }
+        return workers_info;
     }
 }

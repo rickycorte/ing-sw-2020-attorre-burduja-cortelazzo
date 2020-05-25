@@ -65,7 +65,10 @@ public class controllerTest {
             public void send(CommandWrapper packet) {
 
             }
-
+            @Override
+            public int getClientID(){
+                return -1;
+            }
 
             @Override
             public int getServerID() {

@@ -173,4 +173,11 @@ public class TPCNetwork implements INetworkAdapter
     {
         return Server.DEFAULT_SERVER_PORT;
     }
+    @Override
+    public int getClientID() {
+        if(client != null){
+            return client.getId();
+        }
+        return -1;
+    }
 }

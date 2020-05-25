@@ -7,12 +7,14 @@ import java.util.List;
 public class FirstPlayerPickCommand extends BaseCommand {
     private int[] playersID;
     private String[] usernames;
+    private int[] godID;
 
     //to client
     public FirstPlayerPickCommand(int sender, int target, List<Player> connectedPlayers) {
         super(sender, target);
         this.playersID = idsToArray(connectedPlayers);
         this.usernames = usernamesToArray(connectedPlayers);
+        this.godID = godIdsToArray(connectedPlayers);
     }
 
     //to server
@@ -20,6 +22,7 @@ public class FirstPlayerPickCommand extends BaseCommand {
         super(sender, target);
         this.playersID = new int[]{playerID};
         this.usernames = null;
+        this.godID = null;
     }
 
 
@@ -50,6 +53,15 @@ public class FirstPlayerPickCommand extends BaseCommand {
         return usernames;
     }
 
+    private int[] godIdsToArray(List<Player> connectedPlayers){
+        int[] gods = new int[connectedPlayers.size()];
+
+        for(int i = 0 ; i < connectedPlayers.size(); i++){
+            gods[i] = connectedPlayers.get(i).getGod().getId();
+        }
+
+        return gods;
+    }
 
     public int[] getPlayersID() {
         return playersID;
@@ -58,5 +70,7 @@ public class FirstPlayerPickCommand extends BaseCommand {
     public String[] getUsernames() {
         return usernames;
     }
+
+    public int[] getGodID(){return godID;}
 
 }

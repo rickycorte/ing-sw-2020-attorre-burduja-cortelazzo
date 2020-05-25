@@ -1,5 +1,6 @@
 package it.polimi.ingsw;
 
+import it.polimi.ingsw.ViewGui.GuiInterface;
 import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.network.TPCNetwork;
 import it.polimi.ingsw.view.IHumanInterface;
@@ -32,8 +33,7 @@ public class ClientMain {
         }
         else
         {
-            //create gui here
-            hud = new Cli(tcpNetwork); //TODO: change this to GUI
+            hud = new GuiInterface(tcpNetwork);
         }
 
         tcpNetwork.setReceiver(hud);

@@ -51,4 +51,5 @@ public interface INetworkAdapter extends INetworkForwarder
      */
     void removeReceiver();
 
+    int getClientID();
 }
