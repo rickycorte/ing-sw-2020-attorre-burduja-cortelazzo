@@ -1,0 +1,42 @@
+.button:hover{
+    background: #1e62d0;
+}
+
+.button:pressed{
+    -fx-scale-x: 0.90;
+    -fx-scale-y: 0.90;
+}
+
+.mainPane{
+    -fx-background-image: url("../img/common/bluredBackground.png");
+    -fx-background-size: cover;
+    -fx-alignment: center;
+}
+
+.gamePane{
+    -fx-background-image: url("../img/common/SantoriniBoard_nomap_lowres.png");
+    -fx-background-size: cover;
+    -fx-alignment: center;
+}
+
+
+#gen_button {
+    -fx-background-color:
+            #000000,
+            linear-gradient(#7ebcea, #2f4b8f),
+            linear-gradient(#426ab7, #263e75),
+            linear-gradient(#395cab, #223768);
+    -fx-background-insets: 0,1,2,3;
+    -fx-background-radius: 3,2,2,2;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+
+}
+#gen_button Text{
+    -fx-effect: dropshadow( one-pass-box , rgba(0,0,0,0.8) , 0, 0.0 , 0 , 1);
+}
+
+
+#logoImage {
+    -fx-image: url("../img/common/logo.png");
+}
