@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Timer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class represent a network client and holds all the logic
@@ -33,38 +34,19 @@ public class Client {
     private Timer pingTimer;                        //ping timer used to inform the server i'm still alive
     private ICommandReceiver commandReceiver;       //representing the cli/gui based on client's choice
 
-    boolean shouldStop;
+    final AtomicBoolean shouldStop;
 
 
     /**
-     * Client constructor
+     * Create a new client
      */
     public Client()
     {
         id = -1;
         pingTimer = new Timer();
-        shouldStop = false;
+        shouldStop = new AtomicBoolean(false);
     }
 
-
-    /**
-     * Return shouldStop in a synchronized wait, this getter is used by the background loop (socket) to detect when it should stop
-     * without generating race condition
-     * @return should stop read loop
-     */
-    private synchronized boolean getShouldStop()
-    {
-        return shouldStop;
-    }
-
-    /**
-     * Set true to stop the background socket loop in a synchronized way to avoid race conditions
-     * @param shouldStop use true to stop the connection
-     */
-    private synchronized void setShouldStop(boolean shouldStop)
-    {
-        this.shouldStop = shouldStop;
-    }
 
     /**
      * Connect to a remote server, if connections is created send a join command and start
@@ -119,7 +101,7 @@ public class Client {
     private void runReadLoop() {
         String serverResponse;
 
-        while (!getShouldStop())
+        while (!shouldStop.get())
         {
             try
             {
@@ -141,7 +123,7 @@ public class Client {
                         commandReceiver.onConnect(cmd);
                         break;
                     case LEAVE:
-                        commandReceiver.onDisconnect(cmd);
+
                         break;
                     default:
                         commandReceiver.onCommand(cmd);
@@ -150,7 +132,8 @@ public class Client {
             catch (IOException e)
             {
                 System.out.println("[CLIENT] Couldn't read from the socket, closing connection");
-                disconnect();
+                shutdownConnection();
+                commandReceiver.onDisconnect(null);
             }
         }
     }
@@ -185,15 +168,14 @@ public class Client {
 
 
     /**
-     * Disconnect for the current server
-     * If not connected nothing happens
+     * Close sockets and stop ping, this does not send anything to the server
+     * but kill everything locally
      */
-    public void disconnect()
+    private void shutdownConnection()
     {
         try
         {
-            //TODO: send diconnect msg maybe split function to disconnect without sending message
-            setShouldStop(true);
+            shouldStop.set(true);
             in.close();
             out.close();
             s_socket.close();
@@ -204,6 +186,19 @@ public class Client {
         {
             System.out.println("[CLIENT] Error closing the connection");
         }
+    }
+
+
+    /**
+     * Disconnect for the current server
+     * If not connected nothing happens
+     */
+    public void disconnect()
+    {
+        //send leave message
+        send(new CommandWrapper(CommandType.LEAVE, new LeaveCommand(id, Server.SERVER_ID)));
+        // close everything
+        shutdownConnection();
 
     }
 
@@ -237,8 +232,14 @@ public class Client {
             String str = packet.Serialize();
             if (packet.getType() != CommandType.BASE)
                 System.out.println("[CLIENT]  Sending "+ str);
+
             out.println(str);
             out.flush();
+            if(out.checkError())
+            {
+                shutdownConnection();
+                commandReceiver.onDisconnect(null);
+            }
         }
     }
 

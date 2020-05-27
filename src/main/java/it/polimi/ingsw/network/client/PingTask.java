@@ -26,5 +26,5 @@ public class PingTask extends TimerTask {
     public void run() {
         client.send(new CommandWrapper(CommandType.BASE, null));
     }
-    //TODO: on disconnect return null
+
 }
