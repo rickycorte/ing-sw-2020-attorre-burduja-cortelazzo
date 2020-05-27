@@ -40,7 +40,7 @@ public class CardCollection {
         )));
         // Athena
         cardCollection.add(new Card(3, "Athena", BehaviourGraph.makeEmptyGraph().appendSubGraph(
-                BehaviourNode.makeRootNode(new MoveAction())
+                BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.SET_BLOCK_MOVE_UP))
                         .setNext(new BuildAction())
                         .setNext(new EndTurnAction())
                         .getRoot()

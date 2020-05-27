@@ -129,7 +129,8 @@ public class MoveAction extends Action {
                 //push must check if the "push dest" is inside map
                 if(canPush(gc))
                 {
-                    return m.isInsideMap(calculatePushPos(w, target));
+                    Vector2 p = calculatePushPos(w, target);
+                    return m.isInsideMap(p) && m.isCellEmpty(p) && !m.isCellDome(p);
                 }
                 return canSwap(gc);
             }
@@ -184,7 +185,9 @@ public class MoveAction extends Action {
         // athena should disable her lock at the beginning of the turn
         // and reset it later if moves up
         if(localConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP))
+        {
             globalConstrains.remove(GameConstraints.Constraint.BLOCK_MOVE_UP);
+        }
 
         //merge local and global constrains to avoid multiple checks
         GameConstraints gc = mergeConstraints(localConstrains, globalConstrains);
@@ -206,7 +209,9 @@ public class MoveAction extends Action {
 
         // and reset it later if moves up
         if(localConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP) && m.getLevel(w.getPosition()) > m.getLevel(w.getLastLocation()))
+        {
             globalConstrains.add(GameConstraints.Constraint.BLOCK_MOVE_UP);
+        }
 
         return winCheck(w, m, gc, w.getLastLocation());
     }

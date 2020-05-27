@@ -429,18 +429,36 @@ public final class Game
      * Get the list of next possible actions for all worker
      * if a worker is selected for current turn, get possible action to continue turn with that worker
      * @param sender player who issues this command
-     * @return list of actions (workerID,actionName,possibleVector2)
+     * @return list of actions (workerID,actionName,possibleVector2), null if none is available
      */
     public List<NextAction> getNextActions(Player sender) {
-        if (currentTurn.getWorker() == null){
-            ArrayList<NextAction> nextActions = new ArrayList<>();
-            for (Worker worker : sender.getWorkers()) {
+
+        ArrayList<NextAction> nextActions = new ArrayList<>();
+
+        if (currentTurn.getWorker() == null)
+        {
+            for (Worker worker : sender.getWorkers())
+            {
                 nextActions.addAll(currentTurn.getNextAction(worker, game_map, globalConstraints));
-             }
-            return nextActions;
-        }else{
-            return currentTurn.getNextAction(game_map, globalConstraints);
+            }
         }
+        else
+        {
+            nextActions = currentTurn.getNextAction(game_map, globalConstraints);
+        }
+
+        if(nextActions.size() > 0)
+        {
+            return nextActions;
+        }
+        else
+        {
+            //no more things to do... the player got stuck and cant complete the turn
+            playerLost(sender);
+            return null;
+        }
+
+        //return nextActions;
     }
 
     /**
@@ -604,8 +622,6 @@ public final class Game
         if(!currentTurn.canStillMove(game_map, globalConstraints))
         {
             playerLost(players.get(currentPlayer));
-            nextPlayer();
-            makeTurn(currentPlayer);
         }
     }
 
@@ -626,13 +642,19 @@ public final class Game
     private void playerLost(Player loser)
     {
         players.remove(loser);
+        // after this line current player is the next one
+        // because we removed the loser
+        if(currentPlayer >= playerCount())
+            currentPlayer = 0;
+
         if(players.size() < 2)
         {
-            nextPlayer(); //if we are two and i lost the winner is the next player... "the other player"
             endGame(players.get(currentPlayer));
         }
         else {
             game_map.removeWorkers(loser);
+            //start new turn if we can still play
+            makeTurn(currentPlayer);
         }
     }
 

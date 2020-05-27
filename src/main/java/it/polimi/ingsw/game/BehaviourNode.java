@@ -75,7 +75,10 @@ public class BehaviourNode
         for(BehaviourNode n : childNodes)
         {
             NextAction nextAction = new NextAction(w,m,constraints,n);
-            nodes.add(nextAction);
+
+            //add only valid nodes with at least one possible position
+            if(nextAction.getAvailable_position().size() > 0)
+                nodes.add(nextAction);
         }
 
         return nodes;

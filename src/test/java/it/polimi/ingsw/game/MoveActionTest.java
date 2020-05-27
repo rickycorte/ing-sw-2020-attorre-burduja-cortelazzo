@@ -389,7 +389,7 @@ public class MoveActionTest {
     }
 
     @Test
-    void shouldNotPushWithUsedCell()
+    void shouldNotPushIntoAnotherWorker()
     {
         moveAct = new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
         w1p2.setPosition(new Vector2(4,3));
@@ -397,6 +397,90 @@ public class MoveActionTest {
         assertFalse(moveAct.possibleCells(w1p2, m, null).contains(new Vector2(4,2)));
 
         assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w1p2, new Vector2(4,2),m, gc); });
+
+        // create another situation
+
+        /*
+        xy      00 01 02 03 04
+            00 |--|--|--|--|--|
+            01 |--|--|--|--|--|
+            02 |--|--|--|r-|--|
+            03 |--|--|r1|--|--|
+            04 |--|b1|--|--|--|
+        */
+
+        m = new Map();
+        buildPos(m, 3,2,1);
+        buildPos(m,4,1,1);
+        m.setWorkers(p2);
+        m.setWorkers(p1);
+        // p1 = b
+        // p2 = r
+        w1p1.setPosition(new Vector2(4,1));
+        w1p2.setPosition(new Vector2(3,2));
+        w2p2.setPosition(new Vector2(2,3));
+
+        assertFalse(moveAct.possibleCells(w1p1, m, gc).contains(new Vector2(3,2)));
+        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w1p1, new Vector2(3,2),m, gc); });
+
+    }
+
+    @Test
+    void shouldNotPushIntoADome()
+    {
+        moveAct = new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
+        /*
+        xy      00 01 02 03 04
+            00 |--|--|--|--|--|
+            01 |--|--|--|--|--|
+            02 |--|--|--|@4|--|
+            03 |--|--|r1|--|--|
+            04 |--|b1|--|--|--|
+        */
+
+        m = new Map();
+        buildPos(m, 4,1,1);
+        buildPos(m,3,2,1);
+        buildPos(m,2,3,4);
+        m.setWorkers(p2);
+        m.setWorkers(p1);
+        // p1 = b
+        // p2 = r
+        w1p1.setPosition(new Vector2(4,1));
+        w1p2.setPosition(new Vector2(3,2));
+
+        assertFalse(moveAct.possibleCells(w1p1, m, gc).contains(new Vector2(3,2)));
+        assertThrows(NotAllowedMoveException.class, ()-> { moveAct.run(w1p1, new Vector2(3,2),m, gc); });
+    }
+
+    @Test
+    void shouldPushAtAnyLevel() throws NotAllowedMoveException
+    {
+        moveAct = new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT);
+        /*
+        xy      00 01 02 03 04
+            00 |--|--|--|--|--|
+            01 |--|--|--|--|--|
+            02 |--|--|--|-3|--|
+            03 |--|--|r1|--|--|
+            04 |--|b1|--|--|--|
+        */
+
+        m = new Map();
+        buildPos(m, 4,1,1);
+        buildPos(m,3,2,1);
+        buildPos(m,2,3,3);
+        m.setWorkers(p2);
+        m.setWorkers(p1);
+        // p1 = b
+        // p2 = r
+        w1p1.setPosition(new Vector2(4,1));
+        w1p2.setPosition(new Vector2(3,2));
+
+        assertTrue(moveAct.possibleCells(w1p1, m, gc).contains(new Vector2(3,2)));
+        assertEquals(0,moveAct.run(w1p1, new Vector2(3,2),m, gc));
+        assertEquals(new Vector2(2,3), w1p2.getPosition());
+        assertEquals(new Vector2(3,2), w1p1.getPosition());
     }
 
     @Test

@@ -1,8 +1,6 @@
 package it.polimi.ingsw.network.matchmaking;
 
-import it.polimi.ingsw.controller.CommandType;
-import it.polimi.ingsw.controller.CommandWrapper;
-import it.polimi.ingsw.controller.Controller;
+import it.polimi.ingsw.controller.*;
 import it.polimi.ingsw.game.Game;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkForwarder;
@@ -60,7 +58,11 @@ public class VirtualMatch implements INetworkForwarder
             isStarted.set(true);
         }
 
-        matchmaker.send(this, packet, packet.getType() == CommandType.END_GAME);
+        // game ends when a END_GAME command and the winner is one of the player in the match
+        // the get works because of lazy evaluation, when not END_GAME the getCommand wont even run
+        // an no error will show up
+        boolean isGameEnded = packet.getType() == CommandType.END_GAME && players.contains(packet.getCommand(EndGameCommand.class).getWinnerID());
+        matchmaker.send(this, packet, isGameEnded);
     }
 
     @Override

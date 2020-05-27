@@ -10,7 +10,7 @@ Software engineering project AA2019-2020 Politecnico di Milano
 
 - ### 10618456 Francesco Attorre ([@FrancescoAttorre](https://github.com/FrancescoAttorre)) <br> francesco.attorre@mail.polimi.it
 
-- ### 10604480 Vlad Burduja ([@Burduja](https://github.com/Burduja)) <br> vladislav.burduja@mail.polimi.it
+- ### 10604480 Vladislav Burduja ([@Burduja](https://github.com/Burduja)) <br> vladislav.burduja@mail.polimi.it
 
 - ### 10530551 Riccardo Erminio Filippo  Cortelazzo ([@rickycorte](https://github.com/rickycorte)) <br> riccardoerminio.cortelazzo@mail.polimi.it
 
@@ -22,10 +22,10 @@ Software engineering project AA2019-2020 Politecnico di Milano
 | Socket | [![GREEN](https://placehold.it/15/44bb44/44bb44)](#) |
 | GUI | [![YELLOW](https://placehold.it/15/ffdd00/ffdd00)](#) |
 | CLI | [![YELLOW](https://placehold.it/15/ffdd00/ffdd00)](#) |
-| Multiple games | [![YELLOW](https://placehold.it/15/ffdd00/ffdd00)](#) |
+| Multiple games | [![GREEN](https://placehold.it/15/44bb44/44bb44)](#) |
 | Persistence | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |
 | Advanced Gods | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |
-| Undo | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |
+| Undo | [![YELLOW](https://placehold.it/15/ffdd00/ffdd00)](#) |
 
 <!--
 [![RED](https://placehold.it/15/f03c15/f03c15)](#)

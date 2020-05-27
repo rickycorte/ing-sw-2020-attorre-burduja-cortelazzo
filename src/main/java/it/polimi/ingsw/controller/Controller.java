@@ -4,6 +4,7 @@ import it.polimi.ingsw.game.*;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.network.INetworkForwarder;
+import it.polimi.ingsw.network.server.Server;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,6 +146,13 @@ public class Controller implements ICommandReceiver {
                 } else {
                     //different player same state OR same player same state
                     nextCmd = repeatCommand();
+
+                    if(nextCmd.getType() == CommandType.END_GAME)
+                    {
+                        //notify player lose
+                        sendNextCommand(nextCmd);
+                        nextCmd = repeatCommand(); // calculate new moves for a player
+                    }
                 }
                 sendUpdate(cmdWrapper);
             } else {
@@ -314,7 +322,12 @@ public class Controller implements ICommandReceiver {
             case WORKER_PLACE:
                 return new CommandWrapper(CommandType.PLACE_WORKERS, new WorkerPlaceCommand(SERVER_ID, match.getCurrentPlayer().getId(),match.getCurrentMap().cellWithoutWorkers()));
             case GAME:
-                return new CommandWrapper(CommandType.ACTION_TIME, new ActionCommand(SERVER_ID, match.getCurrentPlayer().getId(),match.getNextActions(match.getCurrentPlayer())));
+                var player = match.getCurrentPlayer();
+                var actions = match.getNextActions(player);
+                if(actions != null)
+                    return new CommandWrapper(CommandType.ACTION_TIME, new ActionCommand(SERVER_ID, player.getId(), actions));
+                else
+                    return new CommandWrapper(CommandType.END_GAME, new EndGameCommand(Server.SERVER_ID,player.getId(), EndGameCommand.TARGET_LOST));
         }
         return null;
     }
