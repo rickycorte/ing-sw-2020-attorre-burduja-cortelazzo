@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class BehaviourGraph
 {
     private BehaviourNode rootNode;
-    private BehaviourNode behaviourNode;
+    private BehaviourNode currentNode;
     private BehaviourNode previousNode;
     private boolean alreadyRun;
 
@@ -25,7 +25,7 @@ public class BehaviourGraph
      * Should be called every turn start
      */
     public void resetExecutionStatus() {
-        behaviourNode = rootNode;
+        currentNode = rootNode;
         previousNode = rootNode;
         alreadyRun = true; // root node has no action
     }
@@ -34,8 +34,8 @@ public class BehaviourGraph
      * Return the current node
      * @return return the current node
      */
-    public BehaviourNode getBehaviourNode() {
-        return behaviourNode;
+    public BehaviourNode getCurrentNode() {
+        return currentNode;
     }
 
 
@@ -46,12 +46,12 @@ public class BehaviourGraph
      */
     public void selectAction(int pos) throws OutOfGraphException
     {
-        behaviourNode = behaviourNode.getNextNode(pos);
+        currentNode = currentNode.getNextNode(pos);
         alreadyRun = false;
     }
 
     /**
-     * Run the action selected with SelecAction, calling two times the same selected action has no effect
+     * Run the action selected with SelectAction, calling two times the same selected action has no effect
      * @param w target worker used in this action
      * @param target target position where the action should take place
      * @param m map where the action is executed
@@ -63,17 +63,17 @@ public class BehaviourGraph
     {
         try
         {
-            if (!alreadyRun && behaviourNode.getAction() != null)
+            if (!alreadyRun && currentNode.getAction() != null)
             {
-                int res = behaviourNode.getAction().run(w, target, m, globalConstrains);
+                int res = currentNode.getAction().run(w, target, m, globalConstrains);
                 alreadyRun = true;
-                previousNode = behaviourNode;
+                previousNode = currentNode;
                 return res;
             }
             return -1; //break the game if errors happens here
 
         }catch (NotAllowedMoveException e){
-            behaviourNode = previousNode; // move back in case of a wrong move
+            currentNode = previousNode; // move back in case of a wrong move
             throw e; // notify caller of the error
         }
     }
@@ -83,7 +83,7 @@ public class BehaviourGraph
      * @return true if execution is ended
      */
     public boolean isExecutionEnded() {
-        return behaviourNode.getNextActionCount() <= 0;
+        return currentNode.getNextActionCount() <= 0;
     }
 
     /**
@@ -94,7 +94,7 @@ public class BehaviourGraph
      * @return ArrayList of NextAction from the current node
      */
     public ArrayList<NextAction> getNextActions(Worker w, Map m, GameConstraints constraints) {
-        return behaviourNode.getNextActions(w,m,constraints);
+        return currentNode.getNextActions(w,m,constraints);
     }
 
     /**
@@ -103,7 +103,7 @@ public class BehaviourGraph
      * @return and array of action names
      */
     public String[] getNextActionNames() {
-        return behaviourNode.getNextActionNames();
+        return currentNode.getNextActionNames();
     }
 
 
@@ -122,6 +122,16 @@ public class BehaviourGraph
     }
 
     /**
+     * Move back to previous executed node
+     * You can move back only once, multiple call of this function will always move to the same node
+     */
+    public void rollback()
+    {
+        currentNode = previousNode;
+        alreadyRun = false;
+    }
+
+    /**
      * Generate a empty graph
      * Short version of new creation that can be used to concatenate graph creation
      * @return empty graph
@@ -129,5 +139,6 @@ public class BehaviourGraph
     public static BehaviourGraph makeEmptyGraph() {
         return new BehaviourGraph();
     }
+
 
 }

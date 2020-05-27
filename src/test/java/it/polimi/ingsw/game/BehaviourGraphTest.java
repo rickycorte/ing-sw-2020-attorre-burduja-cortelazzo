@@ -163,7 +163,7 @@ class BehaviourGraphTest
         try
         {
 
-            return g.getBehaviourNode().getNextNode(id).getAction().displayName();
+            return g.getCurrentNode().getNextNode(id).getAction().displayName();
         }
         catch (OutOfGraphException e)
         {
@@ -219,7 +219,7 @@ class BehaviourGraphTest
         BehaviourGraph graph = BehaviourGraph.makeEmptyGraph().appendSubGraph(
                 BehaviourNode.makeRootNode(new TestActionThrow()).setNext(new TestAction()).getRoot());
 
-        BehaviourNode prevAction = graph.getBehaviourNode();
+        BehaviourNode prevAction = graph.getCurrentNode();
 
         try{
             graph.selectAction(0);
@@ -234,7 +234,7 @@ class BehaviourGraphTest
             // 100% sure we go here because TestActionThrow always trows this exception
         }
 
-        assertEquals(prevAction, graph.getBehaviourNode());
+        assertEquals(prevAction, graph.getCurrentNode());
 
     }
 
@@ -269,5 +269,27 @@ class BehaviourGraphTest
         assertTrue(testSeq.runSelectedAction(null,null, null, null ) > 0);
         assertTrue(testSeq.runSelectedAction(null,null, null, null ) < 0);
 
+    }
+
+    @Test
+    void shouldStayAtRootOnRollbackAtStart()
+    {
+        testSeq.rollback();
+        assertEquals(testSeq.getCurrentNode().getRoot(), testSeq.getCurrentNode());
+    }
+
+    @Test
+    void shouldRollbackOnlyOnce() throws OutOfGraphException
+    {
+        var startNode = testSeq.getCurrentNode();
+        testSeq.selectAction(0); // move forward
+        assertNotEquals(startNode, testSeq.getCurrentNode());
+
+        testSeq.rollback();
+        assertEquals(startNode, testSeq.getCurrentNode());
+
+        //rollback once
+        testSeq.rollback();
+        assertEquals(startNode, testSeq.getCurrentNode());
     }
 }

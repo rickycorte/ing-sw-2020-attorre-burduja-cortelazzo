@@ -91,7 +91,7 @@ public class Turn
     public boolean canStillMove(Map map,GameConstraints gc) {
         possible_move = 0;
         for (Worker w : player.getWorkers()){
-            canStillMoveNextAction(graph.getBehaviourNode(),w,map,gc);
+            canStillMoveNextAction(graph.getCurrentNode(),w,map,gc);
         }
         return possible_move>0;
     }

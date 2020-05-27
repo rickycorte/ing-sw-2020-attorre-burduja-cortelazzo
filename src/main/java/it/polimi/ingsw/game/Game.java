@@ -1,8 +1,6 @@
 package it.polimi.ingsw.game;
 
 import java.util.*;
-import com.google.gson.Gson;
-import java.io.*;
 
 /**
  * Main Game and Model class that represents a complete match and serves as the model interface with the outside world
@@ -58,8 +56,8 @@ public final class Game
     private List<Player> players;
     private transient List<Card> allowedCards;
     private GameConstraints globalConstraints;
-    private Map game_map;
-    private transient Turn currentTurn, lastTurn;
+    private Map gameMap;
+    private transient Turn currentTurn;
     private int currentPlayer, firstPlayer;
     private int stateProgress;
     private GameState gameState;
@@ -72,8 +70,7 @@ public final class Game
         players = new ArrayList<>();
         allowedCards = new ArrayList<>();
         globalConstraints = new GameConstraints();
-        game_map = new Map();
-        lastTurn = null;
+        gameMap = new Map();
         currentTurn = null;
         currentPlayer = 0;
         firstPlayer = 0;
@@ -158,7 +155,7 @@ public final class Game
      * @return the current map state
      */
     public Map getCurrentMap(){
-        return game_map;
+        return gameMap;
     }
 
 
@@ -342,7 +339,7 @@ public final class Game
             //workers id are relative for the player
             sender.addWorker(new Worker(0, sender, positions[0]));
             sender.addWorker(new Worker(1, sender, positions[1]));
-            game_map.setWorkers(sender);
+            gameMap.setWorkers(sender);
 
             nextPlayer();
             if(currentPlayer == firstPlayer)
@@ -392,7 +389,7 @@ public final class Game
             if(currentTurn.getWorker() == null)
                 currentTurn.selectWorker(worker);
 
-            int actionRes = currentTurn.runAction(actionId, target, game_map, globalConstraints);
+            int actionRes = currentTurn.runAction(actionId, target, gameMap, globalConstraints);
 
             if (actionRes > 0) // player won
             {
@@ -439,12 +436,12 @@ public final class Game
         {
             for (Worker worker : sender.getWorkers())
             {
-                nextActions.addAll(currentTurn.getNextAction(worker, game_map, globalConstraints));
+                nextActions.addAll(currentTurn.getNextAction(worker, gameMap, globalConstraints));
             }
         }
         else
         {
-            nextActions = currentTurn.getNextAction(game_map, globalConstraints);
+            nextActions = currentTurn.getNextAction(gameMap, globalConstraints);
         }
 
         if(nextActions.size() > 0)
@@ -612,14 +609,13 @@ public final class Game
 
         gameState = GameState.GAME;
 
-        lastTurn = currentTurn;
         Player p = players.get(player);
         if(p.getGod() == null)
             p.setGod(cardCollection.getNoGodCard());
 
         currentTurn = new Turn(p);
 
-        if(!currentTurn.canStillMove(game_map, globalConstraints))
+        if(!currentTurn.canStillMove(gameMap, globalConstraints))
         {
             playerLost(players.get(currentPlayer));
         }
@@ -652,7 +648,7 @@ public final class Game
             endGame(players.get(currentPlayer));
         }
         else {
-            game_map.removeWorkers(loser);
+            gameMap.removeWorkers(loser);
             //start new turn if we can still play
             makeTurn(currentPlayer);
         }
@@ -675,7 +671,7 @@ public final class Game
             return false;
 
         //check that the two position are available in the map
-        List<Vector2> validPos = game_map.cellWithoutWorkers();
+        List<Vector2> validPos = gameMap.cellWithoutWorkers();
 
         if(!validPos.contains(positions[0]) ||  !validPos.contains(positions[1]))
             return false;
