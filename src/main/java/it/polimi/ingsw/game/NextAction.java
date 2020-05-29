@@ -1,6 +1,7 @@
 package it.polimi.ingsw.game;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class the holds a list of valid positions for an action
@@ -8,13 +9,13 @@ import java.util.ArrayList;
 public class NextAction {
     private int worker;
     private String actionName;
-    private ArrayList<Vector2> available_position;
+    private ArrayList<Vector2> availablePositions;
 
     public NextAction(Worker w, Map m, GameConstraints constraints,BehaviourNode node) {
         this.worker = w.getId();
         this.actionName = node.getAction().displayName();
-        this.available_position = new ArrayList<>();
-        this.available_position.addAll(node.getAction().possibleCells(w,m,constraints));
+        this.availablePositions = new ArrayList<>();
+        this.availablePositions.addAll(node.getAction().possibleCells(w,m,constraints));
     }
 
     /**
@@ -29,11 +30,11 @@ public class NextAction {
      * Return a valid list of position where this move can be applied
      * @return valid list of cells
      */
-    public ArrayList<Vector2> getAvailable_position(){ return this.available_position; }
+    public List<Vector2> getAvailablePositions(){ return this.availablePositions; }
 
     /**
      * Return the worker id that must be used to run this move
      * @return worker id
      */
-    public int getWorker() { return worker; }
+    public int getWorkerID() { return worker; }
 }

@@ -1,18 +1,21 @@
 package it.polimi.ingsw.controller;
 
+import it.polimi.ingsw.controller.compact.CompactPlayer;
 import it.polimi.ingsw.game.Player;
 
 import java.util.List;
 
 /**
  * Command used to select the first player that should start placing the workers
+ * (Server)
+ * Request a client to chose what player from the provided list should start to play first
+ * (Client)
+ * Reply to the server with the selected player that should start the match
  */
 public class FirstPlayerPickCommand extends BaseCommand {
-    private int[] playersID;
-    private String[] usernames;
-    private int[] godID;
 
-    //to client
+    private CompactPlayer[] players;
+    private int picked;
 
     /**
      * (Server) Request the host to pick a player that will start the game
@@ -22,9 +25,8 @@ public class FirstPlayerPickCommand extends BaseCommand {
      */
     public FirstPlayerPickCommand(int sender, int target, List<Player> connectedPlayers) {
         super(sender, target);
-        this.playersID = idsToArray(connectedPlayers);
-        this.usernames = usernamesToArray(connectedPlayers);
-        this.godID = godIdsToArray(connectedPlayers);
+        players = toCompatPlayerArray(connectedPlayers);
+        picked =  -1;
     }
 
 
@@ -36,57 +38,111 @@ public class FirstPlayerPickCommand extends BaseCommand {
      */
     public FirstPlayerPickCommand(int sender, int target, int playerID) {
         super(sender, target);
-        this.playersID = new int[]{playerID};
-        this.usernames = null;
-        this.godID = null;
+        players = null;
+        picked = playerID;
     }
 
 
     /**
-     * utility method
-     * every id of players
-     * @return array id of every player
+     * Convert player list to compact player array
+     * @param playerList player list
+     * @return player list converted
      */
-    private int[] idsToArray(List<Player> connectedPlayers){
-        int[] ids = new int[connectedPlayers.size()];
+    private CompactPlayer[] toCompatPlayerArray(List<Player> playerList)
+    {
+        CompactPlayer[] arr = new CompactPlayer[playerList.size()];
+        for(int i =0; i< playerList.size(); i++)
+        {
+            arr[i] = new CompactPlayer(playerList.get(i));
+        }
+        return arr;
+    }
 
-        for(int i = 0; i < connectedPlayers.size(); i++ )
-            ids[i] = connectedPlayers.get(i).getId();
+
+    /**
+     * @deprecated use {@link #getPlayers()}
+     */
+    @Deprecated
+    public int[] getPlayersID()
+    {
+        int[] ids = new int[players.length];
+
+        for(int i =0 ;i < players.length; i++)
+            ids[i] = players[i].getId();
 
         return ids;
     }
 
     /**
-     * every username of players
-     * @return array username of every player
+     * @deprecated use {@link #getPlayers()}
      */
-    private String[] usernamesToArray(List<Player> connectedPlayers){
-        String[] usernames = new String[connectedPlayers.size()];
+    @Deprecated
+    public String[] getUsernames()
+    {
+        String[] ids = new String[players.length];
 
-        for(int i = 0; i < connectedPlayers.size(); i++ )
-            usernames[i] = connectedPlayers.get(i).getUsername();
+        for(int i =0 ;i < players.length; i++)
+            ids[i] = players[i].getUsername();
 
-        return usernames;
+        return ids;
     }
 
-    private int[] godIdsToArray(List<Player> connectedPlayers){
-        int[] gods = new int[connectedPlayers.size()];
+    /**
+     * @deprecated use {@link #getPlayers()}
+     */
+    @Deprecated
+    public int[] getGodID()
+    {
+        int[] ids = new int[players.length];
 
-        for(int i = 0 ; i < connectedPlayers.size(); i++){
-            gods[i] = connectedPlayers.get(i).getGod().getId();
-        }
+        for(int i =0 ;i < players.length; i++)
+            ids[i] = players[i].getGodID();
 
-        return gods;
+        return ids;
     }
 
-    public int[] getPlayersID() {
-        return playersID;
+    /**
+     * Return array of selectable players with their information
+     * @return player list
+     */
+    public CompactPlayer[] getPlayers()
+    {
+        return players;
     }
 
-    public String[] getUsernames() {
-        return usernames;
+    /**
+     * Return picked player id (-1 if error)
+     * @return picked player id
+     */
+    public int getPickedPlayerID()
+    {
+        return picked;
     }
 
-    public int[] getGodID(){return godID;}
+
+    /**
+     * (Server) Request the host to pick a player that will start the game
+     * @param sender sender id of who is issuing this command
+     * @param target receiver of the command
+     * @param connectedPlayers list of players that can be selected
+     * @return wrapped command ready to be sent over the network
+     */
+    public static CommandWrapper makeRequest(int sender, int target, List<Player> connectedPlayers)
+    {
+        return new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(sender,target,connectedPlayers));
+    }
+
+
+    /**
+     * (Client) Send to the server the selected player id
+     * @param sender sender id of who is issuing this command
+     * @param target receiver of the command
+     * @param playerID first player that will start placing workers
+     * @return wrapped command ready to be sent over the network
+     */
+    public static CommandWrapper makeReply(int sender, int target, int playerID)
+    {
+        return new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(sender, target, playerID));
+    }
 
 }

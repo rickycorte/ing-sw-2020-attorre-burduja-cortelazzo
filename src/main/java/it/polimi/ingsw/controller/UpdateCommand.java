@@ -1,52 +1,98 @@
 package it.polimi.ingsw.controller;
 
+import it.polimi.ingsw.controller.compact.CompactMap;
 import it.polimi.ingsw.game.Map;
 import it.polimi.ingsw.game.Vector2;
 
 /**
  * This command is used only as an information method
  * that updates the clients with a new state of the game map is calculated
+ * (Server)
+ * Send a new map state to the clients
+ * (Client)
+ * A new map state is received and should be processed
  */
 public class UpdateCommand extends BaseCommand {
-    private int[] mapWorkerPair;
-    private Vector2[] workerPos;
-    private int[] workersInfo;
+    private CompactMap map;
 
-    //to client
+    /**
+     * (Server) Create a new map update to send to the clients
+     * @param sender sender id
+     * @param target receiver if of the command (should be broadcast)
+     * @param map new map state
+     */
     public UpdateCommand(int sender, int target, Map map){
         super(sender,target);
-        this.mapWorkerPair = mapToArray(map);
-        this.workerPos = workerToArray(map);
-        this.workersInfo = workersInfo(map);
+        this.map = new CompactMap(map);
     }
 
+
+    /**
+     * Get the new map sent by th server
+     * @return new map state
+     */
+    public CompactMap getUpdatedMap()
+    {
+        return map;
+    }
+
+    /**
+     * (Server) Create a new map update to send to the clients
+     * @param sender sender id
+     * @param target receiver if of the command (should be broadcast)
+     * @param map new map state
+     * @return wrapped command ready to be sent over the network
+     */
+    public static CommandWrapper makeWrapped(int sender, int target, Map map)
+    {
+        return new CommandWrapper(CommandType.UPDATE, new UpdateCommand(sender, target, map));
+    }
+
+
+
+    //----------------------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * @deprecated use {@link #getUpdatedMap()}
+     */
+    @Deprecated
     public int[] getIntData() {
-        return mapWorkerPair;
+        return mapToArray(map);
     }
 
+    /**
+     * @deprecated use {@link #getUpdatedMap()}
+     */
+    @Deprecated
     public Vector2[] getV2Data() {
-        return workerPos;
+        return workerToArray(map);
     }
 
-    public int[] getWorkersInfo(){return workersInfo;}
+    /**
+     * @deprecated use {@link #getUpdatedMap()}
+     */
+    @Deprecated
+    public int[] getWorkersInfo(){ return workersInfo(map); }
 
     /**
      * utility method
      * @param map map to convert
      * @return first [HEIGHT*LENGTH] are map int value, then pairs (worker owner id, worker id)
      */
-    private int[] mapToArray(Map map){
-        int[] intMap = new int[(Map.LENGTH * Map.LENGTH)+(map.getWorkers().size()*2)];
+    @Deprecated
+    private int[] mapToArray(CompactMap map){
+        int[] intMap = new int[(Map.LENGTH * Map.LENGTH)+(map.getWorkers().length*2)];
         for(int x = 0, i = 0; i < Map.LENGTH; i++){
             for(int j = 0; j < Map.HEIGHT ; j++){
-                intMap[x] = map.getMap()[i][j];
+                intMap[x] = 1 << map.getLevel(i,j);
+                intMap[x] += map.isDome(i,j) ? Map.DOME_VALUE : 0;
                 x++;
             }
         }
 
-        for(int i = Map.HEIGHT * Map.LENGTH, j = 0; j<map.getWorkers().size();i=i+2,j++){
-            intMap[i] = map.getWorkers().get(j).getOwner().getId();
-            intMap[i+1] = map.getWorkers().get(j).getId();
+        for(int i = Map.HEIGHT * Map.LENGTH, j = 0; j<map.getWorkers().length;i=i+2,j++){
+            intMap[i] = map.getWorkers()[j].getOwnerID();
+            intMap[i+1] = map.getWorkers()[j].getWorkerID();
         }
 
         return intMap;
@@ -57,10 +103,11 @@ public class UpdateCommand extends BaseCommand {
      * @param map map to convert
      * @return array composed of Vector2 representing worker's positions
      */
-    private Vector2[] workerToArray(Map map){
-        Vector2[] vector = new Vector2[map.getWorkers().size()];
-        for(int i=0; i<map.getWorkers().size();i++)
-            vector[i] = map.getWorkers().get(i).getPosition();
+    @Deprecated
+    private Vector2[] workerToArray(CompactMap map){
+        Vector2[] vector = new Vector2[map.getWorkers().length];
+        for(int i=0; i<map.getWorkers().length;i++)
+            vector[i] = map.getWorkers()[i].getPosition();
 
         return vector;
     }
@@ -70,14 +117,15 @@ public class UpdateCommand extends BaseCommand {
      * @param map map to get the worker's info from
      * @return an array of ints. interpret as blocks of 4 [worker_owner_id, worker_id, worker_x_pos, worker_y_pos]
      */
-    private int[] workersInfo(Map map){
-        int[] workers_info = new int[map.getWorkers().size() * 4];
+    @Deprecated
+    private int[] workersInfo(CompactMap map){
+        int[] workers_info = new int[map.getWorkers().length * 4];
         int nHandledWorker = 0;
-        for(int i = 0; i < (map.getWorkers().size() * 4) ; i = i + 4){
-            workers_info[i] = map.getWorkers().get(nHandledWorker).getOwner().getId();
-            workers_info[i + 1] = map.getWorkers().get(nHandledWorker).getId();
-            workers_info[i + 2] = map.getWorkers().get(nHandledWorker).getPosition().getX();
-            workers_info[i + 3] = map.getWorkers().get(nHandledWorker).getPosition().getY();
+        for(int i = 0; i < (map.getWorkers().length * 4) ; i = i + 4){
+            workers_info[i] = map.getWorkers()[nHandledWorker].getOwnerID();
+            workers_info[i + 1] = map.getWorkers()[nHandledWorker].getWorkerID();
+            workers_info[i + 2] = map.getWorkers()[nHandledWorker].getPosition().getX();
+            workers_info[i + 3] = map.getWorkers()[nHandledWorker].getPosition().getY();
             nHandledWorker++;
         }
         return workers_info;

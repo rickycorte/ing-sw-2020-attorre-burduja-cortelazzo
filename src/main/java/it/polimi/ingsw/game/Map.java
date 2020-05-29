@@ -18,6 +18,10 @@ public class Map
      * Dome representation value, useful for client's
      */
     public static final int DOME_VALUE = 128;
+    /**
+     * Max building
+     */
+    public static final int MAX_BUILD_HEIGHT = 4;
 
     private int[][] map = new int[HEIGHT][LENGTH];
 
@@ -73,7 +77,7 @@ public class Map
         {
             map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
 
-            if (getLevel(pos) == 4)
+            if (getLevel(pos) == MAX_BUILD_HEIGHT)
                 map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + DOME_VALUE;
 
             return true;

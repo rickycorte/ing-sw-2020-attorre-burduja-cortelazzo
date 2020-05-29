@@ -77,7 +77,7 @@ public class BehaviourNode
             NextAction nextAction = new NextAction(w,m,constraints,n);
 
             //add only valid nodes with at least one possible position
-            if(nextAction.getAvailable_position().size() > 0)
+            if(nextAction.getAvailablePositions().size() > 0)
                 nodes.add(nextAction);
         }
 

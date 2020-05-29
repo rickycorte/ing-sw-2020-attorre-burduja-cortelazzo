@@ -182,7 +182,7 @@ class BehaviourGraphTest
         var actions = testSeq.getNextActions(w1, null, null);
         assertEquals(1, actions.size());
         assertEquals(getActionName(testSeq,0), actions.get(0).getActionName());
-        assertEquals(ta.possibleCells(null,null, null), actions.get(0).getAvailable_position());
+        assertEquals(ta.possibleCells(null,null, null), actions.get(0).getAvailablePositions());
     }
 
     @Test
@@ -203,13 +203,13 @@ class BehaviourGraphTest
 
         //check all branches
         assertEquals(getActionName(testSeq,0), actions.get(0).getActionName());
-        assertEquals(ta.possibleCells(null,null, null), actions.get(0).getAvailable_position());
+        assertEquals(ta.possibleCells(null,null, null), actions.get(0).getAvailablePositions());
 
         assertEquals(getActionName(testSeq,1), actions.get(1).getActionName());
-        assertEquals(ta.possibleCells(null,null, null), actions.get(1).getAvailable_position());
+        assertEquals(ta.possibleCells(null,null, null), actions.get(1).getAvailablePositions());
 
         assertEquals(getActionName(testSeq,2), actions.get(2).getActionName());
-        assertEquals(ta.possibleCells(null,null, null), actions.get(2).getAvailable_position());
+        assertEquals(ta.possibleCells(null,null, null), actions.get(2).getAvailablePositions());
 
     }
 

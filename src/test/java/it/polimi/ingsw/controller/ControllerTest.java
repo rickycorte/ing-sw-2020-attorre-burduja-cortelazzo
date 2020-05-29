@@ -769,11 +769,13 @@ public class ControllerTest
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
 
         //2 player can move with 2 worker in 2 and 3 possible cell (total of 5 available cell)
-        assertEquals(3,cmd.getAvailablePos().length);
-        assertEquals(1,cmd.getAvailablePos()[0].getX());
-        assertEquals(1,cmd.getAvailablePos()[0].getY());
-        assertEquals(1,cmd.getAvailablePos()[1].getX());
-        assertEquals(1,cmd.getAvailablePos()[1].getY());
+        assertEquals(1,cmd.getAvailableActions()[0].getAvailablePositions().size());
+        assertEquals(2,cmd.getAvailableActions()[1].getAvailablePositions().size());
+
+        assertEquals(new Vector2(1,1), cmd.getAvailableActions()[0].getAvailablePositions().get(0));
+        assertEquals(new Vector2(1,1), cmd.getAvailableActions()[1].getAvailablePositions().get(0));
+        assertEquals(new Vector2(1,2), cmd.getAvailableActions()[1].getAvailablePositions().get(1));
+
     }
 
     @Test

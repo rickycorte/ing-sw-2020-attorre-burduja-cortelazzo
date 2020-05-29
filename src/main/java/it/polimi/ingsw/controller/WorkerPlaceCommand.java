@@ -7,6 +7,10 @@ import java.util.List;
 
 /**
  * Command used to request the placement of workers in the map
+ * (Server)
+ * This command is used to ask a player to select position where they want to place workers from the provided list
+ * (Client)
+ * Reply to the server with the selected positions where workers should be placed
  */
 public class WorkerPlaceCommand extends BaseCommand {
     private Vector2[] positions;
@@ -25,7 +29,7 @@ public class WorkerPlaceCommand extends BaseCommand {
 
     /**
      * (Client) Create a command to inform a client that can place workers
-     * @param sender senderid of who is issuing this command
+     * @param sender sender id of who is issuing this command
      * @param target receiver of the command
      * @param positions positions where you want to place the workers
      */
@@ -44,6 +48,10 @@ public class WorkerPlaceCommand extends BaseCommand {
     }
 
 
+    /**
+     * @deprecated use {@link #getPositions()}.size()
+     */
+    @Deprecated
     public List<Integer> getPositionsIndexes(){
         List<Integer> availableIndexes = new ArrayList<>();
         for(int i = 0; i<positions.length; i++){
@@ -51,4 +59,34 @@ public class WorkerPlaceCommand extends BaseCommand {
         }
         return availableIndexes;
     }
+
+    /**
+     * Create a new Worker place command with the supplied positions
+     * This functions works both on client and server because they share the same type of parameter
+     * so the is no need to have different functions
+     * @param sender sender id of who is issuing this command
+     * @param target receiver of the command
+     * @param positions allowed position where workers can be placed
+     * @return wrapper command ready to be sent over the network
+     */
+    public static CommandWrapper makeWrapped(int sender, int target, Vector2[] positions)
+    {
+        return new CommandWrapper(CommandType.PLACE_WORKERS, new WorkerPlaceCommand(sender,target, positions));
+    }
+
+    /**
+     * Create a new Worker place command with the supplied positions
+     * This functions works both on client and server because they share the same type of parameter
+     * so the is no need to have different functions
+     * @param sender sender id of who is issuing this command
+     * @param target receiver of the command
+     * @param positions allowed position where workers can be placed
+     * @return wrapper command ready to be sent over the network
+     */
+    public static CommandWrapper makeWrapped(int sender, int target, List<Vector2> positions)
+    {
+        return new CommandWrapper(CommandType.PLACE_WORKERS, new WorkerPlaceCommand(sender,target, positions));
+    }
+
+
 }
