@@ -95,7 +95,7 @@ public class Map
     {
         if(isInsideMap(pos) && !isCellDome(pos))
         {
-            map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
+            //map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] << 1;
             map[pos.getX()][pos.getY()] = map[pos.getX()][pos.getY()] + DOME_VALUE;
             return true;
         }

@@ -115,7 +115,7 @@ public class MapTest {
         Vector2 pos = new Vector2(0,0);
 
         assertTrue(map.buildDome(pos));
-        assertEquals(1,map.getLevel(pos));
+        assertEquals(0,map.getLevel(pos));
         assertTrue(map.isCellDome(pos));
         assertFalse(map.buildDome(pos));
     }

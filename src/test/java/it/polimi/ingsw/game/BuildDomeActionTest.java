@@ -102,9 +102,11 @@ class BuildDomeActionTest
         {
             assertEquals(0, buildAction.run(w1p1, new Vector2(2,2) , m, gc) );
             assertTrue(m.isCellDome(new Vector2(2,2)));
+            assertEquals(0 , m.getLevel(new Vector2(2,2)));
 
             assertEquals(0, buildAction.run(w1p1, new Vector2(0,4) , m, gc) );
             assertTrue(m.isCellDome(new Vector2(0,4)));
+            assertEquals(1, m.getLevel(new Vector2(0,4)));
 
         }
         catch (NotAllowedMoveException e)
