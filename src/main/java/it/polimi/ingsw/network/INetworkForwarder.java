@@ -2,6 +2,10 @@ package it.polimi.ingsw.network;
 
 import it.polimi.ingsw.controller.CommandWrapper;
 
+/**
+ * Compact interface for network interactions that don't require starting/stopping client/server
+ * but only send messages
+ */
 public interface INetworkForwarder
 {
     /**

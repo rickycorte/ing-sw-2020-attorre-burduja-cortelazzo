@@ -77,10 +77,10 @@ All the next schemas don't show broadcast interactions, we display only meaningf
 
 ![Join schema](img/net/join.png)
 
-| Seq | CommandType | Sender   | Receiver | Payload                                |
-|-----|-------------|----------|----------|----------------------------------------|
-| 1   | JoinCommand | -        | ServerID | Username: `ElPicanto`<br>IsJoin: `-`   |
-| 2   | JoinCommand | ServerID | 1        | Username: `-`<br>IsJoin: `true/false`  |
+| Seq | CommandType | Sender   | Receiver | Payload                                                                      |
+|-----|-------------|----------|----------|------------------------------------------------------------------------------|
+| 1   | JoinCommand | -        | ServerID | Username: `test`<br>IsJoin: `true`<br>validUsername:`-`<br>hostPlayerID: `-` |
+| 2   | JoinCommand | ServerID | 1        | IsJoin: `true`<br>validUsername:`true/false`<br>hostPlayerID: `1`            |
 
 ## Left
 
@@ -97,20 +97,20 @@ When a connection dies for every reason, the network layer generates a virtual `
 
 ![Setup schema](img/net/setup.png)
 
-| Seq | CommandType            | Sender   | Receiver | Payload                                              |
-|-----|------------------------|----------|----------|------------------------------------------------------|
-| 1   | StartCommand           | 1        | ServerID | --                                                   |
-| 2   | StartCommand           | ServerID | *        | PlayerIDs: `[1,2]`                                   |
-| 3   | FilterGodCommand       | ServerID | 1        | GodsID: `[1,2,3,4,...]`                              |
-| 4   | FilterGodCommand       | 1        | ServerID | GodsID: `[3,4]`                                      |
-| 5   | PickGodCommand         | ServerID | 2        | GodsID: `[3,4]`                                      |
-| 6   | PickGodCommand         | 2        | ServerID | GodsID: `[4]`                                        |
-| 7   | FirstPlayerPickCommand | ServerID | 1        | PlayerID: `[1,2]`<br>Usernames: `["Trash", "Panda"]` |
-| 8   | FirstPlayerPickCommand | 1        | ServerID | PlayerID: `[2]`                                      |
-| 9   | WorkerPlaceCommand     | ServerID | 2        | Positions: `[{0,0},{0,1},{0,2},{0,3},{0,4}...{6,6}]` |
-| 10  | WorkerPlaceCommand     | 2        | ServerID | Positions: `[{0,0},{0,1}]`                           |
-| 11  | WorkerPlaceCommand     | ServerID | 1        | Positions: `[{0,2},{0,3},{0,4}...{6,6}]`             |
-| 12  | WorkerPlaceCommand     | 1        | ServerID | Positions: `[{1,1},{3,3}]`                           |
+| Seq | CommandType            | Sender   | Receiver | Payload                                               |
+|-----|------------------------|----------|----------|-------------------------------------------------------|
+| 1   | StartCommand           | 1        | ServerID | --                                                    |
+| 2   | StartCommand           | ServerID | *        | PlayerIDs: `[1,2]`                                    |
+| 3   | FilterGodCommand       | ServerID | 1        | GodsID: `[1,2,3,4,...]`                               |
+| 4   | FilterGodCommand       | 1        | ServerID | GodsID: `[3,4]`                                       |
+| 5   | PickGodCommand         | ServerID | 2        | GodsID: `[3,4]`                                       |
+| 6   | PickGodCommand         | 2        | ServerID | GodsID: `[4]`                                         |
+| 7   | FirstPlayerPickCommand | ServerID | 1        | Players: `[{id: 1, username: "test", godID: 2}, ...]` |
+| 8   | FirstPlayerPickCommand | 1        | ServerID | PlayerID: `[2]`                                       |
+| 9   | WorkerPlaceCommand     | ServerID | 2        | Positions: `[{0,0},{0,1},{0,2},{0,3},{0,4}...{6,6}]`  |
+| 10  | WorkerPlaceCommand     | 2        | ServerID | Positions: `[{0,0},{0,1}]`                            |
+| 11  | WorkerPlaceCommand     | ServerID | 1        | Positions: `[{0,2},{0,3},{0,4}...{6,6}]`              |
+| 12  | WorkerPlaceCommand     | 1        | ServerID | Positions: `[{1,1},{3,3}]`                            |
 
 This schema is also valid for three players, just imagine to add an extra step to pick gods and place workers.
 With three players the start command is not necessary, because the match has reached the max player count and automatically start.
@@ -119,11 +119,11 @@ With three players the start command is not necessary, because the match has rea
 
 ![Turn schema](img/net/turn.png)
 
-| Seq | CommandType   | Sender   | Receiver | Payload                                                                           |
-|-----|---------------|----------|----------|-----------------------------------------------------------------------------------|
-| 1   | ActionCommand | ServerID | 1        | IdWorkerNMove: `[0,2]`<br>AvailablePos: `[{0,0},{0,1}]`<br>ActionName: `["Move"]` |
-| 2   | ActionCommand | 1        | ServerID | IdWorkerNMove: `[0]`<br>AvailablePos: `[{0,1}]`                                   |
-| 2   | UpdateCommand | ServerID | *        | MapWorkerPair: `[0,2,3,1...,1]`<br>WorkerPos: `[{0,0},{6,6},{1,2}.{3,4}]`         |
+| Seq | CommandType   | Sender   | Receiver | Payload                                                                                      |
+|-----|---------------|----------|----------|----------------------------------------------------------------------------------------------|
+| 1   | ActionCommand | ServerID | 1        | actions: `[{actionName: "Move", worker: 0, availablePositions:[{0,0}, ...]}, ...]`           |
+| 2   | ActionCommand | 1        | ServerID | selectedAction: `{actionID: 0, worker: 0, postions: {0,0}}`                                  |
+| 2   | UpdateCommand | ServerID | *        | map: `{map: [[1,1,1,1,1], ...], workers: [{ownerID: 1, workerID: 1, postions: {0,0}}, ...]}` |
 
 The above schema applies to every to every turn for every player, no distinction is made
 
@@ -131,10 +131,10 @@ The above schema applies to every to every turn for every player, no distinction
 
 ![End Game schema](img/net/end.png)
 
-| Seq | CommandType    | Sender   | Receiver | Payload                                |
-|-----|----------------|----------|----------|----------------------------------------|
-| 1   | EndGameCommand | ServerID | 1        | IsWinner: `false`                      |
-| 2   | EndGameCommand | ServerID | 2        | IsWinner: `true`                       |
+| Seq | CommandType    | Sender   | Receiver | Payload        |
+|-----|----------------|----------|----------|----------------|
+| 1   | EndGameCommand | ServerID | 1        | winnerID: `1`  |
+| 2   | EndGameCommand | ServerID | 2        | winnerID: `1`  |
 
 
 # Final Notes

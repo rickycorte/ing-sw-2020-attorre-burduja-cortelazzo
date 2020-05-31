@@ -688,6 +688,12 @@ public class ControllerTest
         assertEquals(2,cmd.getTarget());
     }
 
+
+    //utility method for Action Command
+    private CommandWrapper createActionCommand(int sender,int worker, int action,Vector2 pos){
+        return ActionCommand.makeReply(sender, SERVER_ID,worker, action, pos );
+    }
+
     @Test
     void commandNotExpectedInPlaceWorkerPhase(){
         join3Player();
@@ -699,19 +705,12 @@ public class ControllerTest
 
         CommandWrapper exCmd = controller.getLastSent();
         //player 1 try to execute an action instead of place its workers
-        controller.onCommand(createActionCommand(1, new int[]{0,0},new Vector2(1,1)));
+        controller.onCommand(createActionCommand(1,0,0,new Vector2(1,1)));
 
         assertEquals(exCmd,controller.getLastSent());
         assertEquals(CommandType.PLACE_WORKERS,controller.getLastSent().getType());
     }
 
-    //utility method for Action Command
-    private CommandWrapper createActionCommand(int sender,int[] workerAndAction,Vector2 pos){
-        ActionCommand cmd = new ActionCommand(sender,SERVER_ID,workerAndAction,pos);
-        CommandWrapper wrap = new CommandWrapper(CommandType.ACTION_TIME,cmd);
-        wrap.Serialize();
-        return wrap;
-    }
 
     //phase helper method
     private void placeWorker2Player(){
@@ -790,21 +789,22 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //2 execute first move action with worker 0 to (1,0)
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0, cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
 
         //player 2 has a build action possibilities to 4 cell
         //but has god ability with constraint that lock a cell (total of 7 possible cell)
-        assertEquals(7,cmd.getAvailablePos().length);
+        assertEquals(2, cmd.getAvailableActions().length);
+        assertEquals(4, cmd.getAvailableActions()[0].getAvailablePositions().size());
+        assertEquals(3, cmd.getAvailableActions()[1].getAvailablePositions().size());
+
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,1)));
         //4 cell available including (0,0)
-        assertEquals(0,cmd.getAvailablePos()[0].getX());
-        assertEquals(0,cmd.getAvailablePos()[0].getY());
+        assertEquals(new Vector2(0,0), cmd.getAvailableActions()[0].getAvailablePositions().get(0));
         //5th available cell is not (0,0) for god ability application, so the next is (1,1)
-        assertEquals(1,cmd.getAvailablePos()[4].getX());
-        assertEquals(1,cmd.getAvailablePos()[4].getY());
+        assertEquals(new Vector2(1,1), cmd.getAvailableActions()[1].getAvailablePositions().get(0));
     }
 
     @Test
@@ -819,7 +819,7 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action in first available cell with first worker (worker 0 in cell (1,0) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         assertEquals(1,controller.getMatch().getPlayers().get(1).getWorkers().get(0).getPosition().getX());
         assertEquals(0,controller.getMatch().getPlayers().get(1).getWorkers().get(0).getPosition().getY());
@@ -845,7 +845,7 @@ public class ControllerTest
         CommandWrapper exCmd = controller.getLastSent();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action, but select a cell not available
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},new Vector2(0,1)));
+        controller.onCommand(createActionCommand(2,0,0,new Vector2(0,1)));
 
         assertEquals(exCmd,controller.getLastSent());
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
@@ -864,7 +864,7 @@ public class ControllerTest
         CommandWrapper exCmd = controller.getLastSent();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action, but select a impossible worker id
-        controller.onCommand(createActionCommand(2,new int[]{3,0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,3,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         assertEquals(exCmd,controller.getLastSent());
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
@@ -883,7 +883,7 @@ public class ControllerTest
         CommandWrapper exCmd = controller.getLastSent();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action, but select a impossible action id
-        controller.onCommand(createActionCommand(2,new int[]{0,1},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,3, cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         assertEquals(exCmd,controller.getLastSent());
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
@@ -901,11 +901,11 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action in first available cell with first worker (worker 0 in cell (0,1) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0, new Vector2(0,1) ));
 
         CommandWrapper exCmd = controller.getLastSent();
         //player 2 try to execute next possible action with a different worker
-        controller.onCommand(createActionCommand(2,new int[]{1,0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,1,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         assertEquals(exCmd,controller.getLastSent());
     }
@@ -922,11 +922,11 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action in first available cell with first worker (worker 0 in cell (0,1) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
-        assertEquals(2,cmd.getActionName().length);
+        assertEquals(2,cmd.getAvailableActions().length);
     }
 
     @Test
@@ -941,12 +941,12 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action in first available cell with first worker (worker 0 in cell (0,1) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0, cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a build action in first available cell with first worker (worker 0 in cell (0,0) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         assertEquals(1,controller.getMatch().getCurrentMap().getLevel(new Vector2(0,0)));
     }
@@ -962,16 +962,16 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action in first available cell with first worker (worker 0 in cell (0,1) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a build action in first available cell with first worker (worker 0 in cell (0,0) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a end turn action (standard value for end turn action are selected)
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
@@ -990,20 +990,20 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         ActionCommand cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a move action in first available cell with first worker (worker 0 in cell (0,1) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a build action in first available cell with first worker (worker 0 in cell (0,0) )
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 2 execute a end turn action (standard value for end turn action are selected)
-        controller.onCommand(createActionCommand(2,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(2,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //player 1 apply his power, can move to cell (0,1)
-        controller.onCommand(createActionCommand(1,new int[]{cmd.getIdWorkerNMove()[0],0},cmd.getAvailablePos()[0]));
+        controller.onCommand(createActionCommand(1,0,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         assertEquals(1,controller.getMatch().getCurrentMap().getWorker(new Vector2(0,1)).getOwner().getId());
         assertEquals(2,controller.getMatch().getCurrentMap().getWorker(new Vector2(0,2)).getOwner().getId());
@@ -1019,7 +1019,7 @@ public class ControllerTest
 
         CommandWrapper exCmd = controller.getLastSent();
         //player 3 try to execute a correct action, but it's not his turn
-        controller.onCommand(createActionCommand(3,new int[]{0,0},new Vector2(1,1)));
+        controller.onCommand(createActionCommand(3,0,0,new Vector2(1,1)));
 
         assertEquals(exCmd, controller.getLastSent());
     }

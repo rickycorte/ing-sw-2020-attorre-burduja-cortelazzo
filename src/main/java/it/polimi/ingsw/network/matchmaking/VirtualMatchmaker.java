@@ -45,15 +45,7 @@ public class VirtualMatchmaker implements ICommandReceiver
 
 
     /**
-     * Start the matchmaking
-     */
-    public void start()
-    {
-        start(Server.DEFAULT_SERVER_PORT);
-    }
-
-    /**
-     * Start the matchmaking
+     * Start the matchmaking and listen in background
      * @param port port where server should start
      */
     public void start(int port)
@@ -64,6 +56,37 @@ public class VirtualMatchmaker implements ICommandReceiver
             server.setReceiver(this);
             server.startInBackground();
         }
+    }
+
+    /**
+     * Start the matchmaking in background on default port
+     */
+    public void start()
+    {
+        start(Server.DEFAULT_SERVER_PORT);
+    }
+
+
+    /**
+     *  Start matchmaking on the caller thread
+     * @param port port where server should start
+     */
+    public void startSync(int port)
+    {
+        if(server == null)
+        {
+            server = new Server(port);
+            server.setReceiver(this);
+            server.start();
+        }
+    }
+
+    /**
+     *  Start matchmaking on the caller thread and use default port
+     */
+    public void startSync()
+    {
+        startSync(Server.DEFAULT_SERVER_PORT);
     }
 
     /**
@@ -116,6 +139,7 @@ public class VirtualMatchmaker implements ICommandReceiver
     {
         System.out.println("[MATCHMAKER] Connect got " + cmd.toString());
         JoinCommand jcm = cmd.getCommand(JoinCommand.class);
+        if(jcm == null) return;
 
         if(!login(jcm))
         {
@@ -149,6 +173,7 @@ public class VirtualMatchmaker implements ICommandReceiver
     {
         System.out.println("[MATCHMAKER] Disconnect got " + cmd.toString());
         LeaveCommand lcm = cmd.getCommand(LeaveCommand.class);
+        if(lcm == null) return;
 
         var vm =  matchCache.get(lcm.getSender());
         if(vm != null)
@@ -174,7 +199,10 @@ public class VirtualMatchmaker implements ICommandReceiver
     public void onCommand(CommandWrapper cmd)
     {
         System.out.println("[MATCHMAKER] Execute got " + cmd.toString());
-        var vm = matchCache.get(cmd.getCommand(BaseCommand.class).getSender());
+        var baseCmd = cmd.getCommand(BaseCommand.class);
+        if(baseCmd == null) return;
+
+        var vm = matchCache.get(baseCmd.getSender());
         if(vm != null)
         {
             vm.execAction(cmd);

@@ -109,7 +109,13 @@ public class VirtualMatch implements INetworkForwarder
     {
         synchronized (controller)
         {
-            controller.onCommand(cmd);
+            try
+            {
+                controller.onCommand(cmd);
+            }catch (Exception e)
+            {
+                System.out.println("[MATCH "+hashCode()+"] Unable to run command "+ cmd.toString()+" because "+ e.getMessage());
+            }
         }
     }
 

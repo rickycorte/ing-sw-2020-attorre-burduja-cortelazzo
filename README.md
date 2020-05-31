@@ -35,6 +35,8 @@ Software engineering project AA2019-2020 Politecnico di Milano
 
 ## Getting started
 
+To build and run this project you need to install Java 13 or later.
+
 After cloning this repo you can:
 - Build and run tests with `mvn package`
 - Build docs with `mvn javadoc:javadoc`
@@ -43,3 +45,30 @@ You can also download the latest build with up-to-date docs from branch `release
 
 Notice: Codecov badge shows only Controller and Model coverage.
 Network and view tests are not required by specification thus the packages are skipped.
+
+In the following section we use `AM44.jar` as file name but it could be different. 
+If you download the jar form `Release` branch the name will match.
+
+### Starting the server
+
+First you need to create a server instance to host the matches with:
+
+`java -jar AM44.jar -s`
+
+This will run a server on the default port. You can also use a custom port by running:
+
+`java -jar AM44.jar -s <port>`
+
+## Starting the client
+
+Both GUI and CLI are supported and can be used to play the game.
+
+If you want to run a new GUI client you can run:
+
+`java -jar AM44.jar`
+
+If you have set the Java path correctly you should be able to also use a double click to open a GUI client.
+
+If you want to create a CLI client you can run:
+
+`java -jar AM44.jar`

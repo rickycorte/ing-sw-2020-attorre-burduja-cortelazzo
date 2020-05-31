@@ -7,7 +7,6 @@
   <groupId>it.polimi.ingsw</groupId>
   <artifactId>AM44</artifactId>
   <version>1.0</version>
-  <packaging>jar</packaging>
 
   <name>AM44</name>
   <url>https://www.polimi.it/</url>
@@ -17,6 +16,7 @@
     <maven.compiler.source>13</maven.compiler.source>
     <maven.compiler.target>13</maven.compiler.target>
     <argLine>-Xmx512m</argLine>
+    <useProjectArtifact>false</useProjectArtifact>
   </properties>
 
   <dependencies>
@@ -42,17 +42,45 @@
       <scope>compile</scope>
     </dependency>
 
+    <!-- Java FX Graphics  -->
+
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>14</version>
+      <classifier>win</classifier>
+    </dependency>
+
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>14</version>
+      <classifier>linux</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>14</version>
+      <classifier>mac</classifier>
+    </dependency>
+
+    <!-- Java FX Controls  -->
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
       <version>14</version>
+      <scope>compile</scope>
     </dependency>
+
+    <!-- Java FX FXML -->
 
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-fxml</artifactId>
       <version>14</version>
+      <scope>compile</scope>
     </dependency>
+
 
   </dependencies>
 
@@ -92,7 +120,6 @@
           <version>2.22.1</version>
         </plugin>
 
-
         <plugin>
           <groupId>org.openjfx</groupId>
           <artifactId>javafx-maven-plugin</artifactId>
@@ -102,6 +129,18 @@
           </configuration>
         </plugin>
 
+        <!-- disable default jar -->
+        <plugin>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.0.2</version>
+          <executions>
+            <execution>
+              <id>default-jar</id>
+              <phase>none</phase>
+            </execution>
+          </executions>
+        </plugin>
+
       </plugins>
 
     </pluginManagement>
@@ -109,11 +148,11 @@
     <!-- build -->
     <plugins>
 
+      <!-- create jar -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
-          <!-- build client -->
           <execution>
             <id>client</id>
             <phase>package</phase>
@@ -121,40 +160,21 @@
               <goal>single</goal>
             </goals>
             <configuration>
-              <finalName>AM44-Client</finalName>
+              <finalName>${project.artifactId}</finalName>
               <descriptorRefs>
                 <descriptorRef>jar-with-dependencies</descriptorRef>
               </descriptorRefs>
               <archive>
                 <manifest>
-                  <mainClass>it.polimi.ingsw.ClientMain</mainClass>
-                </manifest>
-              </archive>
-            </configuration>
-          </execution>
-
-          <!-- build server -->
-          <execution>
-            <id>server</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <finalName>AM44-Server</finalName>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
-              <archive>
-                <manifest>
-                  <mainClass>it.polimi.ingsw.ServerMain</mainClass>
+                  <mainClass>it.polimi.ingsw.CommonLauncher</mainClass>
                 </manifest>
               </archive>
             </configuration>
           </execution>
         </executions>
-
       </plugin>
+
+
        <!-- generate coverage -->
         <plugin>
           <groupId>org.jacoco</groupId>

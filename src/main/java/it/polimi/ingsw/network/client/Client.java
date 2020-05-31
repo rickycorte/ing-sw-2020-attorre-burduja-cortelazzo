@@ -72,7 +72,7 @@ public class Client {
             System.out.println("Connected to server");
 
             //send proper login request
-            send(new CommandWrapper(CommandType.JOIN, new JoinCommand(this.id, Server.SERVER_ID, username, true)));
+            send(JoinCommand.makeRequest(id, Server.SERVER_ID, username));
 
             new Thread(this::runReadLoop).start(); // run connection loop
 
@@ -123,8 +123,7 @@ public class Client {
                         commandReceiver.onConnect(cmd);
                         break;
                     case LEAVE:
-
-                        break;
+                        break; // client never receive Leave request but we still filter them to prevent errors
                     default:
                         commandReceiver.onCommand(cmd);
                 }
@@ -196,7 +195,7 @@ public class Client {
     public void disconnect()
     {
         //send leave message
-        send(new CommandWrapper(CommandType.LEAVE, new LeaveCommand(id, Server.SERVER_ID)));
+        send(LeaveCommand.makeRequest(id, Server.SERVER_ID));
         // close everything
         shutdownConnection();
 
@@ -231,7 +230,7 @@ public class Client {
         {
             String str = packet.Serialize();
             if (packet.getType() != CommandType.BASE)
-                System.out.println("[CLIENT]  Sending "+ str);
+                System.out.println("[CLIENT] Sending "+ str);
 
             out.println(str);
             out.flush();
