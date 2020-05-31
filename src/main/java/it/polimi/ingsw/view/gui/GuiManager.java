@@ -1,6 +1,7 @@
 package it.polimi.ingsw.view.gui;
 
 import it.polimi.ingsw.controller.*;
+import it.polimi.ingsw.controller.compact.CompactPlayer;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.network.server.Server;
@@ -8,6 +9,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
@@ -22,12 +24,14 @@ public class GuiManager implements ICommandReceiver {
     private static GuiManager instance = null;
     private Scene aScene;
     private INetworkAdapter serverConnection;
-    private int[] connectedPlayersIDS;
+    private int[] connectedPlayersIDS;              //is constructed at the incoming Start command
     private boolean isConnected = false;
 
-    private Map<Integer, String> idUsernameMap = new ConcurrentHashMap<>();
-    private Map<Integer, Integer> idGodMap = new HashMap<>();
+    private Map<Integer, String> idUsernameMap = new ConcurrentHashMap<>();     //is constructed at incoming FirstPlayerPick command
+    private Map<Integer, Integer> idGodMap = new HashMap<>();                   //is constructed at incoming FirstPlayerPick command
+    private int winnerID;
 
+    private int hostID;
     //SceneControllers
 
     private MainSceneController mainSceneController;
@@ -36,6 +40,7 @@ public class GuiManager implements ICommandReceiver {
     private ChooseGodsSceneController chooseGodsSceneController;
     private FirstPlayerPickSceneController firstPlayerPickSceneController;
     private GameSceneController gameSceneController;
+    private EndGameController endGameController;
 
 
 
@@ -107,6 +112,9 @@ public class GuiManager implements ICommandReceiver {
     void setGameSceneController(GameSceneController gameSceneController){
         this.gameSceneController = gameSceneController;
     }
+    void setEndGameController(EndGameController endGameController){
+        this.endGameController = endGameController;
+    }
 
     void setServerConnection(INetworkAdapter serverConnection) {
         this.serverConnection = serverConnection;
@@ -127,8 +135,7 @@ public class GuiManager implements ICommandReceiver {
      */
     boolean isForMe(CommandWrapper cmd){
         BaseCommand command = cmd.getCommand(BaseCommand.class);
-        if(GuiManager.getInstance().getServerConnection().getClientID() == command.getTarget() || command.getTarget() == Server.BROADCAST_ID) return true;
-        return false;
+        return GuiManager.getInstance().getServerConnection().getClientID() == command.getTarget() || command.getTarget() == Server.BROADCAST_ID;
     }
 
 
@@ -160,6 +167,9 @@ public class GuiManager implements ICommandReceiver {
     @Override
     public void onDisconnect(CommandWrapper cmd) {
         //handle Leave
+        if(isForMe(cmd)){
+
+        }
     }
 
     /**
@@ -177,6 +187,7 @@ public class GuiManager implements ICommandReceiver {
                     });
                     break;
                 case FILTER_GODS:
+                    setHostID(cmd.getCommand(FilterGodCommand.class).getTarget());
                     Platform.runLater(() -> chooseGodsSceneController.onFilterGodsCommand(cmd));
                     break;
                 case PICK_GOD:
@@ -194,6 +205,10 @@ public class GuiManager implements ICommandReceiver {
                     Platform.runLater(() -> gameSceneController.onActionCommand(cmd));
                     break;
                 }
+                case END_GAME:{
+                    winnerID = cmd.getCommand(EndGameCommand.class).getWinnerID();
+                    Platform.runLater(() -> gameSceneController.onEndGame(cmd));
+                }
                 case UPDATE:
                     Platform.runLater(() -> gameSceneController.onUpdateCommand(cmd));
                     break;
@@ -205,17 +220,25 @@ public class GuiManager implements ICommandReceiver {
      * @param firstPlayerPickCommand command to get the information from
      */
     void mapPlayers(FirstPlayerPickCommand firstPlayerPickCommand){
+        CompactPlayer[] connectedCompactPlayers = firstPlayerPickCommand.getPlayers();
+        int[] connectedIDs = new int[connectedCompactPlayers.length];
+        String[] connectedUsernames = new String[connectedCompactPlayers.length];
+        int[] connectedGods = new int[connectedCompactPlayers.length];
+        int index = 0;
 
-        int [] connectedIDS = firstPlayerPickCommand.getPlayersID();
-        String[] connectedUsernames = firstPlayerPickCommand.getUsernames();
-        int[] connectedGods = firstPlayerPickCommand.getGodID();
-
-        for(int i = 0; i < connectedIDS.length; i++){
-            idUsernameMap.put(connectedIDS[i], connectedUsernames[i]);
-            idGodMap.put(connectedIDS[i], connectedGods[i]);
+        for(CompactPlayer aCompactPlayer : connectedCompactPlayers){
+            connectedIDs[index] = aCompactPlayer.getId();
+            connectedUsernames[index] = aCompactPlayer.getUsername();
+            connectedGods[index] = aCompactPlayer.getGodID();
+            index++;
         }
 
-        System.out.printf("MAP players:: %s,, %s,, %s\n", Arrays.toString(connectedIDS), Arrays.toString(connectedUsernames),
+        for(int i = 0; i < connectedIDs.length; i++){
+            idUsernameMap.put(connectedIDs[i], connectedUsernames[i]);
+            idGodMap.put(connectedIDs[i], connectedGods[i]);
+        }
+
+        System.out.printf("MAP players:: %s,, %s,, %s\n", Arrays.toString(connectedIDs), Arrays.toString(connectedUsernames),
                 Arrays.toString(connectedGods));
         Platform.runLater(()-> {
             if (gameSceneController != null) {
@@ -266,5 +289,21 @@ public class GuiManager implements ICommandReceiver {
 
     Map<Integer, Integer> getIDsGodsMap() {
         return this.idGodMap;
+    }
+
+    public Scene getScene() {
+        return aScene;
+    }
+
+    public int getWinnerID() {
+        return winnerID;
+    }
+
+    public void setHostID(int hostID) {
+        this.hostID = hostID;
+    }
+
+    public int getHostID() {
+        return hostID;
     }
 }

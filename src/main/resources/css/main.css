@@ -1,11 +1,59 @@
-.button:hover{
-    background: #1e62d0;
-}
-
 .button:pressed{
     -fx-scale-x: 0.90;
     -fx-scale-y: 0.90;
 }
+
+.button:hover{
+    -fx-effect: dropshadow(gaussian, #ffffff, 15, 0.2, 0, 0);
+}
+
+#blue_button {
+    -fx-background-image: url("../img/buttons/btn_blue.png");
+
+    -fx-background-size: stretch;
+    -fx-background-radius: 50;
+    -fx-background-insets: 2, 2, 2, 2;
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-family: "Arial";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-content-display: CENTER;
+    -fx-pref-height: 45;
+    -fx-pref-width: 200;
+    -fx-padding: 0 0 7 0;
+
+
+
+}
+#blue_button:pressed{
+    -fx-background-image: url("../img/buttons/btn_blue_pressed.png");
+    -fx-background-size: stretch;
+}
+
+
+#red_button{
+    -fx-background-image: url("../img/buttons/btn_red.png");
+    -fx-background-size: stretch;
+    -fx-background-radius: 50;
+    -fx-background-insets: 2, 2, 2, 2;
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-family: "Arial";
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-content-display: CENTER;
+    -fx-pref-height: 45;
+    -fx-pref-width: 200;
+    -fx-padding: 0 0 7 0;
+
+}
+#red_button:pressed{
+    -fx-background-image: url("../img/buttons/btn_red_pressed.png");
+    -fx-background-size: stretch;
+}
+
+
 
 .mainPane{
     -fx-background-image: url("../img/common/bluredBackground.png");
@@ -14,11 +62,22 @@
 }
 
 .gamePane{
-    -fx-background-image: url("../img/common/SantoriniBoard_nomap_lowres.png");
-    -fx-background-size: cover;
     -fx-alignment: center;
 }
 
+.ambientPane{
+    -fx-background-color: rgba(0 ,0, 0, 0.4);
+    -fx-alignment: center;
+}
+
+.menuLabel{
+    -fx-font-family: "Arial";
+    -fx-font-weight: bold;
+    -fx-content-display: CENTER;
+    -fx-font-size: 20pt;
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+}
 
 #gen_button {
     -fx-background-color:
@@ -34,6 +93,10 @@
 }
 #gen_button Text{
     -fx-effect: dropshadow( one-pass-box , rgba(0,0,0,0.8) , 0, 0.0 , 0 , 1);
+}
+
+#gen_button:hover{
+    -fx-effect: dropshadow(gaussian, #ffffff, 15, 0.2, 0, 0);
 }
 
 

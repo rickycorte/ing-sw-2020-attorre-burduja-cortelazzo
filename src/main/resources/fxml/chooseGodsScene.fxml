@@ -1,30 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="474.0" prefWidth="751.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.ChooseGodsSceneController">
-   <top>
-      <Label fx:id="topLabel" alignment="CENTER" prefHeight="21.0" prefWidth="555.0" text="Label" BorderPane.alignment="CENTER">
-         <font>
-            <Font name="System Bold" size="30.0" />
-         </font>
-      </Label>
-   </top>
+<BorderPane prefHeight="580.0" prefWidth="1001.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.ChooseGodsSceneController">
    <center>
-      <GridPane fx:id="gridPane" style="-fx-background-color: rgba(0 ,0, 0, 0.4);" BorderPane.alignment="CENTER">
-        <columnConstraints>
+      <GridPane fx:id="gridPane" prefHeight="430.0" prefWidth="751.0" styleClass="ambientPane">
+         <columnConstraints>
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        </columnConstraints>
-        <rowConstraints>
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        </rowConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+         </rowConstraints>
+         <BorderPane.margin>
+            <Insets bottom="30.0" left="200.0" right="200.0" />
+         </BorderPane.margin>
       </GridPane>
    </center>
+   <top>
+      <Label fx:id="topLabel" styleClass="menuLabel" stylesheets="@../css/main.css" text="Label" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets top="20.0" />
+         </BorderPane.margin>
+      </Label>
+   </top>
+   <bottom>
+      <HBox alignment="CENTER" prefHeight="56.0" prefWidth="1001.0" BorderPane.alignment="CENTER">
+         <children>
+            <Button id="blue_button" fx:id="cancelButton" mnemonicParsing="false" onAction="#onCancelButtonClick" stylesheets="@../css/main.css" >
+               <HBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </HBox.margin>
+            </Button>
+            <Button id="blue_button" fx:id="sendButton" mnemonicParsing="false" onAction="#onSendButtonClick" stylesheets="@../css/main.css" >
+               <HBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </HBox.margin>
+            </Button>
+         </children>
+      </HBox>
+   </bottom>
 </BorderPane>

@@ -16,6 +16,9 @@ public class MainSceneController {
     private Button exitButton;
 
     @FXML
+    private Button newButton;
+
+    @FXML
     public void initialize() {
     }
 

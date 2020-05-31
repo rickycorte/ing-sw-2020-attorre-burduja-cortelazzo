@@ -5,6 +5,7 @@ import it.polimi.ingsw.controller.JoinCommand;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 
@@ -37,8 +38,13 @@ public class LogInSceneController {
         backButton = new Button();
         mainPane_instance = mainPane;
 
+        usernameField.setOnKeyPressed((e)-> {
+            if (e.getCode() == KeyCode.ENTER) {
+                onConnectButtonClick();
+            }
+        });
     }
-
+        //TODO handle properly false ack join
     /**
      * Handles back button click
      * Goes to main scene
@@ -52,30 +58,24 @@ public class LogInSceneController {
      * Handles connect button click
      * Reads username from username field and attempts join
      */
-    //TODO handle properly false ack join
     @FXML
     private void onConnectButtonClick() {
         final String username = usernameField.getText();
+        if (username.isBlank()) {
+            upperLabel.setText("Blank username");
+            lowerLabel.setText("Enter another username");
+            return;
+        }
 
         backButton.setDisable(true);
         connectButton.setDisable(true);
 
-        if (GuiManager.getInstance().connect(username)) {
-            // change to waiting scene
-        } else {
+        if (!(GuiManager.getInstance().connect(username))) {
             upperLabel.setText("Couldn't connect");
             lowerLabel.setText("Try again later");
-            GuiManager.setLayout("fxml/mainScene.fxml");
+            //GuiManager.setLayout("fxml/mainScene.fxml");
         }
     }
-
-        //TODO make it connect when i hit enter
-    public void buttonPressed(KeyEvent e){
-        if(e.getCode().toString().equals("ENTER")){
-            onConnectButtonClick();
-        }
-    }
-
 
     /**
      * Handles Join response
@@ -87,15 +87,12 @@ public class LogInSceneController {
             if (joinCommand.isJoin()) {
                 GuiManager.setLayout("fxml/waitScene.fxml");
             } else {
-                GuiManager.setLayout("fxml/mainScene.fxml");
-                /*
+                //GuiManager.setLayout("fxml/mainScene.fxml");
                 upperLabel.setText("Couldn't connect");
                 if (!joinCommand.isValidUsername()) {
                     lowerLabel.setText("Username taken");
                 } else
                     lowerLabel.setText("Try again later");
-
-                 */
             }
         }
     }

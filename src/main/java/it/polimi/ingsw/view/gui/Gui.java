@@ -18,7 +18,6 @@ public class Gui extends Application {
         stage.setMinHeight(480);
         stage.setWidth(1280);
         stage.setHeight(720);
-        stage.setResizable(false);
 
         InputStream is = Gui.class.getClassLoader().getResourceAsStream("img/common/icon.png");
 
@@ -35,6 +34,7 @@ public class Gui extends Application {
         GuiManager.getInstance().setScene(scene);
 
         //GuiManager.setLayout("fxml/gameScene.fxml");
+        //GuiManager.setLayout("fxml/chooseGodsScene.fxml");
         GuiManager.setLayout("fxml/mainScene.fxml");
         stage.show();
 

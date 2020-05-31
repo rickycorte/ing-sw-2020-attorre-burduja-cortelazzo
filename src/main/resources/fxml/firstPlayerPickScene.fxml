@@ -1,43 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.image.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>
 
-
-<BorderPane fx:controller="it.polimi.ingsw.view.gui.FirstPlayerPickSceneController" styleClass="mainPane" stylesheets="@../css/main.css" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
-   <center>
-      <AnchorPane prefHeight="720.0" prefWidth="1280.0" BorderPane.alignment="CENTER">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="660.0" prefWidth="1112.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.FirstPlayerPickSceneController">
+   <children>
+      <VBox alignment="CENTER" layoutX="14.0" layoutY="14.0" prefHeight="636.0" prefWidth="1081.0" styleClass="ambientPane" stylesheets="@../css/main.css" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="30.0">
          <children>
-            <VBox layoutX="546.0" layoutY="132.0" prefHeight="410.0" prefWidth="189.0">
+            <Label fx:id="label" alignment="CENTER" prefHeight="31.0" prefWidth="699.0" styleClass="menuLabel" stylesheets="@../css/main.css" text="Label">
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Label>
+            <HBox alignment="CENTER" prefHeight="473.0" prefWidth="712.0">
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
                <children>
-                  <Button fx:id="button1" mnemonicParsing="false" text="Player 1">
-                     <VBox.margin>
-                        <Insets bottom="5.0" left="50.0" right="50.0" top="100.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button fx:id="button2" mnemonicParsing="false" text="Player 2">
-                     <VBox.margin>
-                        <Insets bottom="5.0" left="50.0" right="50.0" top="5.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button fx:id="button3" mnemonicParsing="false" text="Player 3">
-                     <VBox.margin>
-                        <Insets bottom="5.0" left="50.0" right="50.0" top="5.0" />
-                     </VBox.margin>
-                  </Button>
+                  <VBox alignment="BOTTOM_CENTER" prefHeight="473.0" prefWidth="222.0">
+                     <children>
+                        <StackPane fx:id="player1Pane" alignment="BOTTOM_CENTER" prefHeight="365.0" prefWidth="222.0">
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                           <children>
+                              <ImageView fx:id="player1Podium" fitHeight="197.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+                                 <StackPane.margin>
+                                    <Insets />
+                                 </StackPane.margin>
+                              </ImageView>
+                              <ImageView fx:id="player1God" fitHeight="257.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="TOP_CENTER">
+                                 <StackPane.margin>
+                                    <Insets />
+                                 </StackPane.margin>
+                              </ImageView>
+                           </children>
+                        </StackPane>
+                        <Button id="blue_button" fx:id="button1" mnemonicParsing="false" onMouseClicked="#onButtonClick" stylesheets="@../css/main.css" text="Player 1" />
+                     </children>
+                     <HBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                     </HBox.margin>
+                  </VBox>
+                  <VBox alignment="BOTTOM_CENTER" prefHeight="473.0" prefWidth="220.0">
+                     <children>
+                        <StackPane fx:id="player2Pane" alignment="BOTTOM_CENTER" prefHeight="373.0" prefWidth="220.0">
+                           <children>
+                              <ImageView fx:id="player2God" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
+                              <ImageView fx:id="player2Podium" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
+                           </children></StackPane>
+                        <Button id="blue_button" fx:id="button2" mnemonicParsing="false" onMouseClicked="#onButtonClick" stylesheets="@../css/main.css" text="Player 2" />
+                     </children>
+                     <HBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                     </HBox.margin>
+                  </VBox>
+                  <VBox alignment="BOTTOM_CENTER" prefHeight="473.0" prefWidth="220.0">
+                     <children>
+                        <StackPane fx:id="player3Pane" alignment="BOTTOM_CENTER" prefHeight="356.0" prefWidth="220.0">
+                           <children>
+                              <ImageView fx:id="player3God" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
+                              <ImageView fx:id="player3Podium" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
+                           </children></StackPane>
+                        <Button id="blue_button" fx:id="button3" mnemonicParsing="false" onMouseClicked="#onButtonClick" stylesheets="@../css/main.css" text="Player 3" />
+                     </children>
+                     <HBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                     </HBox.margin>
+                  </VBox>
                </children>
-            </VBox>
+            </HBox>
          </children>
-      </AnchorPane>
-   </center>
-   <top>
-      <Label fx:id="label" alignment="CENTER" prefHeight="47.0" prefWidth="779.0" text="Waiting for other players to pick their gods..." BorderPane.alignment="CENTER">
-         <font>
-            <Font size="30.0" />
-         </font>
-      </Label>
-   </top>
-</BorderPane>
+      </VBox>
+   </children>
+</AnchorPane>

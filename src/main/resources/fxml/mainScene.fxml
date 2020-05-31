@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.effect.*?>
 <?import javafx.geometry.*?>
 <?import java.lang.*?>
 <?import java.net.*?>
@@ -24,13 +27,25 @@
          </image>
          <VBox.margin>
             <Insets bottom="50.0" />
-         </VBox.margin></ImageView>
-   
-       <Button id="gen_button" fx:id="startButton" mnemonicParsing="false" onAction="#onStartButtonClick" prefHeight="30.0" prefWidth="170.0" scaleX="1.5" scaleY="1.5" scaleZ="1.5" stylesheets="@../css/main.css" text="Start" />
-   
-       <Button id="gen_button" fx:id="exitButton" mnemonicParsing="false" onAction="#onExitButtonClick" prefHeight="30.0" prefWidth="170.0" scaleX="1.5" scaleY="1.5" stylesheets="@../css/main.css" text="Exit">
+         </VBox.margin>
+         <effect>
+            <DropShadow />
+         </effect></ImageView>
+      <Button id="blue_button" fx:id="startButton" alignment="CENTER" mnemonicParsing="false" onAction="#onStartButtonClick" prefHeight="45.0" prefWidth="200.0" stylesheets="@../css/main.css" text="Start" textAlignment="CENTER" textFill="WHITE">
          <VBox.margin>
-            <Insets top="20.0" />
-         </VBox.margin></Button>
+             <Insets top="5.0" bottom="5.0"/>
+         </VBox.margin>
+         <font>
+            <Font name="Constantia" size="20.0" />
+         </font>
+      </Button>
+      <Button id="red_button" fx:id="exitButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#onExitButtonClick" prefHeight="45.0" prefWidth="200.0" stylesheets="@../css/main.css" text="Exit" textAlignment="CENTER" textFill="WHITE">
+         <VBox.margin>
+            <Insets top="5.0" bottom="5.0"/>
+         </VBox.margin>
+         <font>
+            <Font name="System Bold" size="20.0" />
+         </font>
+      </Button>
    </children>
 </VBox>

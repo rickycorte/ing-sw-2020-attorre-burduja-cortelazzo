@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+
+<?import java.net.URL?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="592.0" prefWidth="1081.0" styleClass="mainPane" xmlns="http://javafx.com/javafx/8" fx:controller="it.polimi.ingsw.view.gui.EndGameController" xmlns:fx="http://javafx.com/fxml/1">
+   <stylesheets>
+      <URL value="@../css/main.css" />
+   </stylesheets>
+   <top>
+      <Label alignment="CENTER" prefHeight="34.0" prefWidth="569.0" text="Game Ended" textFill="WHITE" BorderPane.alignment="CENTER">
+         <font>
+            <Font name="System Bold" size="30.0" />
+         </font>
+      </Label>
+   </top>
+   <center>
+      <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <HBox alignment="CENTER" layoutX="198.0" layoutY="89.0" prefHeight="385.0" prefWidth="717.0" style="-fx-background-color: rgba(0,0,0,0.5);" AnchorPane.bottomAnchor="73.0" AnchorPane.leftAnchor="198.0" AnchorPane.rightAnchor="166.0" AnchorPane.topAnchor="89.0">
+               <children>
+                  <VBox prefHeight="200.0" prefWidth="100.0" />
+                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
+                     <children>
+                        <Label fx:id="winnerLabel" text="Winner" textFill="#ffbf00">
+                           <font>
+                              <Font size="26.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox prefHeight="200.0" prefWidth="100.0" />
+               </children>
+            </HBox>
+         </children>
+      </AnchorPane>
+   </center>
+</BorderPane>

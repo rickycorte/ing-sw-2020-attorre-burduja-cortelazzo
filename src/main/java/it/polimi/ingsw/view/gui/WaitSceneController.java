@@ -28,21 +28,22 @@ public class WaitSceneController {
         guiManager.setWaitSceneController(this);
         startGameButton.setDisable(true);
         startGameButton.setText("Start Game");
-
     }
+    //TODO check that the ack join is true, disable in case the second client has disconnected meanwhile
 
     /**
      * Handles the start button click
      */
     @FXML
     void onStartGameButtonClick(){
-        GuiManager.getInstance().getServerConnection().send(new CommandWrapper(CommandType.START, new StartCommand(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID())));
+        GuiManager.getInstance().getServerConnection().send(StartCommand.makeRequest(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID()));
+
+        //GuiManager.getInstance().getServerConnection().send(new CommandWrapper(CommandType.START, new StartCommand(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID())));
     }
 
     /**
      * Allows the host to start the game in 2 player mode
      */
-    //TODO check that the ack join is true, disable in case the second client has disconnected meanwhile
     void onSecondClientConnection(){
         centerLabel.setText("A second player has connected, you can start the game or wait for a third player");
         startGameButton.setDisable(false);
@@ -54,6 +55,7 @@ public class WaitSceneController {
      */
     void onStart(StartCommand startCommand) {
         GuiManager.setLayout("fxml/chooseGodsScene.fxml");
+
     }
 }
 

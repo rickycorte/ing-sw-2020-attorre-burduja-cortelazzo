@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.text.*?>
 <?import javafx.scene.image.*?>
 <?import java.net.*?>
@@ -10,17 +11,28 @@
 <?import javafx.scene.layout.*?>
 <?import java.net.URL?>
 
-<BorderPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.WaitSceneController">
-   <center>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="494.0" prefWidth="918.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.WaitSceneController">
+   <children>
+      <HBox alignment="CENTER" layoutX="136.0" layoutY="29.0" prefHeight="436.0" prefWidth="646.0" style="-fx-background-color: rgba(0 ,0, 0, 0.3);" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="30.0">
          <children>
-            <Label fx:id="centerLabel" alignment="CENTER" prefHeight="21.0" prefWidth="908.0" text="Waiting for other players to connect..." textFill="WHITE">
-               <font>
-                  <Font name="System Bold" size="30.0" />
-               </font>
-            </Label>
-            <Button fx:id="startGameButton" onAction="#onStartGameButtonClick" mnemonicParsing="false" text="Button" />
+            <VBox alignment="CENTER" prefHeight="436.0" prefWidth="584.0">
+               <children>
+                  <Label fx:id="centerLabel" alignment="CENTER" prefHeight="30.0" prefWidth="575.0" styleClass="menuLabel" stylesheets="@../css/main.css" text="WAITING FOR WORTHY OPPONENTS..." textFill="WHITE">
+                     <font>
+                        <Font name="Arial Bold" size="20.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets bottom="15.0" />
+                     </VBox.margin>
+                  </Label>
+                  <Button id="blue_button" fx:id="startGameButton" mnemonicParsing="false" onAction="#onStartGameButtonClick" stylesheets="@../css/main.css" text="Button">
+                     <VBox.margin>
+                        <Insets bottom="5.0" top="5.0" />
+                     </VBox.margin>
+                  </Button>
+               </children>
+            </VBox>
          </children>
-      </VBox>
-   </center>
-</BorderPane>
+      </HBox>
+   </children>
+</AnchorPane>
