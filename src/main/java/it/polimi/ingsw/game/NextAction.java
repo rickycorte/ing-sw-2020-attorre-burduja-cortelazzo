@@ -11,6 +11,15 @@ public class NextAction {
     private String actionName;
     private ArrayList<Vector2> availablePositions;
 
+
+    public NextAction(String name, Worker w, Vector2 position)
+    {
+        this.worker = w.getId();
+        availablePositions = new ArrayList<>();
+        availablePositions.add(position);
+        actionName = name;
+    }
+
     public NextAction(Worker w, Map m, GameConstraints constraints,BehaviourNode node) {
         this.worker = w.getId();
         this.actionName = node.getAction().displayName();

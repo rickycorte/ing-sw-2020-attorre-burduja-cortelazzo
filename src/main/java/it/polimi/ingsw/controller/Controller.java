@@ -56,6 +56,7 @@ public class Controller implements ICommandReceiver {
 
         if (match == null || match.isEnded()) {
             match = new Game();
+            match.enableUndo();
         }
 
         if(!joinCommand.isJoin() || joinCommand.getUsername() == null || !isUsernameAvailable(joinCommand.getUsername()))
@@ -109,8 +110,14 @@ public class Controller implements ICommandReceiver {
             }
             else //command failed
             {
-                if(cmdWrapper.getType() == CommandType.START) nextCmd = null;
-                else nextCmd = lastSent;
+                if(cmdWrapper.getType() == CommandType.START)
+                {
+                    nextCmd = null;
+                }
+                else
+                {
+                    nextCmd =  makeNextCommand(prevGameState, match.getCurrentState()); // avoid cached last command because undo expire
+                }
             }
 
             sendCommand(nextCmd);

@@ -12,6 +12,7 @@ public class BehaviourGraph
     private BehaviourNode rootNode;
     private BehaviourNode currentNode;
     private BehaviourNode previousNode;
+    private BehaviourNode undoNode;
     private boolean alreadyRun;
 
     public BehaviourGraph()
@@ -28,6 +29,7 @@ public class BehaviourGraph
         currentNode = rootNode;
         previousNode = rootNode;
         alreadyRun = true; // root node has no action
+        undoNode = rootNode;
     }
 
     /**
@@ -67,6 +69,7 @@ public class BehaviourGraph
             {
                 int res = currentNode.getAction().run(w, target, m, globalConstrains);
                 alreadyRun = true;
+                undoNode = previousNode; // save undo node before moving forward
                 previousNode = currentNode;
                 return res;
             }
@@ -127,8 +130,17 @@ public class BehaviourGraph
      */
     public void rollback()
     {
-        currentNode = previousNode;
+        currentNode = undoNode;
         alreadyRun = false;
+    }
+
+    /**
+     * Return true if current node is the root of the graph
+     * @return true if current node is root of the graph
+     */
+    public boolean isAtRoot()
+    {
+        return currentNode == rootNode;
     }
 
     /**

@@ -287,6 +287,7 @@ class BehaviourGraphTest
 
         testSeq.rollback();
         assertEquals(startNode, testSeq.getCurrentNode());
+        assertTrue(testSeq.isAtRoot());
 
         //rollback once
         testSeq.rollback();

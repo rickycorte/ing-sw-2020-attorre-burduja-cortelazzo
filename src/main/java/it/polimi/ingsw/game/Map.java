@@ -63,6 +63,19 @@ public class Map
                 map[i][j] = other.map[i][j];
     }
 
+    /**
+     * Import map data from another map
+     * @param m
+     */
+    public void importMap(Map m)
+    {
+        map = m.getMap();
+    }
+
+    /**
+     * Get map as a double array of cell for serialization purposes
+     * @return map ad bidimensional array
+     */
     public int[][] getMap() { return map; }
 
     /**

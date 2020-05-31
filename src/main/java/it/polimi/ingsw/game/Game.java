@@ -54,17 +54,21 @@ public final class Game
     }
 
     private List<Player> players;
-    private transient List<Card> allowedCards;
+    private List<Card> allowedCards;
     private GameConstraints globalConstraints;
     private Map gameMap;
-    private transient Turn currentTurn;
+    private Turn currentTurn;
     private int currentPlayer, firstPlayer;
     private int stateProgress;
     private GameState gameState;
-    private transient CardCollection cardCollection;
+    private CardCollection cardCollection;
     private Player winner;
+    private boolean allowUndo;
 
 
+    /**
+     * Create a new game instance with undo disabled
+     */
     public Game()
     {
         players = new ArrayList<>();
@@ -78,6 +82,7 @@ public final class Game
         gameState = GameState.WAIT;
         cardCollection = new CardCollection();
         winner = null;
+        allowUndo = false;
     }
 
 
@@ -183,6 +188,14 @@ public final class Game
      */
     public int[] getAllowedCardIDs(){
         return getCardIds(allowedCards);
+    }
+
+    /**
+     * Enable undo for this match, once enabled it cant be disabled
+     */
+    public void enableUndo()
+    {
+        allowUndo = true;
     }
 
     // **********************************************************************************************
@@ -455,7 +468,6 @@ public final class Game
             return null;
         }
 
-        //return nextActions;
     }
 
     /**
@@ -613,7 +625,7 @@ public final class Game
         if(p.getGod() == null)
             p.setGod(cardCollection.getNoGodCard());
 
-        currentTurn = new Turn(p);
+        currentTurn = new Turn(p, allowUndo);
 
         if(!currentTurn.canStillMove(gameMap, globalConstraints))
         {

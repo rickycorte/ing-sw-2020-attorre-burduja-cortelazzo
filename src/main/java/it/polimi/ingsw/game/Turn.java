@@ -1,25 +1,55 @@
 package it.polimi.ingsw.game;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class represent a turn in the match and holds his current state of progression
  */
 public class Turn
 {
+
+    public static final int MAX_UNDO_MILLI = 5000;
+
     private Player player;
     private BehaviourGraph graph;
     private Worker worker;
     private int possible_move;
 
+    private boolean allowUndo;
+    private Vector2 lastTargetPosition;
+    private Map oldMap;
+    private List<Vector2> oldWorkerPositions;
+    private java.util.Map<BehaviourNode, Instant> usedUndos;
+
+
     /**
-     * Make a turn and reset the graph status for player's graph
+     * Make a turn and reset the graph status for player's graph (undo is disabled)
      * @param p player owner of the turn
      */
-    public Turn(Player p) {
+    public Turn(Player p)
+    {
+        this(p, false);
+    }
+
+
+    /**
+     * Make a turn and reset the graph status for player's graph and select if undo is enabled or not
+     * @param p player owner of the turn
+     * @param allowUndo pass true to enable undo of moves
+     */
+    public Turn(Player p, boolean allowUndo)
+    {
         this.player = p;
         this.graph = p.getGod().getGraph();
         this.worker = null;
+        this.allowUndo = false;
+        lastTargetPosition = null;
+        oldMap = null;
+        this.allowUndo = allowUndo;
+        oldWorkerPositions = new ArrayList<>();
+        usedUndos = new java.util.HashMap<>();
 
         graph.resetExecutionStatus();
     }
@@ -33,7 +63,10 @@ public class Turn
     /**
      * Remove selected worker
      */
-    public void resetSelectedWorker() { this.worker = null; }
+    public void resetSelectedWorker()
+    {
+        this.worker = null;
+    }
 
     /**
      * Getter of turn's worker
@@ -53,21 +86,49 @@ public class Turn
      * @throws NotAllowedMoveException if the action cannot be run due to wrong parameters
      * @throws OutOfGraphException if the actions id is wrong and no action exist for that id
      */
-    public int runAction(int id, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException, OutOfGraphException {
-        graph.selectAction(id);
-        return graph.runSelectedAction(worker,target,m,globalConstrains);
+    public int runAction(int id, Vector2 target, Map m, GameConstraints globalConstrains) throws NotAllowedMoveException, OutOfGraphException
+    {
+        int res = 0;
+
+        // undo enabled, it's appended at the end so its id is the same as next actions size
+        if(allowUndo && worker != null && id == graph.getCurrentNode().getChildNodes().size())
+        {
+
+            if(isUndoTimerExpired(graph.getCurrentNode()))
+            {
+                throw new NotAllowedMoveException();
+            }
+
+            m.importMap(oldMap);      // rollback map to remove builds
+            restoreWorkerPositions(); // rollback positions
+
+            //add current node to prevent an undo on older (or already undone) actions with MAX_UNDO_SECONDS + 1
+            usedUndos.put(graph.getCurrentNode(), Instant.now().minusMillis(MAX_UNDO_MILLI +1));
+
+            graph.rollback();
+            // reset worker if we went back to root
+            if(graph.isAtRoot())
+                worker = null;
+
+            //add old node to prevent an undo on older (or already undone) actions with MAX_UNDO_SECONDS + 1
+            usedUndos.put(graph.getCurrentNode(), Instant.now().minusMillis(MAX_UNDO_MILLI +1));
+        }
+        else
+        {
+            if(allowUndo)
+            {
+                oldMap = new Map(m);  // save map backup for undo
+                lastTargetPosition = target; // save pos for undo
+                saveWorkerPositions(); // save worker positions
+            }
+
+            graph.selectAction(id);
+            res = graph.runSelectedAction(worker,target,m,globalConstrains);
+        }
+
+        return res;
     }
 
-    /**
-     * Get next actions from the last executed
-     * get action's names and list of available cell for that action
-     * @param m game's map
-     * @param constraints game's constraints
-     * @return ArrayList of NextAction from the graph's current node
-     */
-    public ArrayList<NextAction> getNextAction (Map m, GameConstraints constraints){
-        return graph.getNextActions(worker,m,constraints);
-    }
 
     /**
      * Get next actions from the last executed
@@ -77,8 +138,30 @@ public class Turn
      * @param constraints game's constraints
      * @return ArrayList of NextAction from the graph's current node
      */
-    public ArrayList<NextAction> getNextAction (Worker w, Map m, GameConstraints constraints){
-        return graph.getNextActions(w,m,constraints);
+    public ArrayList<NextAction> getNextAction (Worker w, Map m, GameConstraints constraints)
+    {
+        var nextActions = graph.getNextActions(w,m,constraints);
+        // append undo only if a worker is selected. Also check if already used for this action
+        if(allowUndo && worker != null && !isUndoTimerExpired(graph.getCurrentNode()))
+        {
+            nextActions.add(new NextAction("Undo", worker, lastTargetPosition));
+            // add only once
+            if(!usedUndos.containsKey(graph.getCurrentNode()))
+                usedUndos.put(graph.getCurrentNode(), Instant.now());
+        }
+
+        return nextActions;
+    }
+
+    /**
+     * Get next actions using an already selected worker
+     * get action's names and list of available cell for that action
+     * @param m game's map
+     * @param constraints game's constraints
+     * @return ArrayList of NextAction from the graph's current node
+     */
+    public ArrayList<NextAction> getNextAction (Map m, GameConstraints constraints){
+        return getNextAction(worker, m, constraints);
     }
 
     /**
@@ -117,5 +200,50 @@ public class Turn
      * @return true if ended
      */
     public boolean isEnded() { return graph.isExecutionEnded(); }
+
+
+    /**
+     * Save worker positions in a list
+     */
+    private void saveWorkerPositions()
+    {
+        oldWorkerPositions.clear();
+        for (Worker w: player.getWorkers())
+        {
+            oldWorkerPositions.add(w.getPosition().copy());
+        }
+    }
+
+    /**
+     * Restore worker positions
+     */
+    private void restoreWorkerPositions()
+    {
+        for(int i=0; i < player.getWorkers().size(); i++)
+        {
+            player.getWorkers().get(i).setPosition(oldWorkerPositions.get(i));
+        }
+        oldWorkerPositions.clear();
+    }
+
+
+    /**
+     * Return true if timer for undo is expired and undo should be rejected
+     * @param node node to check
+     * @return true is timer is expired
+     */
+    private boolean isUndoTimerExpired(BehaviourNode node)
+    {
+        // check if timer is expired
+        if(usedUndos.containsKey(graph.getCurrentNode()))
+        {
+            var interval = Instant.now().minusMillis(usedUndos.get(graph.getCurrentNode()).toEpochMilli()).toEpochMilli();
+            System.out.println("[UNDO] Time delta: "+ interval);
+            if(interval > MAX_UNDO_MILLI)
+                return true;
+        }
+
+        return false;
+    }
 
 }

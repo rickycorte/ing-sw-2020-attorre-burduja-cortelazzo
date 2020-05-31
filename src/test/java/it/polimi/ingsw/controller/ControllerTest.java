@@ -336,7 +336,7 @@ public class ControllerTest
 
         controller.getLastSent().Serialize();
         PickGodCommand cmd = controller.getLastSent().getCommand(PickGodCommand.class);
-        assertEquals(3,cmd.getGodID().length);
+        assertEquals(3,cmd.getAllowedGodsIDS().length);
     }
 
     @Test
@@ -399,7 +399,7 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         PickGodCommand cmd = controller.getLastSent().getCommand(PickGodCommand.class);
         assertEquals(3,cmd.getTarget());
-        assertEquals(2,cmd.getGodID().length);
+        assertEquals(2,cmd.getAllowedGodsIDS().length);
     }
 
     @Test
@@ -421,7 +421,7 @@ public class ControllerTest
         //player 2 try to pick a not available god
         controller.onCommand(createPickGodCommand(2,4));
 
-        assertEquals(exCmd,controller.getLastSent());
+        assertEquals(exCmd.toString(),controller.getLastSent().toString());
     }
 
     @Test
@@ -439,7 +439,7 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         FirstPlayerPickCommand cmd = controller.getLastSent().getCommand(FirstPlayerPickCommand.class);
         assertEquals(1,cmd.getTarget());
-        assertEquals(3,cmd.getPlayersID().length);
+        assertEquals(3,cmd.getPlayers().length);
 
     }
 
@@ -500,7 +500,7 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         FirstPlayerPickCommand cmd = controller.getLastSent().getCommand(FirstPlayerPickCommand.class);
         assertEquals(1,cmd.getTarget());
-        assertEquals(3,cmd.getPlayersID().length);
+        assertEquals(3,cmd.getPlayers().length);
     }
 
     @Test
@@ -794,9 +794,9 @@ public class ControllerTest
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
 
-        //player 2 has a build action possibilities to 4 cell
+        //player 2 has a build action possibilities to 4 cell + 1 undo
         //but has god ability with constraint that lock a cell (total of 7 possible cell)
-        assertEquals(2, cmd.getAvailableActions().length);
+        assertEquals(3, cmd.getAvailableActions().length);
         assertEquals(4, cmd.getAvailableActions()[0].getAvailablePositions().size());
         assertEquals(3, cmd.getAvailableActions()[1].getAvailablePositions().size());
 
@@ -829,7 +829,7 @@ public class ControllerTest
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
         //check if worker has been moved and next actions are correct(containing cell just released)
         assertEquals(2,cmd.getTarget());
-        assertEquals(new Vector2(0,0),cmd.getAvailablePos()[0]);
+        assertEquals(new Vector2(0,0), cmd.getAvailableActions()[0].getAvailablePositions().get(0));
     }
 
     @Test
@@ -847,7 +847,7 @@ public class ControllerTest
         //player 2 execute a move action, but select a cell not available
         controller.onCommand(createActionCommand(2,0,0,new Vector2(0,1)));
 
-        assertEquals(exCmd,controller.getLastSent());
+        assertEquals(exCmd.toString(),controller.getLastSent().toString());
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
     }
 
@@ -866,7 +866,7 @@ public class ControllerTest
         //player 2 execute a move action, but select a impossible worker id
         controller.onCommand(createActionCommand(2,3,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
-        assertEquals(exCmd,controller.getLastSent());
+        assertEquals(exCmd.toString(),controller.getLastSent().toString());
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
     }
 
@@ -885,7 +885,7 @@ public class ControllerTest
         //player 2 execute a move action, but select a impossible action id
         controller.onCommand(createActionCommand(2,0,3, cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
-        assertEquals(exCmd,controller.getLastSent());
+        assertEquals(exCmd.toString(),controller.getLastSent().toString());
         assertFalse(controller.getMatch().getCurrentMap().isCellEmpty(new Vector2(0,0)));
     }
 
@@ -907,7 +907,7 @@ public class ControllerTest
         //player 2 try to execute next possible action with a different worker
         controller.onCommand(createActionCommand(2,1,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
-        assertEquals(exCmd,controller.getLastSent());
+        assertEquals(exCmd.toString(),controller.getLastSent().toString());
     }
 
     @Test
@@ -926,7 +926,7 @@ public class ControllerTest
 
         controller.getLastSent().Serialize();
         cmd = controller.getLastSent().getCommand(ActionCommand.class);
-        assertEquals(2,cmd.getAvailableActions().length);
+        assertEquals(3,cmd.getAvailableActions().length);
     }
 
     @Test
