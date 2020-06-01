@@ -1,393 +1,823 @@
 package it.polimi.ingsw.view.cli;
 
 import it.polimi.ingsw.controller.*;
+import it.polimi.ingsw.controller.compact.CompactMap;
+import it.polimi.ingsw.controller.compact.CompactWorker;
+import it.polimi.ingsw.game.Game;
+import it.polimi.ingsw.game.NextAction;
 import it.polimi.ingsw.game.Vector2;
+import it.polimi.ingsw.game.Worker;
 import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.view.IHumanInterface;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Old cli adapted to use some network changes
  */
-public class Cli implements IHumanInterface
-{
+public class Cli implements IHumanInterface {
     private static final int HEIGHT = it.polimi.ingsw.game.Map.HEIGHT;
     private static final int LENGTH = it.polimi.ingsw.game.Map.LENGTH;
-    private static final int DOME_VALUE = 128;
-    private static final int N_WORKER = 2;
-    private static final int SERVER_ID = -1111;
+    private static final int MAX_PLAYER = Game.MAX_PLAYERS;
+    private static final int MIN_PLAYER = Game.MIN_PLAYERS;
+    private static final int DOME_VALUE = it.polimi.ingsw.game.Map.DOME_VALUE;
+    private static final int N_WORKER = Game.WORKERS_PER_PLAYER;
+    private static final int TARGET_LOST = EndGameCommand.TARGET_LOST;
+    private static final int INTERRUPTED_GAME = EndGameCommand.INTERRUPTED_GAME;
 
     private INetworkAdapter virtualServer;
     private int playersNumber;
     private int idPlayer = -1;
+    private String username;
     private int idHost;
-    private Map<Integer,Color> colors = new HashMap<>();
-    private PrintStream stream = new PrintStream(System.out,true);
+    private Map<Integer, Color> colors = new HashMap<>();
+    private PrintStream stream = new PrintStream(System.out, true);
     private Scanner scanner = new Scanner(System.in);
     private boolean logged = false;
 
-    private Vector2[] availablePosition;
     private CommandWrapper lastCommandWrap;
-    private ActionCommand lastActionCommand;
     private WorkerPlaceCommand lastWorkerCommand;
 
+    private NextAction[] nextActions;
+    private AtomicBoolean cmdNotify = new AtomicBoolean(false);
+    private Vector2[] availablePositions;
+    private CompactMap lastCompactMap;
+
+    private enum MatchState {WAIT, WAIT_NEXT, GOD_SELECT, PICK_GOD, FIRST_PLAYER_SELECT, WORKER_PLACE,ACTION_TIME, END, QUIT}
     private MatchState currentState = MatchState.WAIT;
 
-    private enum MatchState{WAIT,GOD_SELECT,PICK_GOD,FIRST_PLAYER_SELECT,WORKER_PLACE,ACTION_TIME,END};
+    private enum ExecutionResponse {SUCCESS, FAIL, QUIT}
 
-
-    public Cli(INetworkAdapter adapter){
+    public Cli(INetworkAdapter adapter) {
         virtualServer = adapter;
     }
 
     public void onConnect(CommandWrapper cmdWrapper) {
         int targetID = cmdWrapper.getCommand(BaseCommand.class).getTarget();
 
-        stream.println("[CLI] Received " + cmdWrapper.getType().name() + " command on onConnect");
         if (cmdWrapper.getType() == CommandType.JOIN && idPlayer == -1) {
             JoinCommand cmd = cmdWrapper.getCommand(JoinCommand.class);
 
-
-            if (cmd.isJoin()) {
-                idPlayer = cmd.getTarget();
-                stream.println("[CLI] Join successful");
-                stream.println("Connected to game, wait to start...");
-                currentState = MatchState.WAIT;
-                idHost = cmd.getHostPlayerID();
-                logged = true;
-            } else {
-                if (cmd.isValidUsername()) {
-                    stream.println("Can't join a game right now, try another time.");
-                } else {
-                    stream.println("Your username is not valid, choose another one");
-                    String newUsername;
-                    newUsername = scanner.nextLine();
-                    CommandWrapper newJoinCommand = new CommandWrapper(CommandType.JOIN, new JoinCommand(cmd.getTarget(),virtualServer.getServerID(), newUsername, true));
-                    virtualServer.send(newJoinCommand);
-                }
-                System.out.println("[Cli] Received "+ cmdWrapper.getType());
-                //stream.println("Can't join a game.");
+            if (cmd.isJoin())
+                successfulJoin(cmd);
+            else {
+                if (!cmd.isValidUsername()) stream.println("Can't join a game right now, try another time.");
+                else retryJoin(cmd);
             }
-        }else if (cmdWrapper.getType() == CommandType.JOIN && idPlayer == idHost){
-            JoinCommand joinCommand = cmdWrapper.getCommand(JoinCommand.class);
-            if(joinCommand.isJoin())
-                stream.println("Type 'start' to start a 2 player game or wait 3rd player");
+
+        } else if (cmdWrapper.getType() == CommandType.JOIN && targetID != idPlayer) {
+            JoinCommand cmd = cmdWrapper.getCommand(JoinCommand.class);
+            if (cmd.isJoin())
+                playersNumber++;
         }
     }
 
     @Override
-    public void start()
-    {
+    public void start() {
+        cmdNotify.lazySet(false);
         stream.println("Type 'quit' to leave the game");
-        System.out.println("Insert your username: ");
 
+        //TODO : handle ip insert error
+        stream.println("Insert server ip: ");
+        String ip;
+        String ipInput = scanner.nextLine();
+        if(!ipInput.equals("")){
+            ip = ipInput;
+        } else
+            ip = "127.0.0.1";
 
-        if(virtualServer.connect("127.0.0.1", virtualServer.getDefaultPort(), scanner.nextLine()))
-        {
-            while(!logged) {
+        stream.println("Insert your username: ");
+        String user = scanner.nextLine();
+
+        if (virtualServer.connect(ip, virtualServer.getDefaultPort(), user)) {
+
+            //TODO: change sleep with wait condition
+            do{
                 try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException ignored){}
-            }
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) { }
+            }while(!logged);
+
             inputLoop();
-        }
-        else
-        {
-            System.out.println("Connection refused");
+        } else {
+            stream.println("Connection refused");
         }
 
     }
 
-    public void onDisconnect(CommandWrapper cmdWrapper){
-        //never here ?
+    public void onDisconnect(CommandWrapper cmdWrapper) {
+        //TODO : here when lose server connection
     }
 
-    public void onCommand(CommandWrapper cmdWrapper){
+    public void onCommand(CommandWrapper cmdWrapper) {
         lastCommandWrap = cmdWrapper;
         BaseCommand baseCommand = cmdWrapper.getCommand(BaseCommand.class);
 
-        if(baseCommand.getTarget() != idPlayer && baseCommand.getTarget() != virtualServer.getBroadCastID()) {
-            stream.println("Turn of player n. "+ baseCommand.getTarget() + " wait until " + colors.get(baseCommand.getTarget()).escape() + cmdWrapper.getType().toString() + Color.RESET);
+        if (baseCommand.getTarget() != idPlayer && baseCommand.getTarget() != virtualServer.getBroadCastID()) {
+            stream.println("Turn of player n. " + baseCommand.getTarget() + " wait until " + colors.get(baseCommand.getTarget()).escape() + cmdWrapper.getType().toString() + Color.RESET);
+            currentState = MatchState.WAIT_NEXT;
             return;
         }
 
-        switch (cmdWrapper.getType()){
+        switch (cmdWrapper.getType()) {
             case START:
                 StartCommand startCommand = cmdWrapper.getCommand(StartCommand.class);
-                playersNumber = startCommand.getPlayersID().length;
-                initPlayers(startCommand);
-                stream.println("GAME IS STARTED!");
+                startSetup(startCommand);
                 break;
             case FILTER_GODS:
-                printGodsID();
-                stream.println("Select "+playersNumber+" IDs you want to be allowed for this game :");
-                for(int i=1; i<=playersNumber; i++){
-                    stream.print("<int" + i + "> ");
-                }
-                stream.println();
-                currentState = MatchState.GOD_SELECT;
+                filterGodSetup();
                 break;
             case PICK_GOD:
                 PickGodCommand pickGodCommand = cmdWrapper.getCommand(PickGodCommand.class);
-                stream.print("Available god ID for this game : ");
-                for (int i : pickGodCommand.getGodID()){
-                    stream.print(i + ", ");
-                }
-                stream.println();
-                stream.println("Pick a god by selecting id : ");
-                stream.println("<int1>");
-                currentState = MatchState.PICK_GOD;
+                pickGodSetup(pickGodCommand);
                 break;
             case SELECT_FIRST_PLAYER:
-                for (Integer i : colors.keySet())
-                    stream.print(i + " ");
-                stream.println();
-                stream.println("Select first player for this game: ");
-                stream.println("<int1>");
-                currentState = MatchState.FIRST_PLAYER_SELECT;
+                selectFirstPlayerSetup();
                 break;
             case PLACE_WORKERS:
-                WorkerPlaceCommand cmd = cmdWrapper.getCommand(WorkerPlaceCommand.class);
-                for(int i = 0; i<cmd.getPositions().length;i++){
-                    stream.print(i + ".(" + cmd.getPositions()[i].getX() + "," + cmd.getPositions()[i].getY() + ") ");
-                }
-                stream.println();
-                stream.println("Select 2 available positions by its identifiers: ");
-                stream.println("<int1> <int2>");
-                lastWorkerCommand = cmd;
-                availablePosition = cmd.getPositions();
-                currentState = MatchState.WORKER_PLACE;
+                WorkerPlaceCommand workerPlaceCommand = cmdWrapper.getCommand(WorkerPlaceCommand.class);
+                placeWorkerSetup(workerPlaceCommand);
                 break;
             case ACTION_TIME:
                 ActionCommand actionCommand = cmdWrapper.getCommand(ActionCommand.class);
-                stream.print(actionCommand.getIdWorkerNMove()[0] + ", ");
-                for(int i = 0,last = actionCommand.getIdWorkerNMove()[0];i<actionCommand.getIdWorkerNMove().length;i=i+2){
-                    if(actionCommand.getIdWorkerNMove()[i] != last){
-                        stream.print(actionCommand.getIdWorkerNMove()[i]);
-                        last = actionCommand.getIdWorkerNMove()[i];
-                    }
-                }
-                stream.println();
-                stream.println("Select id of worker you want to move");
-                stream.println("<int1>");
-
-                currentState = MatchState.ACTION_TIME;
-                lastActionCommand = actionCommand;
+                actionTimeSetup(actionCommand);
                 break;
             case END_GAME:
                 EndGameCommand endGameCommand = cmdWrapper.getCommand(EndGameCommand.class);
-                if(endGameCommand.getWinnerID() == EndGameCommand.TARGET_LOST)
-                    stream.print("Game ended.");
-                else
-                    stream.println("Game ended: " + endGameCommand.getWinnerID() + " win! ");
+                endGameSetup(endGameCommand);
                 break;
             case UPDATE:
                 UpdateCommand updateCommand = cmdWrapper.getCommand(UpdateCommand.class);
-                show(updateCommand);
+                setLastCompactMap(updateCommand.getUpdatedMap());
+                showMap(updateCommand.getUpdatedMap());
                 break;
         }
 
     }
 
-    private void inputLoop(){
-        String input;
-        boolean shouldStop = false;
+    // SETUP STATE METHODS
 
-        do{
-            input = scanner.nextLine();
-            String[] inputArray = input.split("\\s+");
-
-            if(inputArray[0].equals("start") && currentState == MatchState.WAIT && idPlayer == idHost){
-                virtualServer.send(new CommandWrapper(CommandType.START,new StartCommand(idPlayer,virtualServer.getServerID())));
-            }else if(inputArray[0].equals("quit")){
-                shouldStop = true;
-                virtualServer.send(new CommandWrapper(CommandType.LEAVE,new LeaveCommand(idPlayer,virtualServer.getServerID())));
-            }else{
-                try{
-                    int[] intInput = new int[inputArray.length];
-                    for(int i = 0; i<inputArray.length ; i++){
-                        intInput[i] = Integer.parseInt(inputArray[i]);
-                    }
-                    receivedIntFromLine(intInput);
-                }catch(NumberFormatException | NullPointerException e){
-                    if(currentState != MatchState.WAIT) this.onCommand(lastCommandWrap);
-                }
-            }
-
-        }while(!shouldStop);
-
+    private void retryJoin(JoinCommand cmd) {
+        stream.println("Your username is not valid, choose another one");
+        String newUsername;
+        newUsername = scanner.nextLine();
+        virtualServer.send(JoinCommand.makeRequest(cmd.getTarget(),virtualServer.getServerID(),newUsername));
     }
 
-    private synchronized void receivedIntFromLine(int[] intInput){
-        switch (currentState){
-            case GOD_SELECT:
-                virtualServer.send(new CommandWrapper(CommandType.FILTER_GODS, new FilterGodCommand(idPlayer,virtualServer.getServerID(),intInput)));
-                break;
-            case PICK_GOD:
-                virtualServer.send(new CommandWrapper(CommandType.PICK_GOD, new PickGodCommand(idPlayer,virtualServer.getServerID(),intInput)));
-                break;
-            case FIRST_PLAYER_SELECT:
-                if(intInput.length == 1) virtualServer.send(new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(idPlayer,virtualServer.getServerID(),intInput[0])));
-                else virtualServer.send(new CommandWrapper(CommandType.SELECT_FIRST_PLAYER, new FirstPlayerPickCommand(idPlayer,virtualServer.getServerID(),-1)));
-                break;
-            case WORKER_PLACE:
-                if(intInput.length == N_WORKER && lastWorkerCommand.getPositionsIndexes().contains(intInput[0]) && lastWorkerCommand.getPositionsIndexes().contains(intInput[1])) {
-                    Vector2[] selectedPositions = new Vector2[N_WORKER];
-                    selectedPositions[0] = availablePosition[intInput[0]];
-                    selectedPositions[1] = availablePosition[intInput[1]];
-                    virtualServer.send(new CommandWrapper(CommandType.PLACE_WORKERS, new WorkerPlaceCommand(idPlayer, virtualServer.getServerID(), selectedPositions)));
-                }else{
-                    this.onCommand(lastCommandWrap);
-                }
-                break;
-            case ACTION_TIME:
-                if(0<=intInput[0] && intInput[0]<N_WORKER)
-                    executeAction(intInput[0]);
-                else
-                    this.onCommand(lastCommandWrap);
+    private void successfulJoin(JoinCommand cmd) {
+        idPlayer = cmd.getTarget();
+        stream.println("Join successful");
+        idHost = cmd.getHostPlayerID();
+        playersNumber++;
+
+        if (idPlayer == idHost) stream.println("Type 'start' to start a game with 2 player or wait 3rd player...");
+        else stream.println("Connected to game, wait to start...");
+
+        username = cmd.getUsername();
+        setCurrentState(MatchState.WAIT);
+        logged = true;
+    }
+
+    private void endGameSetup(EndGameCommand endGameCommand) {
+        if (endGameCommand.getWinnerID() == TARGET_LOST) {
+            int playerLost = endGameCommand.getTarget();
+            stream.println("Player " + colors.get(playerLost).escape() + playerLost + Color.RESET + " left game");
+
+            setCurrentState(MatchState.WAIT_NEXT);
+        } else if (endGameCommand.getWinnerID() == INTERRUPTED_GAME) {
+            virtualServer.send(JoinCommand.makeRequest(idPlayer, virtualServer.getServerID(), username));
+            currentState = MatchState.WAIT_NEXT;
         }
     }
 
-    private void executeAction(int workerId){
-        List<Integer> availableInteger = new ArrayList<>();
-        if(!lastActionCommand.getAvailableWorker().contains(workerId)){
-            this.onCommand(lastCommandWrap);
-            return;
-        }
-
-        List<String> actions = lastActionCommand.getActionForWorker(workerId);
-
-        for(int i = 0; i<actions.size(); i++){
-            stream.print(i + "." + actions.get(i) + "  ");
-            availableInteger.add(i);
-        }
+    private void placeWorkerSetup(WorkerPlaceCommand workerPlaceCommand) {
+        setAvailablePositions(workerPlaceCommand);
+        lastWorkerCommand = workerPlaceCommand;
+        showMap(getLastCompactMap(),getAvailablePositions());
+        for (int i = 0; i < workerPlaceCommand.getPositions().length; i++)
+            stream.print(i + ".(" + workerPlaceCommand.getPositions()[i].getX() + "," + workerPlaceCommand.getPositions()[i].getY() + ") ");
 
         stream.println();
-        stream.println("Select action's number you want execute: ");
-        stream.println("<int1>");
 
-        int actionId = scanner.nextInt();
-        scanner.nextLine();
-        if(!availableInteger.contains(actionId)){
-            this.onCommand(lastCommandWrap);
-            return;
-        }
+        stream.println("Select 2 available positions by its identifiers: \n<int1> <int2>");
 
+        cmdNotify.lazySet(true);
+        setCurrentState(MatchState.WORKER_PLACE);
+    }
 
-        int baseIndex = lastActionCommand.getBaseIndexForAction(workerId);
-        List<Vector2> positions = lastActionCommand.getPositionsForAction(baseIndex + actionId);
-
-        availableInteger.clear();
-        for(int i = 0; i<positions.size(); i++){
-            stream.print(i + ".(" + positions.get(i).getX() + "," + positions.get(i).getY() + ")  ");
-            availableInteger.add(i);
-        }
-
-
+    private void selectFirstPlayerSetup() {
+        for (Integer i : colors.keySet()) stream.print(i + " ");
         stream.println();
-        stream.println("Select a cell from available : ");
-        stream.println("<int1>");
 
-        int targetId = scanner.nextInt();
-        scanner.nextLine();
-        if(!availableInteger.contains(targetId)){
-            this.onCommand(lastCommandWrap);
-            return;
-        }
+        stream.println("Select first player for this game: \n<int1>");
 
-        baseIndex = lastActionCommand.getBaseIndexForPositions(baseIndex + actionId);
-        Vector2 target = lastActionCommand.getTargetPosition(baseIndex + targetId);
-
-        virtualServer.send(new CommandWrapper(CommandType.ACTION_TIME,new ActionCommand(idPlayer,SERVER_ID,new int[]{workerId,actionId},target)));
+        cmdNotify.lazySet(true);
+        setCurrentState(MatchState.FIRST_PLAYER_SELECT);
     }
 
-    private void show(UpdateCommand updateCommand){
-        Vector2[] workerPos = updateCommand.getV2Data().clone();
-        int[] pairOwnerWorker = getPairOwnerWorker(updateCommand.getIntData());
-
-        /*
-        int[][] map = new int[LENGTH][HEIGHT];
-        for(int x = 0; x < LENGTH; x++) {
-            for (int y = 0; y < HEIGHT; y++)
-                map[x][y] = updateCommand.getIntData()[x + y];
+    private void pickGodSetup(PickGodCommand pickGodCommand) {
+        stream.print("Available god ID for this game : ");
+        for (int i : pickGodCommand.getAllowedGodsIDS()) {
+            stream.print(i + ", ");
         }
-         */
-        clearScreen();
+        stream.println();
 
-        System.out.flush();
+        stream.println("Pick a god by selecting id : \n<int1>");
 
-        StringBuilder string = new StringBuilder();
-        string.append(" y | 0 | 1 | 2 | 3 | 4 |\n");
-        string.append("x   ___ ___ ___ ___ ___ \n");
-        int mapInt = 0;
-        for(int x = 0; x < HEIGHT; x++){
-            string.append(x).append("  |");
-            for(int y = 0; y<LENGTH; y++){
-                boolean flag=false;
-                for(int i=0,j=0; i<workerPos.length;i++,j= j+2){
-                    if(workerPos[i].getX() == x && workerPos[i].getY() == y){
-                        string.append(colors.get(pairOwnerWorker[j]).escape()).append(pairOwnerWorker[j+1]).append(Color.RESET).append(" ");
-                        flag = true;
-                    }
-                }
-                if(!flag) string.append("  ");
-                if(updateCommand.getIntData()[x+y] >= DOME_VALUE)
-                    string.append("# #");
-                else
-                    string.append(Integer.numberOfTrailingZeros(updateCommand.getIntData()[mapInt]));
-                mapInt++;
-                string.append("|");
-            }
-            string.append("\n");
-            string.append("__ |___|___|___|___|___|\n");
-        }
-        stream.print(string);
-        //System.out.print(string);
+        cmdNotify.lazySet(true);
+        setCurrentState(MatchState.PICK_GOD);
     }
 
-    private int[] getPairOwnerWorker(int[] updateIntData){
-        int pairLength = updateIntData.length - (LENGTH*HEIGHT);
-        int[] pairOwnerWorker = new int[pairLength];
+    private void filterGodSetup() {
+        printGodsID();
+        stream.println("Select " + playersNumber + " IDs you want to be allowed for this game :");
+        for (int i = 1; i <= playersNumber; i++) stream.print("<int" + i + "> ");
+        stream.println();
 
-        System.arraycopy(updateIntData,(LENGTH*HEIGHT),pairOwnerWorker,0,pairLength);
-
-        return pairOwnerWorker;
+        cmdNotify.lazySet(true);
+        setCurrentState(MatchState.GOD_SELECT);
     }
 
-    private void printGodsID(){
+    private void printGodsID() {
         //TODO : print CardCollection (player name + ID)
     }
 
-    private void clearScreen(){
-        System.out.print("\033[2J");
-        //System.out.print("\r");
-        //System.out.print("\b\b\b\b\b");
-        System.out.flush();
+    private void startSetup(StartCommand startCommand) {
+        playersNumber = startCommand.getPlayersID().length;
+        initPlayers(startCommand);
+        stream.println("Game is now started !!!");
     }
 
-    private void initPlayers(StartCommand cmd){
-        //TODO : random ? and select my color from available?
-        if(idPlayer == cmd.getPlayersID()[0]){
-            colors.put(idPlayer,Color.BLUE);
-            colors.put(cmd.getPlayersID()[1],Color.RED);
-            if(playersNumber>2)
-                colors.put(cmd.getPlayersID()[2],Color.YELLOW);
+    private void actionTimeSetup(ActionCommand actionCommand) {
 
-        }else if(idPlayer == cmd.getPlayersID()[1]){
-            colors.put(idPlayer,Color.BLUE);
-            colors.put(cmd.getPlayersID()[0],Color.RED);
-            if(playersNumber>2)
-                colors.put(cmd.getPlayersID()[2],Color.YELLOW);
+        setNextActions(actionCommand);
 
-        }else{
-            colors.put(idPlayer,Color.BLUE);
-            colors.put(cmd.getPlayersID()[0],Color.RED);
-            if(playersNumber>2)
-                colors.put(cmd.getPlayersID()[1],Color.YELLOW);
+        NextAction[] nextActions = actionCommand.getAvailableActions();
 
+        List<Integer> availableWorker = getAvailableWorker(nextActions);
+
+        //if can auto-select worker
+        if (canAutoSelectWorker(nextActions)) {
+            stream.println("Auto-selection worker n." + colors.get(idPlayer).escape() + availableWorker.get(0) + Color.RESET);
+            int idWorker = availableWorker.get(0);
+
+            List<NextAction> actionForWorker = clearNextActions(nextActions,idWorker);
+
+            //if can auto-select action also
+            if (canAutoSelectAction(actionForWorker)) {
+                int actionId = 0;
+                stream.print("Time to " + actionForWorker.get(actionId).getActionName() + "...");
+
+                List<Vector2> positionForAction = actionForWorker.get(actionId).getAvailablePositions();
+
+                //if can auto-select position also
+                if (canAutoSelectPosition(positionForAction)) {
+                    stream.println(" to (" + positionForAction.get(0).getX() + "," + positionForAction.get(0).getY() + ")");
+                    Vector2 target = positionForAction.get(0);
+                    setCurrentState(MatchState.WAIT_NEXT);
+
+                    virtualServer.send(ActionCommand.makeReply(idPlayer, virtualServer.getServerID(), 0, idWorker, target));
+                } else {
+                    List<NextAction> actions = clearNextActions(nextActions,idWorker);
+                    NextAction nextAction = getSelectedNextAction(actions,actionId);
+                    List<Vector2> possiblePositions = getAvailablePosition(nextAction);
+                    stream.println("\nSelect a position n. where you want to execute action: ");
+                    for(int i = 0; i < possiblePositions.size(); i++){
+                        stream.print(i + ".(" + possiblePositions.get(i).getX() + "," + possiblePositions.get(i).getY() + ")   ");
+                    }
+                    stream.println("\n<int1>");
+
+                    cmdNotify.lazySet(true);
+                    setCurrentState(MatchState.ACTION_TIME);
+                }
+
+            } else {
+                List<NextAction> actions = clearNextActions(nextActions,idWorker);
+                stream.println("Select action n. you want to carry out: ");
+                for(int i = 0; i<actions.size(); i++){
+                    stream.print(i + "." + actions.get(i).getActionName() + "   ");
+                }
+                stream.println("\n<int1>");
+                cmdNotify.lazySet(true);
+                setCurrentState(MatchState.ACTION_TIME);
+            }
+
+        } else {
+            for (Integer integer : availableWorker) {
+                stream.print(integer + "   ");
+            }
+            stream.println();
+
+            stream.println("Select id of worker you want to move :\n<int1>");
+
+            cmdNotify.lazySet(true);
+            setCurrentState(MatchState.ACTION_TIME);
         }
     }
 
+    private boolean canAutoSelectWorker(NextAction[] nextActions) {
+        return getAvailableWorker(nextActions).size() <= 1;
+    }
+
+    private boolean canAutoSelectAction(List<NextAction> actions){
+        if(actions == null) return false;
+        return actions.size() == 1;
+    }
+
+    private boolean canAutoSelectPosition(List<Vector2> possiblePositions){
+        if(possiblePositions == null) return false;
+        return possiblePositions.size() == 1;
+    }
+
+    //new for actionCommand
+
+    //return list of possible worker for this turn and its execution
+    private List<Integer> getAvailableWorker(NextAction[] nextActions){
+        List<Integer> availableWorkers = new ArrayList<>();
+
+        for (NextAction nextAction : nextActions) {
+            if (!availableWorkers.contains(nextAction.getWorkerID())) {
+                availableWorkers.add(nextAction.getWorkerID());
+            }
+        }
+
+        return availableWorkers;
+    }
+
+    //remove actions made by the unselected worker(if available worker = 1 should remain the same)
+    private List<NextAction> clearNextActions(NextAction[] nextActions, int selectedWorker){
+        List<NextAction> actions = new ArrayList<>();
+
+        for(NextAction nextAction : nextActions){
+            if(nextAction.getWorkerID() == selectedWorker)
+                actions.add(nextAction);
+        }
+
+        return actions;
+    }
+
+
+    private NextAction getSelectedNextAction(List<NextAction> nextActions, int selectedAction){
+        return nextActions.get(selectedAction);
+    }
+
+    private List<Vector2> getAvailablePosition(NextAction nextAction){
+        return nextAction.getAvailablePositions();
+    }
+
+
+    //safe information passing between the two threads
+
+    private synchronized void setLastCompactMap(CompactMap compactMap){
+        lastCompactMap = compactMap;
+    }
+
+    private synchronized CompactMap getLastCompactMap(){
+        return Objects.requireNonNullElseGet(lastCompactMap, () -> new CompactMap(new it.polimi.ingsw.game.Map()));
+    }
+
+    private synchronized void setAvailablePositions(WorkerPlaceCommand workerPlaceCommand){
+        availablePositions = workerPlaceCommand.getPositions();
+    }
+
+    private synchronized Vector2[] getAvailablePositions(){
+        if(availablePositions != null)
+            return availablePositions.clone();
+        else return null;
+    }
+
+    private synchronized void setNextActions(ActionCommand actionCommand) {
+        nextActions = actionCommand.getAvailableActions();
+    }
+
+    private synchronized NextAction[] getNextActions() {
+        if(nextActions!=null)
+            return nextActions;
+        else
+            return null;
+    }
+
+    private synchronized void setCurrentState(MatchState newState) {
+        currentState = newState;
+    }
+
+    private synchronized MatchState getCurrentState() {
+        return currentState;
+    }
+
+
+    ////////     MAIN THREAD METHODS
+
+    private void inputLoop() {
+        String input;
+        boolean shouldStop;
+
+        do {
+            input = scanner.nextLine();
+            String[] inputArray = input.split("\\s+");
+
+            shouldStop = checkStatelessInput(inputArray);
+
+            //i can set the value to false in this thread because :
+            //  if true i have to reply to the other thread
+            //  if false i have to wait a command
+            //  it should not set true inside this block but only at the end because it come after a send call or onCommand auto recall
+            if (cmdNotify.compareAndSet(true, false)) {
+                MatchState state = getCurrentState();
+                NextAction[] nextActions = getNextActions();
+                Vector2[] availableVectors = getAvailablePositions();
+
+                boolean retry = false;
+                ExecutionResponse response;
+                do {
+                    if (retry) {
+                        input = scanner.nextLine();
+                        inputArray = input.split("\\s+");
+                        shouldStop = quitCheck(inputArray);
+                    }
+                    if(!shouldStop)
+                        response = matchState(inputArray, state, nextActions, availableVectors);
+                    else
+                        response = ExecutionResponse.SUCCESS;
+
+                    retry = true;
+                } while (response != ExecutionResponse.QUIT && response != ExecutionResponse.SUCCESS);
+
+                if(response == ExecutionResponse.QUIT) shouldStop = true;
+            }
+
+        } while (!shouldStop);
+
+    }
+
+    private boolean checkStatelessInput(String[] inputArray) {
+        if (currentState == MatchState.WAIT) {
+            //TODO : can't start if player != min player fix
+            if (canStartGame(inputArray))
+                virtualServer.send(StartCommand.makeRequest(idPlayer,virtualServer.getServerID()));
+        }else
+                return quitCheck(inputArray);
+
+        return false;
+    }
+
+    private boolean quitCheck(String[] inputArray) {
+        if (inputArray.length <= 1 && inputArray[0].equals("quit")) {
+            virtualServer.send(LeaveCommand.makeRequest(idPlayer, virtualServer.getServerID()));
+            return true;
+        }
+        return false;
+    }
+
+    private ExecutionResponse matchState(String[] inputArray, MatchState state, NextAction[] nextActions, Vector2[] availablePositions) {
+        switch (state) {
+            case GOD_SELECT:
+                if (canConvertInputToInt(inputArray)) {
+                    int[] selectedGods = inputToInt(inputArray);
+                    virtualServer.send(FilterGodCommand.makeReply(idPlayer,virtualServer.getServerID(),selectedGods));
+                    return ExecutionResponse.SUCCESS;
+                }
+                stream.println("Select Gods allowed for this game, please try again: ");
+                for (int i = 1; i <= playersNumber; i++) stream.print("<int" + i + "> ");
+                stream.println();
+                return ExecutionResponse.FAIL;
+            case PICK_GOD:
+                if (canConvertInputToInt(inputArray) && inputArray.length == 1) {
+                    int[] pickedGod = inputToInt(inputArray);
+                    virtualServer.send(PickGodCommand.makeReply(idPlayer,virtualServer.getServerID(),pickedGod[0]));
+                    return ExecutionResponse.SUCCESS;
+                }
+                stream.println("Select you God, please try again: \n<int1>");
+                return ExecutionResponse.FAIL;
+            case FIRST_PLAYER_SELECT:
+                if (canConvertInputToInt(inputArray) && inputArray.length == 1) {
+                    int[] firstPlayer = inputToInt(inputArray);
+                    virtualServer.send(FirstPlayerPickCommand.makeReply(idPlayer,virtualServer.getServerID(),firstPlayer[0]));
+                    return ExecutionResponse.SUCCESS;
+                }
+                stream.println("Select first player for this game, please try again: \n<int1>");
+                return ExecutionResponse.FAIL;
+            case WORKER_PLACE:
+                if(canConvertInputToInt(inputArray) && inputArray.length == N_WORKER){
+                    int[] selectedPos = inputToInt(inputArray);
+                    Vector2[] selectedPosition = new Vector2[N_WORKER];
+                    for(int i = 0 ; i<selectedPos.length; i++){
+                        if(selectedPos[i] < 0 || selectedPos[i] >= availablePositions.length) {
+                            stream.println("Position not available, please try again: ");
+                            for(int j=0; j < N_WORKER; j++){
+                                stream.print("<int" + j + "> ");
+                            }
+                            stream.println();
+                            return ExecutionResponse.FAIL;
+                        }
+                        selectedPosition[i] = availablePositions[selectedPos[i]];
+                    }
+                    virtualServer.send(WorkerPlaceCommand.makeWrapped(idPlayer,virtualServer.getServerID(),selectedPosition));
+                    return ExecutionResponse.SUCCESS;
+                }
+                stream.println("Select " + N_WORKER + " identifier positions where you want to place your workers: ");
+                for(int i=0; i < N_WORKER; i++){
+                    stream.print("<int" + i + "> ");
+                }
+                stream.println();
+                return ExecutionResponse.FAIL;
+            case ACTION_TIME:
+                if(canAutoSelectWorker(nextActions)){
+                    int workerID = nextActions[0].getWorkerID(); //cause of auto select
+                    List<NextAction> actions = clearNextActions(nextActions,workerID);
+                    if(canAutoSelectAction(actions)){
+                        int actionID = 0; // cause of auto select
+                        //input is positionID
+                        if(canConvertInputToInt(inputArray) && inputArray.length == 1){
+                            int[] input = inputToInt(inputArray);
+                            int targetID = input[0];
+                            NextAction nextAction = getSelectedNextAction(actions,actionID);
+                            List<Vector2> positions = getAvailablePosition(nextAction);
+                            if(targetID >= 0 && targetID < positions.size()){
+                                Vector2 target = positions.get(targetID);
+                                virtualServer.send(ActionCommand.makeReply(idPlayer,virtualServer.getServerID(),actionID,workerID,target));
+                                return ExecutionResponse.SUCCESS;
+                            }
+                            stream.println("Position not available, please try again: \n<int1>");
+                            return ExecutionResponse.FAIL;
+                        }
+                        stream.println("Select target n. you want to execute move to, please try again: \n<int1>");
+                        return ExecutionResponse.FAIL;
+                    }else{
+                        //input is actionID
+                        if(canConvertInputToInt(inputArray) && inputArray.length == 1){
+                            int[] input = inputToInt(inputArray);
+                            int actionID = input[0];
+                            if(actionID >= 0 && actionID < nextActions.length){
+                                NextAction nextAction = getSelectedNextAction(actions,actionID);
+                                List<Vector2> possiblePositions = getAvailablePosition(nextAction);
+                                return positionSelection(actions, possiblePositions,actionID);
+                            }
+                            stream.println("Action not available, please try again: \n<int1>");
+                            return ExecutionResponse.FAIL;
+                        }
+                        stream.println("Select action n. you want to perform, please try again: \n<int1>");
+                        return ExecutionResponse.FAIL;
+                    }
+                }else{
+                    //input is workerID
+                    if(canConvertInputToInt(inputArray) && inputArray.length == 1){
+                        int[] input = inputToInt(inputArray);
+                        int workerID = input[0];
+                        if(workerID>=0 && workerID<N_WORKER) {
+                            List<NextAction> actions =  clearNextActions(nextActions,workerID);
+                            return actionSelection(actions);
+                        }
+                        stream.println("Worker not available, please try again: \n<int1>");
+                        return ExecutionResponse.FAIL;
+                    }
+                    stream.println("Select worker you want to use, please try again: \n<int1>");
+                    return ExecutionResponse.FAIL;
+                }
+            default:
+                return ExecutionResponse.SUCCESS;
+        }
+    }
+
+    /**
+     *
+     * @param actions already cleared NextActions List, avery element has the same (selected) worker
+     */
+    private ExecutionResponse actionSelection(List<NextAction> actions) {
+        if(canAutoSelectAction(actions)){
+            stream.println("Time to " + actions.get(0).getActionName() + "...");
+            int actionID = 0;
+            NextAction  nextAction = getSelectedNextAction(actions,actionID);
+            List<Vector2> availablePositions = getAvailablePosition(nextAction);
+            return positionSelection(actions, availablePositions , actionID);
+        }else{
+            stream.println("Select the identifier of action you want to carry out: ");
+            for(int i = 0; i<actions.size(); i++){ stream.println(i + "." + actions.get(i).getActionName() + "   "); }
+            stream.println("\n<int1>");
+
+            boolean shouldStop;
+            String[] inputArray;
+            int actionID = -1;
+            do {
+                inputArray = scanner.nextLine().split("\\s+");
+                shouldStop = quitCheck(inputArray);
+
+                if(canConvertInputToInt(inputArray) && inputArray.length == 1){
+                    actionID = inputToInt(inputArray)[0];
+                }else if(!shouldStop){
+                    stream.println("Select the identifier of action you want to carry out, please try again: \n<int1>");
+                }
+
+            } while (!shouldStop && actionID >= 0 && actionID < actions.size());
+
+            if(!shouldStop) {
+                NextAction nextAction = getSelectedNextAction(actions,actionID);
+                List<Vector2> possiblePositions = getAvailablePosition(nextAction);
+                return positionSelection(actions, possiblePositions, actionID);
+            }else
+                return ExecutionResponse.QUIT;
+        }
+    }
+
+    private ExecutionResponse positionSelection(List<NextAction> actions, List<Vector2> possiblePositions, int actionID) {
+        if(canAutoSelectPosition(possiblePositions)){
+            int workerID = actions.get(0).getWorkerID();
+            int targetID = 0;
+            Vector2 target = possiblePositions.get(targetID);
+            stream.println("Execution to (" + target.getX() + "," + target.getY() + ")");
+            virtualServer.send(ActionCommand.makeReply(idPlayer,virtualServer.getServerID(),actionID,workerID,target));
+            return ExecutionResponse.SUCCESS;
+        }else{
+            showMap(getLastCompactMap(),actions.get(actionID).getAvailablePositions().toArray(Vector2[]::new));
+            stream.println("Select the identifier n. of position you want to chose: ");
+            for(int i = 0; i<possiblePositions.size(); i++){ stream.print(i + ".(" + possiblePositions.get(i).getX() + "," + possiblePositions.get(i).getY() + ")   "); }
+            stream.println("\n<int1>");
+
+            boolean shouldStop;
+            String[] inputArray;
+            int targetID = -1;
+            do {
+                inputArray = scanner.nextLine().split("\\s+");
+                shouldStop = quitCheck(inputArray);
+
+                if(canConvertInputToInt(inputArray) && inputArray.length == 1){
+                    targetID = inputToInt(inputArray)[0];
+                }else{
+                    if(!shouldStop){
+                        stream.println("Select the identifier n. of position you want to execute on, please try again: \n<int1>");
+                    }
+                }
+
+            } while (!shouldStop && (targetID < 0 || targetID >= possiblePositions.size()) );
+
+            if(!shouldStop) {
+                int workerID = actions.get(0).getWorkerID();
+                Vector2 target = possiblePositions.get(targetID);
+                virtualServer.send(ActionCommand.makeReply(idPlayer,virtualServer.getServerID(),actionID,workerID,target));
+                return ExecutionResponse.SUCCESS;
+            }else
+                return ExecutionResponse.QUIT;
+        }
+    }
+
+    private boolean canConvertInputToInt(String[] inputArray) {
+        try {
+            for (String s : inputArray) {
+                Integer.parseInt(s);
+            }
+            return true;
+        } catch (NumberFormatException | NullPointerException e) {
+            return false;
+        }
+    }
+
+    private int[] inputToInt(String[] inputArray) {
+        int[] intInput = new int[inputArray.length];
+        for (int i = 0; i < inputArray.length; i++) {
+            intInput[i] = Integer.parseInt(inputArray[i]);
+        }
+        return intInput;
+    }
+
+    private boolean canStartGame(String[] inputArray) {
+        return inputArray.length == 1 && inputArray[0].equals("start") && idHost == idPlayer;
+    }
+
+
+    //TODO : split in functions
+    private void showMap(CompactMap compactMap) {
+        CompactWorker[] compactWorkers = compactMap.getWorkers();
+
+        clearScreen();
+        System.out.flush();
+
+        StringBuilder string = new StringBuilder();
+        string.append("\n");
+        string.append(" y |");
+        for (int i = 0; i < LENGTH; i++) string.append(" ").append(i).append(" |");
+        string.append("\nx   ");
+        string.append("___ ".repeat(LENGTH));
+        string.append("\n");
+
+        for (int x = 0; x < HEIGHT; x++) {
+            string.append(x).append("  |");
+            for (int y = 0; y < LENGTH; y++) {
+                boolean isWorkerOnCurrentCell = false;
+                for (CompactWorker compactWorker : compactWorkers) {
+                    if (compactWorker.getPosition().getX() == x && compactWorker.getPosition().getY() == y) {
+                        string.append(colors.get(compactWorker.getOwnerID()).escape()).append(compactWorker.getWorkerID()).append(Color.RESET).append(" ");
+                        isWorkerOnCurrentCell = true;
+                    }
+                }
+                if (compactMap.isDome(x, y)) {
+                    string.append("# #");
+                } else {
+                    if (!isWorkerOnCurrentCell) string.append("  ");
+                    string.append(compactMap.getLevel(x, y));
+                }
+                string.append("|");
+            }
+            string.append("\n");
+            string.append("__ |");
+            string.append("___|".repeat(LENGTH));
+            string.append("\n");
+        }
+        string.append("\n");
+        stream.print(string);
+    }
+
+    private void showMap(CompactMap compactMap, Vector2[] availablePositions){
+        CompactWorker[] compactWorkers = compactMap.getWorkers();
+
+        clearScreen();
+        System.out.flush();
+
+        StringBuilder string = new StringBuilder();
+        string.append("\n");
+        string.append(" y |");
+        for (int i = 0; i < LENGTH; i++) string.append(" ").append(i).append(" |");
+        string.append("\nx   ");
+        string.append("___ ".repeat(LENGTH));
+        string.append("\n");
+
+        for (int x = 0; x < HEIGHT; x++) {
+            string.append(x).append("  |");
+            for (int y = 0; y < LENGTH; y++) {
+                boolean isWorkerOnCurrentCell = false;
+                for (CompactWorker compactWorker : compactWorkers) {
+                    if (compactWorker.getPosition().getX() == x && compactWorker.getPosition().getY() == y) {
+                        string.append(colors.get(compactWorker.getOwnerID()).escape()).append(compactWorker.getWorkerID()).append(Color.RESET).append(" ");
+                        isWorkerOnCurrentCell = true;
+                    }
+                }
+                if (compactMap.isDome(x, y)) {
+                    string.append("# #");
+                } else {
+                    if (!isWorkerOnCurrentCell) string.append("  ");
+                    string.append(compactMap.getLevel(x, y));
+                }
+                string.append("|");
+            }
+            string.append("\n");
+            string.append("__ |");
+            if(availablePositions.length < 10){
+                boolean available;
+                for(int i = 0; i<LENGTH; i++){
+                    available = false;
+                    for(int j = 0; j<availablePositions.length ; j++){
+                        if(availablePositions[j].getX() == x && availablePositions[j].getY() == i){
+                            string.append("_").append(Color.GREEN.escape()).append(j).append(Color.RESET).append("_|");
+                            available = true;
+                        }
+                    }
+                    if(!available) string.append("___|");
+                }
+            }else{
+                boolean available;
+                for(int i = 0; i<LENGTH; i++){
+                    available = false;
+                    for (Vector2 availablePosition : availablePositions) {
+                        if (availablePosition.getX() == x && availablePosition.getY() == i) {
+                            string.append("_").append(Color.GREEN.escape()).append("+").append(Color.RESET).append("_|");
+                            available = true;
+                        }
+                    }
+                    if(!available) string.append("___|");
+                }
+            }
+
+            string.append("\n");
+        }
+        string.append("\n");
+        stream.print(string);
+    }
+
+    private void clearScreen() {
+        System.out.print("\033[2J");
+        System.out.flush();
+    }
+
+    private void initPlayers(StartCommand cmd) {
+        if (idPlayer == cmd.getPlayersID()[0]) {
+            colors.put(idPlayer, Color.BLUE);
+            colors.put(cmd.getPlayersID()[1], Color.RED);
+            if (playersNumber > 2)
+                colors.put(cmd.getPlayersID()[2], Color.YELLOW);
+
+        } else if (idPlayer == cmd.getPlayersID()[1]) {
+            colors.put(idPlayer, Color.BLUE);
+            colors.put(cmd.getPlayersID()[0], Color.RED);
+            if (playersNumber > 2)
+                colors.put(cmd.getPlayersID()[2], Color.YELLOW);
+
+        } else {
+            colors.put(idPlayer, Color.BLUE);
+            colors.put(cmd.getPlayersID()[0], Color.RED);
+            if (playersNumber > 2)
+                colors.put(cmd.getPlayersID()[1], Color.YELLOW);
+        }
+    }
 }

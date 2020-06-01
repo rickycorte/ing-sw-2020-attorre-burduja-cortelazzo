@@ -16,7 +16,7 @@ public final class Game
 {
     public static final int MIN_PLAYERS = 2;
     public static final int MAX_PLAYERS = 3;
-    private static final int WORKERS_PER_PLAYER = 2;
+    public static final int WORKERS_PER_PLAYER = 2;
 
     /**
      * Enum that represent all the possible phases of a game:
