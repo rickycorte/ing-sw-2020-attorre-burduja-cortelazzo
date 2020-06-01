@@ -148,7 +148,7 @@ public class VirtualMatchmaker implements ICommandReceiver
                     new CommandWrapper(CommandType.JOIN,
                             new JoinCommand(Server.SERVER_ID, jcm.getSender(), jcm.getUsername(), false)
                     ));
-            System.out.printf("[MATCHMAKER] Rejected login from user: [%d] %s\n", jcm.getSender(), jcm.getUsername());
+            System.out.printf("[MATCHMAKER] Rejected login of user: [%d] %s\n", jcm.getSender(), jcm.getUsername());
         }
         else
         {
@@ -250,6 +250,17 @@ public class VirtualMatchmaker implements ICommandReceiver
 
 
     /**
+     * Return if a username is valid and can be used to login
+     * Valid username: size: [3, 32] and chars: [a-z A-Z 0-9]
+     * @param usr username to check
+     * @return true if username is valid
+     */
+    boolean isUsernameValid(String usr)
+    {
+        return usr != null && usr.matches("^[a-zA-Z0-9]{3,32}$");
+    }
+
+    /**
      * Check if a user can login into the game
      * @param cmd join command
      * @return true if player logged in correctly
@@ -258,14 +269,15 @@ public class VirtualMatchmaker implements ICommandReceiver
     {
         String usr = cmd.getUsername();
 
+        if(!isUsernameValid(usr))
+            return false;
+
         if(loggedPlayers.containsValue(usr))
         {
-            System.out.println("[MATCHMAKER] Duplicate username detected: "+ usr);
             // same username and same id -> login ok
-            if (usr.equals(loggedPlayers.get(cmd.getSender())))
-                return true;
-            else
-                return false;
+            boolean isOk = usr.equals(loggedPlayers.get(cmd.getSender()));
+            System.out.println("[MATCHMAKER] Duplicate username detected: "+ usr+". Accepted: "+ isOk);
+            return isOk;
         }
         else
         {

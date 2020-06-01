@@ -72,7 +72,7 @@ public class Controller implements ICommandReceiver {
         {
             connectedPlayers.add(p);
             // send join notification to player
-            sendCommand(JoinCommand.makeReplyOk(network.getServerID(), joinCommand.getSender(), match.getHost().getId()));
+            sendCommand(JoinCommand.makeReplyOk(network.getServerID(), joinCommand.getSender(), joinCommand.getUsername() , match.getHost().getId()));
             // auto start match with three players
             if(match.playerCount() == Game.MAX_PLAYERS)
             {

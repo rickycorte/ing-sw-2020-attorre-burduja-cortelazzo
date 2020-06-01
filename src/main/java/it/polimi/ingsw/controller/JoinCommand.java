@@ -19,14 +19,15 @@ public class JoinCommand extends BaseCommand {
      * (Server) Send to the client a reply
      * @param sender sender id of who is issuing this command
      * @param target receiver of the command
+     * @param username valid username used to join
      * @param isSuccess set to true if login is successful
      * @param validUsername set to true if username is valid
      * @param hostPlayerID id of the game host
      */
-    public JoinCommand(int sender, int target, boolean isSuccess, boolean validUsername, int hostPlayerID){
+    public JoinCommand(int sender, int target, String username, boolean isSuccess, boolean validUsername, int hostPlayerID){
         //UPDATE FROM SERVER
         super(sender,target);
-        this.username = null;
+        this.username = username;
         this.isJoin = isSuccess;
         this.validUsername = validUsername;
         this.hostPlayerID = hostPlayerID;
@@ -94,14 +95,15 @@ public class JoinCommand extends BaseCommand {
      * The command also include information about the owner of the joined game
      * @param sender sender id
      * @param target client id that should receive this command
+     * @param username valid username used to join
      * @param isSuccess true if join is successful
      * @param isValidUsername true is username is valid
      * @param matchOwnerID client id of the owner of the match joined by target client
      * @return wrapped join command ready to be sent over network
      */
-    public static CommandWrapper makeReply(int sender, int target, boolean isSuccess, boolean isValidUsername ,int matchOwnerID)
+    public static CommandWrapper makeReply(int sender, int target, String username, boolean isSuccess, boolean isValidUsername ,int matchOwnerID)
     {
-        return new CommandWrapper(CommandType.JOIN, new JoinCommand(sender, target, isSuccess, isValidUsername, matchOwnerID));
+        return new CommandWrapper(CommandType.JOIN, new JoinCommand(sender, target, username, isSuccess, isValidUsername, matchOwnerID));
     }
 
     /**
@@ -109,12 +111,13 @@ public class JoinCommand extends BaseCommand {
      * The command also include information about the owner of the joined game
      * @param sender sender id
      * @param target client id that should receive this command
+     * @param validUsername valid username used to join
      * @param matchOwnerID client id of the owner of the match joined by target client
      * @return wrapped join command ready to be sent over network
      */
-    public static CommandWrapper makeReplyOk(int sender, int target ,int matchOwnerID)
+    public static CommandWrapper makeReplyOk(int sender, int target , String validUsername ,int matchOwnerID)
     {
-        return makeReply(sender, target, true, true, matchOwnerID);
+        return makeReply(sender, target, validUsername,true, true, matchOwnerID);
     }
 
     /**
@@ -127,7 +130,7 @@ public class JoinCommand extends BaseCommand {
      */
     public static CommandWrapper makeReplyFail(int sender, int target, boolean isValidUsername)
     {
-        return makeReply(sender, target, false, isValidUsername, -1);
+        return makeReply(sender, target, null,false, isValidUsername, -1);
     }
 
 

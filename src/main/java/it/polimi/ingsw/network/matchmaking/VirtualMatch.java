@@ -61,7 +61,7 @@ public class VirtualMatch implements INetworkForwarder
         // game ends when a END_GAME command and the winner is one of the player in the match
         // the get works because of lazy evaluation, when not END_GAME the getCommand wont even run
         // an no error will show up
-        boolean isGameEnded = packet.getType() == CommandType.END_GAME && players.contains(packet.getCommand(EndGameCommand.class).getWinnerID());
+        boolean isGameEnded = packet.getType() == CommandType.END_GAME && packet.getCommand(EndGameCommand.class).getWinnerID() != EndGameCommand.TARGET_LOST;
         matchmaker.send(this, packet, isGameEnded);
     }
 
