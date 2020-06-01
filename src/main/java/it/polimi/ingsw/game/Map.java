@@ -65,7 +65,7 @@ public class Map
 
     /**
      * Import map data from another map
-     * @param m
+     * @param m map to import
      */
     public void importMap(Map m)
     {

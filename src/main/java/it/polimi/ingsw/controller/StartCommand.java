@@ -24,7 +24,6 @@ public class StartCommand extends BaseCommand {
      * @param connectedPlayers list of connected players (ids)
      */
     public StartCommand(int sender, int target, List<Player> connectedPlayers) {
-        //UPDATE FROM SERVER
         super(sender, target);
         this.playersID = idsToArray(connectedPlayers);
     }
@@ -35,7 +34,6 @@ public class StartCommand extends BaseCommand {
      * @param target receiver of the command
      */
     public StartCommand(int sender, int target) {
-        //REQUEST FROM CLIENT
         super(sender, target);
         this.playersID = null;
     }

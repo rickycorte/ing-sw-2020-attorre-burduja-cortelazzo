@@ -35,17 +35,6 @@ public class FilterGodCommand extends BaseCommand {
     /**
      * Return store god ids array
      * @return god ids array
-     * @deprecated use {@link #getGodFilter()} instead.
-     */
-    @Deprecated
-    public int[] getGodID() {
-        return godsID;
-    }
-
-
-    /**
-     * Return store god ids array
-     * @return god ids array
      */
     public int[] getGodFilter()
     {

@@ -35,16 +35,6 @@ public class PickGodCommand extends BaseCommand {
     }
 
     /**
-     * Store array of god ids
-     * @return god ids array
-     * @deprecated use {@link #getAllowedGodsIDS()}
-     */
-    @Deprecated
-    public int[] getGodID() {
-        return godsID;
-    }
-
-    /**
      * Return stored array of allowed god ids
      * @return array of allowed god ids
      */

@@ -1,7 +1,6 @@
 package it.polimi.ingsw.controller.compact;
 
 import it.polimi.ingsw.game.Map;
-import it.polimi.ingsw.game.Worker;
 
 /**
  * This is a data only class used to send the game map
@@ -49,7 +48,7 @@ public class CompactMap
 
     /**
      * Get workers placed in the map
-     * @return
+     * @return workers in the map
      */
     public CompactWorker[] getWorkers()
     {

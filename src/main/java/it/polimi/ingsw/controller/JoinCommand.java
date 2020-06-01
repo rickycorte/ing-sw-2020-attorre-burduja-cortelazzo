@@ -25,7 +25,6 @@ public class JoinCommand extends BaseCommand {
      * @param hostPlayerID id of the game host
      */
     public JoinCommand(int sender, int target, String username, boolean isSuccess, boolean validUsername, int hostPlayerID){
-        //UPDATE FROM SERVER
         super(sender,target);
         this.username = username;
         this.isJoin = isSuccess;
@@ -41,7 +40,6 @@ public class JoinCommand extends BaseCommand {
      * @param isJoin set to true to mark this command as a join request
      */
     public JoinCommand(int sender, int target, String username, boolean isJoin) {
-        //REQUEST FROM CLIENT
         super(sender, target);
         this.username = username;
         this.isJoin = isJoin;

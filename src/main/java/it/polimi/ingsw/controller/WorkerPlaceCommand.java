@@ -47,19 +47,6 @@ public class WorkerPlaceCommand extends BaseCommand {
         return positions;
     }
 
-
-    /**
-     * @deprecated use {@link #getPositions()}.size()
-     */
-    @Deprecated
-    public List<Integer> getPositionsIndexes(){
-        List<Integer> availableIndexes = new ArrayList<>();
-        for(int i = 0; i<positions.length; i++){
-            availableIndexes.add(i);
-        }
-        return availableIndexes;
-    }
-
     /**
      * Create a new Worker place command with the supplied positions
      * This functions works both on client and server because they share the same type of parameter
@@ -87,6 +74,5 @@ public class WorkerPlaceCommand extends BaseCommand {
     {
         return new CommandWrapper(CommandType.PLACE_WORKERS, new WorkerPlaceCommand(sender,target, positions));
     }
-
 
 }

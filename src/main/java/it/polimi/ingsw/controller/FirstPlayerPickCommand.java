@@ -60,48 +60,6 @@ public class FirstPlayerPickCommand extends BaseCommand {
 
 
     /**
-     * @deprecated use {@link #getPlayers()}
-     */
-    @Deprecated
-    public int[] getPlayersID()
-    {
-        int[] ids = new int[players.length];
-
-        for(int i =0 ;i < players.length; i++)
-            ids[i] = players[i].getId();
-
-        return ids;
-    }
-
-    /**
-     * @deprecated use {@link #getPlayers()}
-     */
-    @Deprecated
-    public String[] getUsernames()
-    {
-        String[] ids = new String[players.length];
-
-        for(int i =0 ;i < players.length; i++)
-            ids[i] = players[i].getUsername();
-
-        return ids;
-    }
-
-    /**
-     * @deprecated use {@link #getPlayers()}
-     */
-    @Deprecated
-    public int[] getGodID()
-    {
-        int[] ids = new int[players.length];
-
-        for(int i =0 ;i < players.length; i++)
-            ids[i] = players[i].getGodID();
-
-        return ids;
-    }
-
-    /**
      * Return array of selectable players with their information
      * @return player list
      */
