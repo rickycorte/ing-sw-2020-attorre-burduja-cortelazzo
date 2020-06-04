@@ -7,7 +7,8 @@ public enum Color {
     GREEN("\u001b[32m"),
     YELLOW("\u001b[33m"),
     BLUE("\u001b[34m"),
-    PURPLE("\u001b[35m");
+    PURPLE("\u001b[35m"),
+    SOFT_WHITE("\u001b[90m");
 
     static final String RESET = "\u001B[0m";
 
