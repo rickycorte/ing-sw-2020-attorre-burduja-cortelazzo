@@ -20,14 +20,16 @@ public class LogInSceneController {
     @FXML
     private Pane mainPane;
     @FXML
-    private Label upperLabel;
-    @FXML
-    private Label lowerLabel;
+    private Label infoLabel;
     @FXML
     private TextField usernameField;
     @FXML
-    private Button connectButton;
+    private TextField serverField;
     @FXML
+    private TextField portField;
+
+    private Button connectButton;
+
     private Button backButton;
 
     @FXML
@@ -37,6 +39,8 @@ public class LogInSceneController {
         connectButton = new Button();
         backButton = new Button();
         mainPane_instance = mainPane;
+
+        infoLabel.setText("Enter your username, server ip and port to connect");
 
         usernameField.setOnKeyPressed((e)-> {
             if (e.getCode() == KeyCode.ENTER) {
@@ -60,20 +64,21 @@ public class LogInSceneController {
      */
     @FXML
     private void onConnectButtonClick() {
-        final String username = usernameField.getText();
+        String username = usernameField.getText();
+        String serverIP = serverField.getText();
+        String serverPort = portField.getText();
         if (username.isBlank()) {
-            upperLabel.setText("Blank username");
-            lowerLabel.setText("Enter another username");
+            infoLabel.setText("Blank username \n You need to have one if you want to play");
             return;
         }
 
         backButton.setDisable(true);
         connectButton.setDisable(true);
 
-        if (!(GuiManager.getInstance().connect(username))) {
-            upperLabel.setText("Couldn't connect");
-            lowerLabel.setText("Try again later");
-            //GuiManager.setLayout("fxml/mainScene.fxml");
+        if(!serverIP.isBlank() && !serverPort.isBlank()){
+            GuiManager.getInstance().connect(serverIP, Integer.parseInt(serverPort), username);
+        }else{
+            GuiManager.getInstance().connect(username);
         }
     }
 
@@ -88,11 +93,11 @@ public class LogInSceneController {
                 GuiManager.setLayout("fxml/waitScene.fxml");
             } else {
                 //GuiManager.setLayout("fxml/mainScene.fxml");
-                upperLabel.setText("Couldn't connect");
+                infoLabel.setText("Couldn't connect");
                 if (!joinCommand.isValidUsername()) {
-                    lowerLabel.setText("Username taken");
+                    infoLabel.setText("Username taken");
                 } else
-                    lowerLabel.setText("Try again later");
+                    infoLabel.setText("Try again later");
             }
         }
     }

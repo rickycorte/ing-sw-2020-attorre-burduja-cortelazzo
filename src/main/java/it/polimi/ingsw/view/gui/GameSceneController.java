@@ -6,7 +6,13 @@ import it.polimi.ingsw.controller.compact.CompactSelectedAction;
 import it.polimi.ingsw.controller.compact.CompactWorker;
 import it.polimi.ingsw.game.NextAction;
 import it.polimi.ingsw.game.Vector2;
+import javafx.animation.KeyFrame;
+import javafx.animation.RotateTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.Timeline;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -18,6 +24,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,10 +33,6 @@ import java.util.*;
 
 public class GameSceneController implements Initializable {
 
-    @FXML
-    private HBox rootleft;
-    @FXML
-    private HBox rootright;
 
     private boolean my_turn;            //true if it's my turn
 
@@ -59,6 +62,12 @@ public class GameSceneController implements Initializable {
 
     private int currentPlayerID;
 
+    private Timer timer;
+
+    @FXML
+    private HBox rootleft;
+    @FXML
+    private HBox rootright;
     @FXML
     private AnchorPane rootcenter;
     @FXML
@@ -74,6 +83,10 @@ public class GameSceneController implements Initializable {
     @FXML
     private Button cancellWorkerSelection;
     @FXML
+    private Button undoButton;
+    @FXML
+    private Button quitButton;
+    @FXML
     private Label gameLabel;
     @FXML
     private StackPane stack_id;
@@ -87,6 +100,7 @@ public class GameSceneController implements Initializable {
     private ImageView myGod;
     @FXML
     private GridPane mapGrid;
+
     @FXML
     public void initialize() {
     }
@@ -108,6 +122,7 @@ public class GameSceneController implements Initializable {
         state = 0;
         my_turn = false;
 
+        /*
         URL url = getClass().getResource("/img/common/SantoriniBoard_nomap.png");
         try (InputStream stream = url.openStream()) {
             background.setImage(new Image(stream));
@@ -115,6 +130,7 @@ public class GameSceneController implements Initializable {
             e.printStackTrace();
         }
         background.setPreserveRatio(false);
+         */
 
         background.fitWidthProperty().bind(borderpane.widthProperty());
         background.fitHeightProperty().bind(borderpane.heightProperty());
@@ -126,7 +142,7 @@ public class GameSceneController implements Initializable {
         borderpane.minHeightProperty().bind(root.heightProperty());
 
         rootcenter.maxHeightProperty().bind(borderpane.heightProperty().multiply(0.75));
-        rootcenter.maxWidthProperty().bind(borderpane.widthProperty().multiply(0.5));
+        rootcenter.maxWidthProperty().bind(borderpane.widthProperty().multiply(0.75));
 
         rootright.minWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
         rootright.maxWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
@@ -140,19 +156,20 @@ public class GameSceneController implements Initializable {
         player2_god.fitWidthProperty().bind(rootright.widthProperty().multiply(0.5));
         player2_god.fitHeightProperty().bind(rootright.heightProperty().multiply(0.5));
 
+        map.setPreserveRatio(true);
+
         StackPane.setAlignment(map, Pos.CENTER);
         StackPane.setAlignment(mapGrid, Pos.CENTER);
         mapGrid.setAlignment(Pos.CENTER);
 
-        map.fitWidthProperty().bind(stack_id.widthProperty().multiply(0.75));
-        map.fitHeightProperty().bind(stack_id.heightProperty().multiply(0.75));
+
+        map.fitWidthProperty().bind(stack_id.widthProperty().multiply(0.95));
+        map.fitHeightProperty().bind(stack_id.heightProperty().multiply(0.95));
 
         initializeTiles();
 
-
-
         initializeButtons();
-        disableAllButtons();
+        disableAllButtons(true);
     }
 
     private void initializeGodsImages() {
@@ -188,7 +205,7 @@ public class GameSceneController implements Initializable {
      * This method adds a highlight image on a tile
      * @param availablePositions represent the tiles/positions to highlight
      */
-    void highlightAvailableTiles(Vector2[] availablePositions) {
+    private void highlightAvailableTiles(Vector2[] availablePositions) {
         for (Vector2 availablePosition : availablePositions) {
             Tile tileToHighlight = tiles[availablePosition.getX()][availablePosition.getY()];
             tileToHighlight.highlightTile();
@@ -198,7 +215,7 @@ public class GameSceneController implements Initializable {
     /**
      * This method removes the highlight image of a tile if it has one
      */
-    void unHighlightTiles() {
+    private void unHighlightTiles() {
         for (int col = 0; col < mapGrid.getColumnCount(); col++) {
             for (int row = 0; row < mapGrid.getRowCount(); row++) {
                 Tile tileToUnhighlight = tiles[col][row];
@@ -211,7 +228,7 @@ public class GameSceneController implements Initializable {
      * Handle mouse clicks on a tile
      * @param mouseEvent user mouse click
      */
-    void onTileClick(javafx.scene.input.MouseEvent mouseEvent){
+    private void onTileClick(javafx.scene.input.MouseEvent mouseEvent){
         if(my_turn){
             if(state == 1){ // workers placement phase
                 Tile clickedTile = findTileByMouseEvent(mouseEvent);
@@ -223,53 +240,38 @@ public class GameSceneController implements Initializable {
                     if( workers_placement.size() == 2){
                         my_workers = workers_placement.toArray(my_workers);
                         sendMyWorkers(my_workers);
-                        disableAllButtons();
+                        disableAllButtons(true);
                         my_turn = false;
                         state = 0;
                     }
                 }
             }else if(state == 2){ // i'm in the move/build phase
                 Tile clickedTile = findTileByMouseEvent(mouseEvent);
-
                 if(selectedWorker == -1){ // if I haven't selected a worker yet
                     if ((clickedTile.workerId != -1)
-                            && clickedTile.workerOwnerID == GuiManager.getInstance().getServerConnection().getClientID() //the worker I just clicked is mine
-                            && getWorkers().contains(clickedTile.workerId)) {                                           // the worker is available to be chosen
-
+                            && clickedTile.workerOwnerID == GuiManager.getInstance().getServerConnection().getClientID()         //the worker I just clicked is mine
+                            && getAvailableWorkers().contains(clickedTile.workerId)) {                                           // the worker is available to be chosen
                         selectedWorker = clickedTile.workerId;
                         unHighlightWorkers();
 
                         NextAction[] availableActions = receivedCommand.getAvailableActions();  //all the actions
                         List<NextAction> actionsForWorker = actionsForWorker(availableActions); //all the actions for the selected worker
-
+                        bindButtonsActions();
                         if( actionsForWorker.size() == 1) { // i have one possible action
                             actionID = 0;
-                            List<Vector2> possibleCells = actionsForWorker.get(0).getAvailablePositions();
+                            List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
                             Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
                             cellsToHighlight = possibleCells.toArray(cellsToHighlight);
                             highlightAvailableTiles(cellsToHighlight);
                             cancellWorkerSelection.setDisable(false);
-                        }else if( actionsForWorker.size() == 2 ){ // the worker has two possible actions
-                            //make the user choose which of the two actions to execute
-                            if(isEndTurnAvailable()){
-                                endTurnButton.setDisable(false);
-                            }
-
-                            actionID = 0;
-                            godPowerButton.setText(availableActions[1].getActionName());
-                            godPowerButton.setDisable(false);
-
-                            List<Vector2> possibleCellss = actionsForWorker.get(actionID).getAvailablePositions();
-                            Vector2[] cellsToHighlight = new Vector2[possibleCellss.size()];
-                            cellsToHighlight = possibleCellss.toArray(cellsToHighlight);
-
-
-                            if(!(availableActions[actionID].getActionName().startsWith("End Turn"))) {
+                        }else{ // the worker has multiple possible actions
+                            List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
+                            Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
+                            cellsToHighlight = possibleCells.toArray(cellsToHighlight);
+                            if(!(availableActions[actionID].getActionName().startsWith("End Turn")) && !(availableActions[actionID].getActionName().startsWith("Undo"))) {
                                 highlightAvailableTiles(cellsToHighlight);
                             }
                             //cancellWorkerSelection.setDisable(false);
-                        }else {
-                            // the worker has more than 2 possible actions or no possible action, should never happen
                         }
                     }else{
                         // the worker is either not mine or there is no worker at all or is not available to be chosen
@@ -277,23 +279,123 @@ public class GameSceneController implements Initializable {
                 }else { // handle execution, I've already selected a worker
                     cancellWorkerSelection.setDisable(false);
                     Vector2 posToSend = clickedTile.pos;
-                   // CompactSelectedAction actionToSend = new CompactSelectedAction(actionID, selectedWorker, posToSend);
                     GuiManager.getInstance().send(ActionCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), actionID, selectedWorker, posToSend));
 
                     unHighlightTiles();
-                    disableAllButtons();
+                    disableAllButtons(true);
                     my_turn = false;
                     state = 0;
                 }
             }
         }else{
-            gameLabel.setText("Wait, it's not your turn yet");
+            gameLabel.setText("Wait, it's " + idsUsernamesMap.get(currentPlayerID) + "'s turn");
         }
     }
 
-    List<NextAction> actionsForWorker(NextAction[] availableActions){
-        List<NextAction> actions = new ArrayList<>();
+    /**
+     * Handles Action commands
+     * @param cmd action command to handle
+     */
+    void onActionCommand(CommandWrapper cmd) {
+        if (GuiManager.getInstance().isForMe(cmd)) {
+            my_turn = true;
+            state = 2;
+            receivedCommand = cmd.getCommand(ActionCommand.class);
+            if (receivedCommand.getAvailableActions().length == 1 && receivedCommand.getAvailableActions()[0].getActionName().equals("End Turn")) {
+                GuiManager.getInstance().send(ActionCommand.makeReply(
+                        GuiManager.getInstance().getServerConnection().getClientID(),
+                        GuiManager.getInstance().getServerConnection().getServerID(),
+                        0,
+                        selectedWorker,
+                        receivedCommand.getAvailableActions()[0].getAvailablePositions().get(0) // replace with new Vector2(0, 0) if things get too slow
+                ));
+                return;
+            }
 
+            boolean onlyEndTurnAndUndoAvailable = onlyEndTurnAndUndoAvailable(receivedCommand);
+
+            if (isUndoAvailable()) {
+                undoButton.setDisable(false);
+                Timeline timeline = new Timeline();
+                timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(5), new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        undoButton.setDisable(true);
+                        if (onlyEndTurnAndUndoAvailable)
+                            //disableAllButtons(true);
+                            onEndTurnButtonClick(null);
+                    }
+                }));
+                timeline.play();
+            }
+
+            if (getAvailableWorkers().size() == 2) { // both of my workers have possible actions
+                selectedWorker = -1;
+                highlightAvailableWorkers(getAvailableWorkers());
+                gameLabel.setText("Click on a Worker you want to select");
+            } else {
+                actionID = 0;
+                bindButtonsActions();
+                List<NextAction> actionsForWorker = actionsForWorker(receivedCommand.getAvailableActions());
+                List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
+                Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
+                cellsToHighlight = possibleCells.toArray(cellsToHighlight);
+                if (!(actionsForWorker.get(actionID).getActionName().startsWith("Undo")) && !(actionsForWorker.get(actionID).getActionName().startsWith("End Turn"))) {
+                    highlightAvailableTiles(cellsToHighlight);
+                    gameLabel.setText("Choose a position");
+                }
+            }
+        } else {
+            currentPlayerID = cmd.getCommand(ActionCommand.class).getTarget();
+            gameLabel.setText("Wait, it's " + idsUsernamesMap.get(currentPlayerID) + "'s turn");
+        }
+    }
+
+    /**
+     * Method that binds buttons to the respective incoming available actions
+     */
+    void bindButtonsActions(){
+        int actionIndex = 0;
+        actionsForWorker(receivedCommand.getAvailableActions());
+        receivedCommand.getAvailableActions();
+        for (NextAction anAction : actionsForWorker(receivedCommand.getAvailableActions())) {
+            String actionName = anAction.getActionName();
+            if (actionName.startsWith("Undo"))
+                undoButton.setDisable(false);
+            else if (actionName.startsWith("End Turn"))
+                endTurnButton.setDisable(false);
+            else if (actionName.contains("Again") || actionName.startsWith("Build Dome") || actionIndex > 0) {
+                System.out.println("Found a god power");
+                godPowerButton.setId(String.valueOf(actionIndex));
+                godPowerButton.setText(actionName);
+                godPowerButton.setDisable(false);
+            }
+            actionIndex++;
+        }
+    }
+
+    /**
+     * This method checks if Undo is an available action
+     * @return true / false accordingly
+     */
+    private boolean isUndoAvailable(){
+        NextAction[] availableActions = receivedCommand.getAvailableActions();
+        List<NextAction> actionsForWorker = actionsForWorker(availableActions);
+        for (NextAction nextAction : actionsForWorker) {
+            if (nextAction.getActionName().startsWith("Undo")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Looks for available actions for the selected worker
+     * @param availableActions array of available actions for all workers
+     * @return List of NextActions representing the actions selected worker can run
+     */
+    private List<NextAction> actionsForWorker(NextAction[] availableActions){
+        List<NextAction> actions = new ArrayList<>();
         for(NextAction anAction : availableActions){
             if(anAction.getWorkerID() == selectedWorker)
                 actions.add(anAction);
@@ -302,7 +404,10 @@ public class GameSceneController implements Initializable {
 
     }
 
-    void initializeButtons(){
+    /**
+     * This method initializes buttons by setting their text / background / onAction method
+     */
+    private void initializeButtons(){
         godPowerButton.setText("Use god power");
         godPowerButton.setOnMouseClicked(this :: onGodPowerButtonClick);
 
@@ -312,7 +417,38 @@ public class GameSceneController implements Initializable {
         cancellWorkerSelection.setText("Cancel W.Sel");
         cancellWorkerSelection.setOnMouseClicked(this :: onCancellWorkerSelectionClick);
 
+        undoButton.setText("Undo");
+        undoButton.setOnMouseClicked(this:: onUndoButtonClick);
+
     }
+
+    /**
+     * Handle user's click on undo button
+     * @param mouseEvent user's click on the button
+     */
+    private void onUndoButtonClick(MouseEvent mouseEvent) {
+        actionID = getActionID("Undo");
+        List<Vector2> posToSend = posForUndo();
+        GuiManager.getInstance().send(ActionCommand.makeReply(
+                GuiManager.getInstance().getServerConnection().getClientID(),
+                GuiManager.getInstance().getServerConnection().getServerID(),
+                actionID,
+                selectedWorker,
+                posToSend.get(0)
+        ));
+        endTurnButton.setDisable(true);
+        undoButton.setDisable(true);
+    }
+
+    private List<Vector2> posForUndo(){
+        NextAction[] nextActions = receivedCommand.getAvailableActions();
+        for(int i = 0; i< nextActions.length;i++){
+            if(nextActions[i].getActionName().startsWith("Undo"))
+                return nextActions[i].getAvailablePositions();
+        }
+        return null;
+    }
+
 
     /**
      * Handle user's click on cancel worker selection button
@@ -321,18 +457,21 @@ public class GameSceneController implements Initializable {
     private void onCancellWorkerSelectionClick(MouseEvent mouseEvent) {
         selectedWorker = -1;
         unHighlightTiles();
-        disableAllButtons();
-        List<Integer> workers = getWorkers();
+        disableAllButtons(true);
+        List<Integer> workers = getAvailableWorkers();
         highlightAvailableWorkers(workers);
     }
 
     /**
-     * Disables all buttons
+     * Disables / enables all buttons
+     * @param par if true will disable all, if false will enable all
      */
-    void disableAllButtons(){
-        endTurnButton.setDisable(true);
-        godPowerButton.setDisable(true);
-        cancellWorkerSelection.setDisable(true);
+    private void disableAllButtons(boolean par){
+        endTurnButton.setDisable(par);
+        godPowerButton.setDisable(par);
+        cancellWorkerSelection.setDisable(par);
+        quitButton.setDisable(par);
+        undoButton.setDisable(par);
     }
 
     /**
@@ -340,20 +479,30 @@ public class GameSceneController implements Initializable {
      * @param mouseEvent user's click on the button
      */
     private void onEndTurnButtonClick(MouseEvent mouseEvent) {
+        actionID = getActionID("End Turn");
         GuiManager.getInstance().send(ActionCommand.makeReply(
                 GuiManager.getInstance().getServerConnection().getClientID(),
                 GuiManager.getInstance().getServerConnection().getServerID(),
-                0,
+                actionID,
                 selectedWorker,
                 new Vector2(0,0))); //TODO change this to the received pos
-        disableAllButtons();
+        disableAllButtons(true);
+    }
+
+    int getActionID(String actionName){
+        NextAction[] actions = receivedCommand.getAvailableActions();
+        for(int i = 0; i < actions.length; i++){
+            if(actions[i].getActionName().startsWith(actionName))
+                return i;
+        }
+        return -1;
     }
 
     /**
      * Checks if End Turn is among the possible actions
      * @return true / false accordingly
      */
-    boolean isEndTurnAvailable(){
+    private boolean isEndTurnAvailable(){
         NextAction[] availableActions = receivedCommand.getAvailableActions();
         for(NextAction anAction : availableActions){
             if(anAction.getActionName().startsWith("End Turn"))
@@ -366,18 +515,18 @@ public class GameSceneController implements Initializable {
      * Handle god power button
      * @param mouseEvent user click on the button
      */
-    void onGodPowerButtonClick(MouseEvent mouseEvent) {
-        actionID = 1;
+    private void onGodPowerButtonClick(MouseEvent mouseEvent) {
+        actionID = Integer.parseInt(godPowerButton.getId());
         unHighlightTiles();
         NextAction[] availableActions = receivedCommand.getAvailableActions();  //all the actions
         List<NextAction> actionsForWorker = actionsForWorker(availableActions); //actions for selected worker
-        List<Vector2> possibleCellss = actionsForWorker.get(actionID).getAvailablePositions();
+        List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
 
-        Vector2[] cellsToHighlight = new Vector2[possibleCellss.size()];
-        cellsToHighlight = possibleCellss.toArray(cellsToHighlight);
+        Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
+        cellsToHighlight = possibleCells.toArray(cellsToHighlight);
 
         highlightAvailableTiles(cellsToHighlight);
-        disableAllButtons();
+        disableAllButtons(true);
     }
 
     /**
@@ -385,7 +534,7 @@ public class GameSceneController implements Initializable {
      * @param mouseEvent user click
      * @return tile clicked
      */
-    Tile findTileByMouseEvent(javafx.scene.input.MouseEvent mouseEvent){
+    private Tile findTileByMouseEvent(javafx.scene.input.MouseEvent mouseEvent){
         Node clickedNode = mouseEvent.getPickResult().getIntersectedNode();
         Tile clickedTile;
         if (clickedNode instanceof Tile) {
@@ -401,43 +550,25 @@ public class GameSceneController implements Initializable {
      * Sends the chosen positions to place my workers
      * @param w_pos array of positions I chose
      */
-    void sendMyWorkers(Vector2[] w_pos) {
+    private void sendMyWorkers(Vector2[] w_pos) {
         GuiManager.getInstance().send(WorkerPlaceCommand.makeWrapped(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), w_pos));
     }
 
-    /**
-     * Handles Action commands
-     * @param cmd action command to handle
-     */
-    void onActionCommand(CommandWrapper cmd) {
-        if (GuiManager.getInstance().isForMe(cmd)) {
-            if(cmd.getCommand(ActionCommand.class).getAvailableActions()[0].getActionName().equals("End Turn") && cmd.getCommand(ActionCommand.class).getAvailableActions().length == 1){
-                GuiManager.getInstance().send(ActionCommand.makeReply(
-                        GuiManager.getInstance().getServerConnection().getClientID(),
-                        GuiManager.getInstance().getServerConnection().getServerID(),
-                        0,
-                        selectedWorker,
-                        new Vector2(0,0)
 
-                ));
-                return;
-            }
-            receivedCommand = cmd.getCommand(ActionCommand.class);
 
-            List<Integer> workers = getWorkers();
-
-            highlightAvailableWorkers(workers);
-            selectedWorker = -1;
-            my_turn = true;
-            state = 2;
-            gameLabel.setText("Click on a Worker then click on a tile");
-        } else {
-            currentPlayerID = cmd.getCommand(ActionCommand.class).getTarget();
-            gameLabel.setText("Wait, it's " + idsUsernamesMap.get(currentPlayerID) + "'s turn");
-        }
+    private boolean onlyEndTurnAndUndoAvailable(ActionCommand receivedCommand) {
+        if( receivedCommand.getAvailableActions().length == 2);
+            if (receivedCommand.getAvailableActions()[0].getActionName().startsWith("End Turn") || receivedCommand.getAvailableActions()[0].getActionName().startsWith("Undo"))
+                if (receivedCommand.getAvailableActions()[1].getActionName().startsWith("End Turn") || receivedCommand.getAvailableActions()[1].getActionName().startsWith("Undo"))
+                    return true;
+        return false;
     }
 
-    List<Integer> getWorkers(){
+    /**
+     * Looks for available workers in the received command
+     * @return List of integers representing available workers
+     */
+    private List<Integer> getAvailableWorkers(){
         List<Integer> availableWorkers = new ArrayList<>();
         for(int i = 0; i<receivedCommand.getAvailableActions().length; i++){
             Integer x = receivedCommand.getAvailableActions()[i].getWorkerID();
@@ -452,7 +583,7 @@ public class GameSceneController implements Initializable {
      * Iterates thru all the available workers and highlights them
      * @param availableWorkers workers to highlight
      */
-    void highlightAvailableWorkers(List<Integer> availableWorkers){
+    private void highlightAvailableWorkers(List<Integer> availableWorkers){
         for( Integer workerID : availableWorkers ){
             highlightWorker(workerID);
         }
@@ -462,7 +593,7 @@ public class GameSceneController implements Initializable {
      * Highlights a worker by placing an ImageView on his Tile
      * @param workerID worker to highlight
      */
-    void highlightWorker(int workerID){
+    private void highlightWorker(int workerID){
         for(int col = 0; col < 5 ; col++){
             for (int row = 0; row < 5; row++) {
                 Tile tileToHighlight = tiles[col][row];
@@ -476,7 +607,7 @@ public class GameSceneController implements Initializable {
     /**
      * Calls the unHighlightWorker method on each Tile
      */
-    void unHighlightWorkers() {
+    private void unHighlightWorkers() {
         for (int col = 0; col < 5; col++) {
             for (int row = 0; row < 5; row++) {
                 Tile tile = tiles[col][row];
@@ -503,7 +634,7 @@ public class GameSceneController implements Initializable {
     /**
      * Method that updates the map with the new levels
      */
-    void updateLevels(CompactMap updatedMap) {
+    private void updateLevels(CompactMap updatedMap) {
         int col = 0;
         int row = 0;
 
@@ -529,7 +660,7 @@ public class GameSceneController implements Initializable {
      * This method updates all the worker's info from information coming from the server (update command)
      *
      */
-    void updateWorkers(CompactWorker[] updatedWorkers) {
+    private void updateWorkers(CompactWorker[] updatedWorkers) {
         for (int col = 0; col < 5; col++) {
             for (int row = 0; row < 5; row++) {
                 tiles[row][col].putWorker(-1, -1);
@@ -545,7 +676,7 @@ public class GameSceneController implements Initializable {
     /**
      * This method iterates thru all the tiles of the mapGrid and renders them
      */
-    void renderTiles() {
+    private void renderTiles() {
         for (int col = 0; col < 5; col++) {
             for (int row = 0; row < 5; row++) {
                 Tile tileToRender = tiles[row][col];
@@ -556,9 +687,8 @@ public class GameSceneController implements Initializable {
 
     /**
      * This method initializes the mapGrid pane by placing a Tile on each cell
-     * @return mapGrid initialized
      */
-    private GridPane initializeTiles() {
+    private void initializeTiles() {
         //mapGrid.setMinSize(map.getFitWidth(), map.getFitHeight());
         double tileW = map.getFitWidth() / 5;
         double tileH = map.getFitHeight() / 5;
@@ -580,18 +710,22 @@ public class GameSceneController implements Initializable {
                 tile.workerImages = workerImages;
                 //tile.setMinSize(tileW, tileH);
                 mapGrid.add(tile, col, row);
+                tile.setMapGrid(mapGrid);
+                tile.minWidthProperty().bind(map.fitWidthProperty().multiply(0.165));
+                tile.minHeightProperty().bind(map.fitHeightProperty().multiply(0.198));
 
-                tile.minWidthProperty().bind(map.fitWidthProperty().multiply(0.2));
-                tile.minHeightProperty().bind(map.fitHeightProperty().multiply(0.2));
-                tile.maxWidthProperty().bind(map.fitWidthProperty().multiply(0.2));
-                tile.maxHeightProperty().bind(map.fitHeightProperty().multiply(0.2));
-                //tile.setStyle("-fx-border-color: yellow; -fx-border-radius: 2");
+                //tile.maxWidthProperty().bind(map.fitWidthProperty().multiply(0.22));
+                //tile.maxHeightProperty().bind(map.fitHeightProperty().multiply(0.2));
+
+
+                tile.setStyle("-fx-border-color: yellow; -fx-border-radius: 5");
 
                 tiles[row][col] = tile;
             }
         }
-        //mapGrid.setGridLinesVisible(true);
-        return mapGrid;
+        mapGrid.setGridLinesVisible(true);
+
+
     }
 
     private ImageView getImageImageViewByURL(URL url) {
@@ -609,6 +743,7 @@ public class GameSceneController implements Initializable {
      * This method maps each client to a specific worker color image URL
      */
     void mapPlayers() {
+
         List<Integer> clientIds = guiManager.getAllPlayerIds();
         //System.out.printf("player idssssss %s\n", clientIds);
         Collections.sort(clientIds);
@@ -623,9 +758,14 @@ public class GameSceneController implements Initializable {
         }
     }
 
+
+
+
     void onEndGame(CommandWrapper cmd) {
         GuiManager.setLayout("fxml/endGameScene.fxml");
     }
+
+
 
     //------------------------------------------------------------------------------------------------------------------
 
@@ -640,7 +780,12 @@ public class GameSceneController implements Initializable {
         private boolean hasDome = false;        //initially the Tile has no dome on it
         private Vector2 pos;                    //the position of this tile inside the gridMap
         private Map<Integer, URL> workerImages; //map to have a reference of each player's worker color
+        private GridPane mapGrid;
 
+
+        void setMapGrid(GridPane mapGrid){
+            this.mapGrid = mapGrid;
+        }
         /**
          * Updates the level of this Tile
          * @param newLevel new level of the tile
@@ -679,9 +824,7 @@ public class GameSceneController implements Initializable {
          * Highlights the Tile by placing a highlight image
          */
         private void highlightTile() {
-            URL url = getClass().getResource("/img/common/highlight.png");
-            ImageView highlight = getImageImageViewByURL(url);
-            highlight.setId("highlight");
+            ImageView highlight = initializeHighlight("highlight");
             this.getChildren().add(highlight);
         }
 
@@ -733,7 +876,6 @@ public class GameSceneController implements Initializable {
         /**
          * Render method - Places the corresponding image of a worker
          */
-        //TODO add female type worker
         private void placeWorkerImage() {
             int workerOwnerID = this.workerOwnerID;
             int workerID = this.workerId;
@@ -744,7 +886,25 @@ public class GameSceneController implements Initializable {
             URL url = workerImages.get(workerOwnerID);
             //System.out.printf("DEbug %d, %d, %s || %s\n", workerID, workerOwnerID, url, workerImages);
             ImageView my_worker = getImageImageViewByURL(url);
+            my_worker.setPreserveRatio(true);
+            double workerScaleFactor = getScaleFactor(this);
+            my_worker.fitWidthProperty().bind(this.mapGrid.widthProperty().multiply(0.2).multiply(workerScaleFactor));
             this.getChildren().add(my_worker);
+        }
+
+        private double getScaleFactor(Tile tile) {
+            int tileLevel = tile.level;
+            switch (tileLevel){
+                case 0:
+                    return 0.65;
+                case 1:
+                    return 0.7;
+                case 2:
+                    return 0.75;
+                case 3:
+                    return 0.8;
+            }
+            return -1;
         }
 
         /**
@@ -759,18 +919,24 @@ public class GameSceneController implements Initializable {
                 case 1: {
                     URL url = getClass().getResource("/img/buildings/Level_1.png");
                     ImageView levelImage = getImageImageViewByURL(url);
+                    levelImage.setPreserveRatio(true);
+                    levelImage.fitWidthProperty().bind(this.widthProperty().multiply(0.9));
                     this.getChildren().add(levelImage);
                     break;
                 }
                 case 2: {
                     URL url = getClass().getResource("/img/buildings/Level_2.png");
                     ImageView levelImage = getImageImageViewByURL(url);
+                    levelImage.setPreserveRatio(true);
+                    levelImage.fitWidthProperty().bind(this.widthProperty().multiply(0.9));
                     this.getChildren().add(levelImage);
                     break;
                 }
                 default: {
                     URL url = getClass().getResource("/img/buildings/Level_3.png");
                     ImageView levelImage = getImageImageViewByURL(url);
+                    levelImage.setPreserveRatio(true);
+                    levelImage.fitWidthProperty().bind(this.widthProperty().multiply(0.9));
                     this.getChildren().add(levelImage);
                     break;
                 }
@@ -779,6 +945,8 @@ public class GameSceneController implements Initializable {
             if (hasDome) {
                 URL url = getClass().getResource("/img/buildings/dome.png");
                 ImageView levelImage = getImageImageViewByURL(url);
+                levelImage.setPreserveRatio(true);
+                levelImage.fitWidthProperty().bind(this.widthProperty().multiply(0.9));
                 this.getChildren().add(levelImage);
             }
         }
@@ -787,10 +955,8 @@ public class GameSceneController implements Initializable {
          * Highlights a worker by placing a highlight ImageView on the Tile
          */
         void highlightWorker() {
-            URL url = getClass().getResource("/img/common/highlight_worker.png");
-            ImageView levelImage = getImageImageViewByURL(url);
-            levelImage.setId("highlight_worker");
-            this.getChildren().add(levelImage);
+            ImageView workerHighlight = initializeHighlight("highlight_worker");
+            this.getChildren().add(workerHighlight);
         }
 
         /**
@@ -807,6 +973,24 @@ public class GameSceneController implements Initializable {
                 e.printStackTrace();
             }
             return imageView;
+        }
+
+        ImageView initializeHighlight(String highlightType){
+            URL highlightURL = getClass().getResource("/img/common/"+highlightType+".png");
+            ImageView highlight = getImageImageViewByURL(highlightURL);
+
+            highlight.setId(highlightType);
+            highlight.setPreserveRatio(true);
+            highlight.fitWidthProperty().bind(this.widthProperty().multiply(0.9));
+
+            ScaleTransition scaleTransition = new ScaleTransition(Duration.seconds(2), highlight);
+            scaleTransition.setByX(-0.3);
+            scaleTransition.setByY(-0.3);
+            scaleTransition.setCycleCount(ScaleTransition.INDEFINITE);
+            scaleTransition.setAutoReverse(true);
+            scaleTransition.play();
+
+            return highlight;
         }
     }
 }

@@ -9,9 +9,11 @@
 
 <AnchorPane fx:id="root" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.GameSceneController">
    <StackPane AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-      <ImageView fx:id="background" >
-
-      </ImageView><!-- prefHeight="729.0" prefWidth="1280.0"  -->
+      <ImageView fx:id="background"  style="-fx-background-size: stretch">
+         <image>
+            <Image url="@../img/common/SantoriniBoard_nomap.png" />
+         </image>
+      </ImageView>
       <BorderPane fx:id="borderpane"
                   styleClass="gamePane" stylesheets="@../css/main.css" >
          <left>
@@ -60,11 +62,11 @@
                                 GridPane.halignment="CENTER"
                                 GridPane.fillHeight="true" GridPane.fillWidth="true"
                                 maxWidth="Infinity"/>
-                        <Button mnemonicParsing="false" text="?"
+                        <Button fx:id="undoButton" mnemonicParsing="false" text="?"
                                 GridPane.columnIndex="0" GridPane.rowIndex="2"
                                 GridPane.fillHeight="true" GridPane.fillWidth="true"
                                 maxWidth="Infinity"/>
-                        <Button mnemonicParsing="false" text="q"
+                        <Button fx:id="quitButton" mnemonicParsing="false" text="q"
                                 GridPane.columnIndex="1" GridPane.rowIndex="2"
                                 GridPane.fillHeight="true" GridPane.fillWidth="true"
                                  maxWidth="Infinity"/>

@@ -15,7 +15,7 @@ public class BuildAgainAction extends BuildAction {
         this.localConstrains.add(constraint1);
         this.localConstrains.add(constraint2);
 
-        displayName = "Build";
+        displayName = "Build Again";
 
         if(constraint1 != GameConstraints.Constraint.NONE && constraint2 != GameConstraints.Constraint.NONE)
         {

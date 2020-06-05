@@ -96,7 +96,7 @@ public class CardCollection {
         ).appendSubGraph(
                 BehaviourNode.makeRootNode(new BuildAction())
                         .setNext(new MoveAction(GameConstraints.Constraint.BLOCK_MOVE_UP))
-                        .setNext(new BuildAgainAction())
+                        .setNext(new BuildAction())
                         .setNext(new EndTurnAction())
                         .getRoot()
         )));

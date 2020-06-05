@@ -13,7 +13,7 @@ public class MoveAgainAction extends MoveAction {
         this.localConstrains.add(localConstrains);
         this.localConstrains.add(GameConstraints.Constraint.BLOCK_SAME_CELL_MOVE);
 
-        displayName = "Move ("+GameConstraints.Constraint.BLOCK_SAME_CELL_MOVE.toString();
+        displayName = "Move Again ("+GameConstraints.Constraint.BLOCK_SAME_CELL_MOVE.toString();
 
         if(localConstrains != GameConstraints.Constraint.NONE)
             displayName += ", " + localConstrains.toString();

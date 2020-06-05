@@ -306,4 +306,8 @@ public class GuiManager implements ICommandReceiver {
     public int getHostID() {
         return hostID;
     }
+
+    public void connect(String serverIP, int serverPort, String username) {
+        getServerConnection().connect(serverIP, serverPort, username);
+    }
 }

@@ -13,8 +13,6 @@ public class WaitSceneController {
 
     private GuiManager guiManager;
 
-
-
     @FXML
     private Pane mainPane;
     @FXML
@@ -28,6 +26,7 @@ public class WaitSceneController {
         guiManager.setWaitSceneController(this);
         startGameButton.setDisable(true);
         startGameButton.setText("Start Game");
+        centerLabel.setText("Waiting for a worthy opponent...");
     }
     //TODO check that the ack join is true, disable in case the second client has disconnected meanwhile
 
