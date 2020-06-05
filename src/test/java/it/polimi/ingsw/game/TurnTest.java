@@ -3,9 +3,6 @@ package it.polimi.ingsw.game;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Vector;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,7 +37,7 @@ class TurnTest
         //setup players
         p = new Player(1, "first");
         w = new Worker(0, p, new Vector2(0, 0));
-        w2 = new Worker(1, p, new Vector2(5, 5));
+        w2 = new Worker(1, p, new Vector2(4, 4));
 
         p.addWorker(w);
         p.addWorker(w2);
@@ -239,7 +236,7 @@ class TurnTest
 
 
     @Test
-    void shouldNotUndoAfterTimeout() throws NotAllowedMoveException, OutOfGraphException, InterruptedException, ReflectiveOperationException
+    void shouldNotUndoAfterTimeout() throws NotAllowedMoveException, OutOfGraphException, InterruptedException
     {
         turn = new Turn(p, true);
         w.setPosition(new Vector2(3, 3)); // move in a free space
@@ -250,5 +247,47 @@ class TurnTest
 
         Thread.sleep(Turn.MAX_UNDO_MILLI + 2);
         assertThrows(NotAllowedMoveException.class, ()->{turn.runAction(1, new Vector2(3, 3), map, gc);});
+    }
+
+    @Test
+    void shouldResetWorkerPosWhenUndoASwap()throws NotAllowedMoveException, OutOfGraphException
+    {
+        turn = new Turn(p, true);
+        // ad swap move to branch 1
+        testSeq.appendSubGraph(BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.CAN_SWAP_CONSTRAINT)).setNext(new EndTurnAction()).getRoot());
+        Player p2 = new Player(64,"Yes");
+        Worker wOther = new Worker(0, p2, new Vector2(4,3)); // place near w2
+        p2.addWorker(wOther);
+        map.setWorkers(p2);
+
+
+        turn.selectWorker(1); // select w2
+        turn.runAction(1, new Vector2(4,3), map, gc); // swap with other worker
+        turn.runAction(1, new Vector2(4,4), map, gc); // run undo
+
+        assertEquals(wOther.getPosition(), new Vector2(4,3));
+        assertEquals(w2.getPosition(), new Vector2(4,4));
+
+    }
+
+    @Test
+    void shouldResetWorkerPosWhenUndoAPush() throws NotAllowedMoveException, OutOfGraphException
+    {
+        turn = new Turn(p, true);
+        // ad swap move to branch 1
+        testSeq.appendSubGraph(BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.CAN_PUSH_CONSTRAINT)).setNext(new EndTurnAction()).getRoot());
+        Player p2 = new Player(64,"Yes");
+        Worker wOther = new Worker(0, p2, new Vector2(4,3)); // place near w2
+        p2.addWorker(wOther);
+        map.setWorkers(p2);
+
+
+        turn.selectWorker(1); // select w2
+        turn.runAction(1, new Vector2(4,3), map, gc); // push with other worker
+        turn.runAction(1, new Vector2(4,4), map, gc); // run undo
+
+        assertEquals(wOther.getPosition(), new Vector2(4,3));
+        assertEquals(w2.getPosition(), new Vector2(4,4));
+
     }
 }

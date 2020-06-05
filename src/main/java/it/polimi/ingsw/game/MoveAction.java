@@ -192,7 +192,7 @@ public class MoveAction extends Action {
         //merge local and global constrains to avoid multiple checks
         GameConstraints gc = mergeConstraints(localConstrains, globalConstrains);
 
-        ArrayList<Vector2> allowed_cells = possibleCells(w, m, globalConstrains);
+        ArrayList<Vector2> allowed_cells = possibleCells(w, m, gc);
 
         if (allowed_cells.size() == 0)
             return  -1;  // if i have nowhere to go -> i lost

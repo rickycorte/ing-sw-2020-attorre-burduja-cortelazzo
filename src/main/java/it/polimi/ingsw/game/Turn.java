@@ -100,7 +100,7 @@ public class Turn
             }
 
             m.importMap(oldMap);      // rollback map to remove builds
-            restoreWorkerPositions(); // rollback positions
+            restoreWorkerPositions(m); // rollback positions
 
             //add current node to prevent an undo on older (or already undone) actions with MAX_UNDO_SECONDS + 1
             usedUndos.put(graph.getCurrentNode(), Instant.now().minusMillis(MAX_UNDO_MILLI +1));
@@ -119,7 +119,7 @@ public class Turn
             {
                 oldMap = new Map(m);  // save map backup for undo
                 lastTargetPosition = target; // save pos for undo
-                saveWorkerPositions(); // save worker positions
+                saveWorkerPositions(m); // save worker positions
             }
 
             graph.selectAction(id);
@@ -204,11 +204,12 @@ public class Turn
 
     /**
      * Save worker positions in a list
+     * @param m map used to make a backup of workers
      */
-    private void saveWorkerPositions()
+    private void saveWorkerPositions(Map m)
     {
         oldWorkerPositions.clear();
-        for (Worker w: player.getWorkers())
+        for (Worker w: m.getWorkers())
         {
             oldWorkerPositions.add(w.getPosition().copy());
         }
@@ -216,12 +217,13 @@ public class Turn
 
     /**
      * Restore worker positions
+     * @param m map where worker backup should be applied
      */
-    private void restoreWorkerPositions()
+    private void restoreWorkerPositions(Map m)
     {
-        for(int i=0; i < player.getWorkers().size(); i++)
+        for(int i=0; i < m.getWorkers().size(); i++)
         {
-            player.getWorkers().get(i).setPosition(oldWorkerPositions.get(i));
+            m.getWorkers().get(i).setPosition(oldWorkerPositions.get(i));
         }
         oldWorkerPositions.clear();
     }
