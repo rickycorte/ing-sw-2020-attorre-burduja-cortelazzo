@@ -691,7 +691,7 @@ public class ControllerTest
 
     //utility method for Action Command
     private CommandWrapper createActionCommand(int sender,int worker, int action,Vector2 pos){
-        return ActionCommand.makeReply(sender, SERVER_ID,worker, action, pos );
+        return ActionCommand.makeReply(sender, SERVER_ID, action, worker, pos );
     }
 
     @Test
@@ -905,7 +905,7 @@ public class ControllerTest
 
         CommandWrapper exCmd = controller.getLastSent();
         //player 2 try to execute next possible action with a different worker
-        controller.onCommand(createActionCommand(2,1,0,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
+        controller.onCommand(createActionCommand(2,0,1,cmd.getAvailableActions()[0].getAvailablePositions().get(0)));
 
         assertEquals(exCmd.toString(),controller.getLastSent().toString());
     }

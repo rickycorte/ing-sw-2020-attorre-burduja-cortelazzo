@@ -119,6 +119,15 @@ public class VirtualMatchmaker implements ICommandReceiver
         for (Integer client : clients)
             server.send(client, cmd);
 
+        // someone lost in the game and we should remove him from the match
+        // to avoid sending messages to a "idle" client
+        if(!gameEnded && cmd.getType() == CommandType.END_GAME)
+        {
+            int id = cmd.getCommand(BaseCommand.class).getTarget();
+            matchCache.remove(id);
+            vm.removePlayerNoDisconnect(id);
+        }
+
         // remove game if ended and keep client sessions
         if(gameEnded)
             removeEndedMatch(vm);
@@ -144,10 +153,7 @@ public class VirtualMatchmaker implements ICommandReceiver
         if(!login(jcm))
         {
             // duplicate username notify client
-            server.send(jcm.getSender(),
-                    new CommandWrapper(CommandType.JOIN,
-                            new JoinCommand(Server.SERVER_ID, jcm.getSender(), jcm.getUsername(), false)
-                    ));
+            server.send(jcm.getSender(), JoinCommand.makeReplyFail(Server.SERVER_ID, jcm.getSender(), false));
             System.out.printf("[MATCHMAKER] Rejected login of user: [%d] %s\n", jcm.getSender(), jcm.getUsername());
         }
         else

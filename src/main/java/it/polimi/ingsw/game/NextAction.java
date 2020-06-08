@@ -10,14 +10,16 @@ public class NextAction {
     private int worker;
     private String actionName;
     private ArrayList<Vector2> availablePositions;
+    private boolean isUndoAction;
 
 
-    public NextAction(String name, Worker w, Vector2 position)
+    public NextAction(String name, Worker w, Vector2 position, boolean isUndo)
     {
         this.worker = w.getId();
         availablePositions = new ArrayList<>();
         availablePositions.add(position);
         actionName = name;
+        isUndoAction = isUndo;
     }
 
     public NextAction(Worker w, Map m, GameConstraints constraints,BehaviourNode node) {
@@ -25,6 +27,7 @@ public class NextAction {
         this.actionName = node.getAction().displayName();
         this.availablePositions = new ArrayList<>();
         this.availablePositions.addAll(node.getAction().possibleCells(w,m,constraints));
+        isUndoAction = false;
     }
 
     /**
@@ -46,4 +49,13 @@ public class NextAction {
      * @return worker id
      */
     public int getWorkerID() { return worker; }
+
+    /**
+     * Check if this actions is an undo or not
+     * @return true if undo
+     */
+    public boolean isUndo()
+    {
+        return isUndoAction;
+    }
 }

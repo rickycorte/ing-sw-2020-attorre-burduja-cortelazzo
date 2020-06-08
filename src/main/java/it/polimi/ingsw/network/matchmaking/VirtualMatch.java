@@ -114,7 +114,8 @@ public class VirtualMatch implements INetworkForwarder
                 controller.onCommand(cmd);
             }catch (Exception e)
             {
-                System.out.println("[MATCH "+hashCode()+"] Unable to run command "+ cmd.toString()+" because "+ e.getMessage());
+                System.out.println("[MATCH "+hashCode()+"] Unable to run command "+ cmd.toString()+" because "+e.getClass()+": "+ e.getMessage());
+                e.printStackTrace();
             }
         }
     }
@@ -135,6 +136,19 @@ public class VirtualMatch implements INetworkForwarder
         }
     }
 
+
+    /**
+     * Remove a player from the virtual match without a disconnect notification
+     * @param id id of the player to remove
+     */
+    public void removePlayerNoDisconnect(int id)
+    {
+        synchronized (controller)
+        {
+            //use indexof because removing with a int is used as "index" and not as a search item
+            players.remove(players.indexOf(id));
+        }
+    }
 
     /**
      * Return an array of connected player ids

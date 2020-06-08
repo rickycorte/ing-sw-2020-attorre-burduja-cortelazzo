@@ -10,6 +10,13 @@ import it.polimi.ingsw.game.Player;
  * Inform a client that the match is ended (winner/interruped/loser)
  * (Client)
  * Not send
+ *
+ * When issued this command always has a winnerID that holds different meanings.
+ * winnerID is:
+ * 1) greater than 0: the game has a real winner and this variable is the client id of the winner
+ * 2) INTERRUPTED_GAME: this value mean the the game was interrupted because a client left a running match. This also means that the match is now closed
+ * and the client should try to join a new game.
+ * 3) TARGET_LOST: this values means that the client with the id located in Command Target has lost the game
  */
 public class EndGameCommand extends BaseCommand {
     private int winnerID;

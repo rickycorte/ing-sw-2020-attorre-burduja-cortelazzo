@@ -932,7 +932,7 @@ class GameTest
         // w1 | w2 | X
         // A1 | A2 | X
 
-        assertNull(game.getNextActions(p1));
+        assertNull(game.getNextActions());
         assertEquals(Game.GameState.GAME, game.getCurrentState());
         assertEquals(p2, game.getCurrentPlayer());
         //ensure cells are freed when a player loses

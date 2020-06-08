@@ -84,4 +84,10 @@ public class Player
         Player player = (Player) o;
         return username.equals(player.username);
     }
+
+    @Override
+    public String toString()
+    {
+        return "{id=" + id + ", username=" + username + "}";
+    }
 }

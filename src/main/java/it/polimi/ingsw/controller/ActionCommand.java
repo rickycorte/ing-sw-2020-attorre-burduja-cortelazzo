@@ -75,6 +75,8 @@ public class ActionCommand extends BaseCommand {
      */
     public static CommandWrapper makeRequest(int sender, int target, List<NextAction> nextActions)
     {
+        if(nextActions == null)
+            return null;
         return new CommandWrapper(CommandType.ACTION_TIME, new ActionCommand(sender,target,nextActions));
     }
 

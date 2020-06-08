@@ -400,7 +400,9 @@ public final class Game
         {
             //select worker when the first action run succeed
             if(currentTurn.getWorker() == null)
+            {
                 currentTurn.selectWorker(worker);
+            }
 
             int actionRes = currentTurn.runAction(actionId, target, gameMap, globalConstraints);
 
@@ -411,6 +413,7 @@ public final class Game
             else if (actionRes < 0) // player lost
             {
                 playerLost(players.get(currentPlayer));
+                System.out.println("[GAME] Player" + sender +" lost because cant make any move (during turn exec), players left: "+ players);
                 return 0;
             }
             else {
@@ -438,16 +441,15 @@ public final class Game
     /**
      * Get the list of next possible actions for all worker
      * if a worker is selected for current turn, get possible action to continue turn with that worker
-     * @param sender player who issues this command
      * @return list of actions (workerID,actionName,possibleVector2), null if none is available
      */
-    public List<NextAction> getNextActions(Player sender) {
+    public List<NextAction> getNextActions() {
 
         ArrayList<NextAction> nextActions = new ArrayList<>();
 
         if (currentTurn.getWorker() == null)
         {
-            for (Worker worker : sender.getWorkers())
+            for (Worker worker : getCurrentPlayer().getWorkers())
             {
                 nextActions.addAll(currentTurn.getNextAction(worker, gameMap, globalConstraints));
             }
@@ -464,7 +466,9 @@ public final class Game
         else
         {
             //no more things to do... the player got stuck and cant complete the turn
-            playerLost(sender);
+            Player p = currentTurn.getPlayer();
+            playerLost(p);
+            System.out.println("[GAME] Player " + p +" lost because has 0 actions left, players left: "+ players);
             return null;
         }
 
@@ -622,6 +626,9 @@ public final class Game
         gameState = GameState.GAME;
 
         Player p = players.get(player);
+
+        System.out.println("[GAME] Created new turn for " + p);
+
         if(p.getGod() == null)
             p.setGod(cardCollection.getNoGodCard());
 
@@ -629,7 +636,9 @@ public final class Game
 
         if(!currentTurn.canStillMove(gameMap, globalConstraints))
         {
-            playerLost(players.get(currentPlayer));
+            var loser = players.get(currentPlayer);
+            playerLost(loser);
+            System.out.println("[GAME] Player" + loser +" lost because cant make any move, players left: "+ players);
         }
     }
 
@@ -644,11 +653,15 @@ public final class Game
     }
 
     /**
-     * Remove a player that lost the game
+     * Remove a player that lost the game, this function can only be called in GAME phase
+     * during other phases nothing happens
      * @param loser player that met a lose condition
      */
     private void playerLost(Player loser)
     {
+        if(gameState != GameState.GAME)
+            return;
+
         players.remove(loser);
         // after this line current player is the next one
         // because we removed the loser
@@ -659,7 +672,8 @@ public final class Game
         {
             endGame(players.get(currentPlayer));
         }
-        else {
+        else
+        {
             gameMap.removeWorkers(loser);
             //start new turn if we can still play
             makeTurn(currentPlayer);

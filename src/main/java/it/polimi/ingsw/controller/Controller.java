@@ -6,8 +6,9 @@ import it.polimi.ingsw.network.INetworkForwarder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import static it.polimi.ingsw.game.Game.GameState.END;
 
 /**
  * Controller class that handles incoming messages from layer network
@@ -22,11 +23,20 @@ public class Controller implements ICommandReceiver {
     private INetworkForwarder network;
     private CommandWrapper lastSent;
 
+    private Timer undoCheckTimer;
+    private Player[] prevPlayers;
+
+
+    private CommandType allowedCommandType;
+    private boolean alreadySentEndGame;
+
 
     public Controller (INetworkForwarder adapter){
         connectedPlayers = new ArrayList<>();
         network = adapter;
         lastSent = null;
+        allowedCommandType = CommandType.START;
+        alreadySentEndGame = false;
     }
 
     // **********************************************************************************************
@@ -77,8 +87,7 @@ public class Controller implements ICommandReceiver {
             if(match.playerCount() == Game.MAX_PLAYERS)
             {
                 // start game
-                match.start(getPlayer(match.getHost().getId()));
-                sendCommand(makeNextCommand(Game.GameState.WAIT, match.getCurrentState())); // WAIT because was in lobby
+                runStartCommand(new StartCommand(match.getHost().getId(), network.getServerID())); // start game by emulating start command from host
             }
         }
         else
@@ -96,31 +105,11 @@ public class Controller implements ICommandReceiver {
      */
     public void onCommand(CommandWrapper cmdWrapper)
     {
-        CommandWrapper nextCmd;
-        Game.GameState prevGameState = match.getCurrentState();
-
-        if(!filterCommandType(cmdWrapper)) return; //command not expected
+        if(match.isEnded()) return; // cant accept commands if match is ended
 
         try
         {
-            if (runCommand(cmdWrapper))
-            {
-                nextCmd = makeNextCommand(prevGameState, match.getCurrentState());
-                sendMapUpdate(cmdWrapper);
-            }
-            else //command failed
-            {
-                if(cmdWrapper.getType() == CommandType.START)
-                {
-                    nextCmd = null;
-                }
-                else
-                {
-                    nextCmd =  makeNextCommand(prevGameState, match.getCurrentState()); // avoid cached last command because undo expire
-                }
-            }
-
-            sendCommand(nextCmd);
+            executeCommand(cmdWrapper);
         }
         catch (NotAllowedOperationException e)
         {
@@ -145,7 +134,7 @@ public class Controller implements ICommandReceiver {
         System.out.println("[CONTROLLER] Disconnect "+ cmd.getSender());
         match.left(getPlayer(cmd.getSender()));
 
-        if(match.getCurrentState() == END)
+        if(match.getCurrentState() == Game.GameState.END)
         {
             sendCommand(EndGameCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getWinner()));
         }
@@ -157,7 +146,6 @@ public class Controller implements ICommandReceiver {
 
     /**
      * Translate a numeric id into a real connected player
-     *
      * @param id player id
      * @return Player instance when passed id
      */
@@ -166,153 +154,6 @@ public class Controller implements ICommandReceiver {
         for (Player p : connectedPlayers) {
             if (p.getId() == id)
                 return p;
-        }
-        return null;
-    }
-
-    /**
-     * Check if cmd type is the required one
-     * include first command case
-     * @param cmd Command to be checked
-     * @return true if cmd type is valid
-     */
-    private boolean filterCommandType(CommandWrapper cmd)
-    {
-        //start is not a request
-        if(match.getCurrentState() != Game.GameState.WAIT && cmd.getType() == CommandType.START) return false;
-
-        //join are not onCommand type
-        if(lastSent.getType() == CommandType.JOIN && cmd.getType() == CommandType.START) return true;
-
-        //command is not the requested one
-        return lastSent == null || lastSent.getType() == cmd.getType();
-    }
-
-    /**
-     * Run a receiver and command and return if the execution was successful of not
-     * @param cmd command to run
-     * @return false if a command execution failed
-     * @throws NotAllowedOperationException if a not allowed command is run, it's not sender turn
-     */
-    private boolean runCommand(CommandWrapper cmd) throws NotAllowedOperationException
-    {
-        BaseCommand baseCommand = cmd.getCommand(BaseCommand.class);
-        Player p = getPlayer(baseCommand.getSender());
-
-        switch (cmd.getType()) {
-            case START:
-                return match.start(p);
-
-            case FILTER_GODS:
-                FilterGodCommand filterGodCommand = cmd.getCommand(FilterGodCommand.class);
-                return match.applyGodFilter(p, filterGodCommand.getGodFilter());
-
-            case PICK_GOD:
-                PickGodCommand pickGodCommand = cmd.getCommand(PickGodCommand.class);
-                return match.selectGod(p, pickGodCommand.getPickedGodID());
-
-            case SELECT_FIRST_PLAYER:
-                FirstPlayerPickCommand firstPlayerPickCommand = cmd.getCommand(FirstPlayerPickCommand.class);
-                return match.selectFirstPlayer(p, getPlayer(firstPlayerPickCommand.getPickedPlayerID()));
-
-            case PLACE_WORKERS:
-                WorkerPlaceCommand workerPlaceCommand = cmd.getCommand(WorkerPlaceCommand.class);
-                return match.placeWorkers(p, workerPlaceCommand.getPositions());
-
-            case ACTION_TIME:{
-                ActionCommand actionCommand = cmd.getCommand(ActionCommand.class);
-                var selectedAction = actionCommand.getSelectedAction();
-
-                int res = match.executeAction(p, selectedAction.getWorkerID(), selectedAction.getActionID(), selectedAction.getPosition());
-
-                if(res > 0) // exec ok
-                {
-                    return true;
-                }
-                else if(res == 0) // current player lost
-                {
-                    network.send(EndGameCommand.makeLoseSingle(network.getServerID(), actionCommand.getSender()));
-                    return true;
-                }
-                else // exec fail
-                {
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
-
-
-    /**
-     * Create a new command for the new state reached by the game,
-     * this function also generates correct values if the game is still in the same state
-     * but some data values change
-     * @param oldState old game state (before command run)
-     * @param currentState current game state (after command run)
-     * @return new command that should be sent to the clients
-     */
-    private CommandWrapper makeNextCommand(Game.GameState oldState, Game.GameState currentState)
-    {
-        CommandWrapper nextCmd;
-        //check for state changes
-        if (oldState != currentState)
-        {
-            // check if should notify a game start
-            if(oldState == Game.GameState.WAIT)
-                sendCommand(StartCommand.makeReply(network.getServerID(), network.getBroadCastID(), connectedPlayers));
-
-            //different state
-            nextCmd = makeCommandForState(currentState);
-        }
-        else
-        {
-            //different player same state OR same player same state
-            nextCmd = makeCommandForState(currentState);
-
-            if(nextCmd.getType() == CommandType.END_GAME)
-            {
-                //notify player lose in his turn
-                sendCommand(nextCmd);
-                nextCmd = makeCommandForState(currentState); // calculate new moves for a player
-            }
-        }
-
-        return nextCmd;
-    }
-
-    /**
-     * Create a new command to send to the client based on a game state
-     * @param state state used to generate the command
-     * @return wrapped command fot the supplied state
-     */
-    private CommandWrapper makeCommandForState(Game.GameState state)
-    {
-        var currentPlayer = match.getCurrentPlayer();
-        var host = match.getHost();
-        switch (state)
-        {
-            case GOD_FILTER:
-                return FilterGodCommand.makeRequest(network.getServerID(), host.getId());
-
-            case GOD_PICK:
-                return PickGodCommand.makeRequest(network.getServerID(), currentPlayer.getId(), match.getAllowedCardIDs());
-
-            case FIRST_PLAYER_PICK:
-                return FirstPlayerPickCommand.makeRequest(network.getServerID(),host.getId(), connectedPlayers);
-
-            case WORKER_PLACE:
-                return WorkerPlaceCommand.makeWrapped(network.getServerID(), currentPlayer.getId(), match.getCurrentMap().cellWithoutWorkers());
-
-            case GAME:
-                var actions = match.getNextActions(currentPlayer);
-                if(actions != null)
-                    return ActionCommand.makeRequest(network.getServerID(), currentPlayer.getId(), actions);
-                else
-                    return EndGameCommand.makeLoseSingle(network.getServerID(), currentPlayer.getId());
-
-            case END:
-                return EndGameCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getWinner());
         }
         return null;
     }
@@ -331,34 +172,386 @@ public class Controller implements ICommandReceiver {
         return true;
     }
 
-    /**
-     * Send update of game status
-     * Data is stored in an int array like :
-     *  LENGTH * HEIGHT element represent map values
-     *  the rest are pairs of (id owner, id worker)
-     * Every Vector2 is corrispondent to a pai of (id owner, id worker)
-     * @param lastCommand last command received
-     */
-    private void sendMapUpdate(CommandWrapper lastCommand)
-    {
-        if(lastCommand.getType() == CommandType.PLACE_WORKERS || lastCommand.getType() == CommandType.ACTION_TIME) {
 
-            System.out.println("Sending map update to everyone");
-            network.send(UpdateCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getCurrentMap()));
-        }
+    /**
+     * Check if a command is allowed to run or not
+     * @param cmd command to check
+     * @return true is command is allowed
+     */
+    private boolean allowedCommand(CommandWrapper cmd)
+    {
+        return !match.isEnded() || cmd.getType() == allowedCommandType;
     }
 
 
     /**
-     * send a command
+     * Execute an incoming command
+     * @param cmd command to execute
+     * @throws NotAllowedOperationException if sender of the command can't run the command
+     */
+    private void executeCommand(CommandWrapper cmd) throws NotAllowedOperationException
+    {
+        prevPlayers = match.getPlayers().toArray(Player[]::new);
+
+        if(cmd == null || !allowedCommand(cmd))
+        {
+            System.out.println("[CONTROLLER] Got a not allowed command "+ cmd);
+        }
+
+        switch (cmd.getType())
+        {
+            case START:
+                runStartCommand(cmd.getCommand(StartCommand.class));
+                break;
+            case FILTER_GODS:
+                runFilterGodCommand(cmd.getCommand(FilterGodCommand.class));
+                break;
+            case PICK_GOD:
+                runPickGodCommand(cmd.getCommand(PickGodCommand.class));
+                break;
+            case SELECT_FIRST_PLAYER:
+                runSelectFirstPlayerCommand(cmd.getCommand(FirstPlayerPickCommand.class));
+                break;
+            case PLACE_WORKERS:
+                runWorkerPlaceCommand(cmd.getCommand(WorkerPlaceCommand.class));
+                break;
+            case ACTION_TIME:
+                runActionCommand(cmd.getCommand(ActionCommand.class));
+                break;
+        }
+
+        runEndGameDetection(prevPlayers);
+
+    }
+
+
+    /**
+     * Send a command to connected clients
      * @param cmdWrap next command to send
      */
     private void sendCommand(CommandWrapper cmdWrap)
     {
         if(cmdWrap != null)
         {
-            lastSent = cmdWrap;
+            if(cmdWrap.getType() != CommandType.UPDATE)
+                lastSent = cmdWrap;
+
             network.send(cmdWrap);
         }
+    }
+
+
+    //****************************************************************************************************************
+    // Command handlers
+
+    /**
+     * Execute a start command
+     * If command is correct the match is started and filter god request is sent
+     * If data is not correct nothing is performed
+     * @param cmd start command to execute
+     */
+    private void runStartCommand(StartCommand cmd)
+    {
+        if(cmd == null || match.getCurrentState() != Game.GameState.WAIT)
+        {
+            System.out.println("[CONTROLLER] Unexpected "+ cmd+" when game is in "+ match.getCurrentState());
+            return;
+        }
+
+        if(match.start(getPlayer(cmd.getSender())))
+        {
+            // send start notification to everyone
+            sendCommand(StartCommand.makeReply(network.getServerID(), network.getBroadCastID(), connectedPlayers));
+            // start filter god phase
+            sendCommand(FilterGodCommand.makeRequest(network.getServerID(), match.getHost().getId()));
+            allowedCommandType = CommandType.FILTER_GODS;
+        }
+    }
+
+    /**
+     * Execute a Filter God Command
+     * If command is correct god filter is applied to the match and the first God pick command is issued
+     * If command is not correct god filter request is repeated
+     * @param cmd god filter command to run
+     * @throws NotAllowedOperationException if sender of the command can't run the command
+     */
+    private void runFilterGodCommand(FilterGodCommand cmd) throws NotAllowedOperationException
+    {
+        if(cmd == null || match.getCurrentState() != Game.GameState.GOD_FILTER)
+        {
+            System.out.println("[CONTROLLER] Unexpected "+ cmd+" when game is in "+ match.getCurrentState());
+            return;
+        }
+
+        if(match.applyGodFilter(getPlayer(cmd.getSender()), cmd.getGodFilter()))
+        {
+            //start god pick phase
+            sendCommand(PickGodCommand.makeRequest(network.getServerID(), match.getCurrentPlayer().getId(), match.getAllowedCardIDs()));
+            allowedCommandType = CommandType.PICK_GOD;
+        }
+        else
+        {
+            // send again required action
+            sendCommand(FilterGodCommand.makeRequest(network.getServerID(), match.getHost().getId()));
+        }
+    }
+
+
+    /**
+     * Execute god pick command
+     * If command is correct a new god pick command is issued if there are some players that still need to chose a god otherwise
+     * Select First Player Command is issued
+     * If command is not correct god pick command is repeated for the player that sent a broken request
+     * @param cmd god pick command to execute
+     * @throws NotAllowedOperationException if sender of the command can't run the command
+     */
+    private void runPickGodCommand(PickGodCommand cmd) throws NotAllowedOperationException
+    {
+        if(cmd == null || match.getCurrentState() != Game.GameState.GOD_PICK)
+        {
+            System.out.println("[CONTROLLER] Unexpected "+ cmd +" when game is in "+ match.getCurrentState());
+            return;
+        }
+
+        // if pick is applied and we moved to the next stage of game
+        if(match.selectGod(getPlayer(cmd.getSender()), cmd.getPickedGodID()) && match.getCurrentState() != Game.GameState.GOD_PICK)
+        {
+            // start select first player phase
+           sendCommand(FirstPlayerPickCommand.makeRequest(network.getServerID(), match.getHost().getId(), connectedPlayers));
+           allowedCommandType = CommandType.SELECT_FIRST_PLAYER;
+        }
+        else
+        {
+            // send again required action
+            sendCommand(PickGodCommand.makeRequest(network.getServerID(), match.getCurrentPlayer().getId(), match.getAllowedCardIDs()));
+        }
+
+    }
+
+
+    /**
+     * Execute Select First Player Command
+     * If command is correct the first Worker Place command is issued to the selected first player
+     * If command is not correct Select First Player Command is issued again
+     * @param cmd first player command to run
+     * @throws NotAllowedOperationException if sender of the command can't run the command
+     */
+    private void runSelectFirstPlayerCommand(FirstPlayerPickCommand cmd) throws NotAllowedOperationException
+    {
+        if(cmd == null || match.getCurrentState() != Game.GameState.FIRST_PLAYER_PICK)
+        {
+            System.out.println("[CONTROLLER] Unexpected "+ cmd +" when game is in "+ match.getCurrentState());
+            return;
+        }
+
+        if(match.selectFirstPlayer(getPlayer(cmd.getSender()), getPlayer(cmd.getPickedPlayerID())))
+        {
+            // move to the next phase, worker place
+            sendCommand(WorkerPlaceCommand.makeWrapped(network.getServerID(), match.getCurrentPlayer().getId(), match.getCurrentMap().cellWithoutWorkers()));
+            allowedCommandType = CommandType.PLACE_WORKERS;
+        }
+        else
+        {
+            // send again required action
+            sendCommand(FirstPlayerPickCommand.makeRequest(network.getServerID(), match.getHost().getId(), connectedPlayers));
+        }
+    }
+
+
+    /**
+     * Execute Worker Place Command
+     * If command is correct issue a new Worker Place Command if there are players that still require to place workers
+     * otherwise start the match and send the first ActionCommand
+     * If command is not correct issue again the Worker Place Command to the player who sent a broken command
+     * @param cmd worker place command to run
+     * @throws NotAllowedOperationException if sender of the command can't run the command
+     */
+    private void runWorkerPlaceCommand(WorkerPlaceCommand cmd) throws NotAllowedOperationException
+    {
+        if(cmd == null || match.getCurrentState() != Game.GameState.WORKER_PLACE)
+        {
+            System.out.println("[CONTROLLER] Unexpected "+ cmd +" when game is in "+ match.getCurrentState());
+            return;
+        }
+
+        var res = match.placeWorkers(getPlayer(cmd.getSender()), cmd.getPositions());
+
+        // send map update
+        if(res)
+            sendCommand(UpdateCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getCurrentMap()));
+
+        if(res && match.getCurrentState() != Game.GameState.WORKER_PLACE)
+        {
+            //move to game phase if noone has to place workers
+            sendActionsToCurrentPlayer();
+            allowedCommandType = CommandType.ACTION_TIME;
+        }
+        else
+        {
+            // request again if action failed, or make a request to another player
+            sendCommand(WorkerPlaceCommand.makeWrapped(network.getServerID(), match.getCurrentPlayer().getId(), match.getCurrentMap().cellWithoutWorkers()));
+        }
+
+
+    }
+
+    /**
+     * Return true if one of the actions passed as parameter is an undo action
+     * @param nextActions list of actions to check
+     * @return true is there is an undo action
+     */
+    private boolean hasUndoAction(List<NextAction> nextActions)
+    {
+        for (NextAction a: nextActions)
+        {
+            if(a.isUndo()) return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Generate and send next actions for the current game state
+     * This function takes care to send actions in any kind of situation.
+     * For example it sends actions for every phase of the current player turn but is also capable to understand
+     * that a new turn has been started and act accordingly.
+     *
+     * End game checks are also performed if the game ends during an action
+     * this function sends END GAME notifications to players
+     * Lastly during action generations undo checks are performed to understand if its required to start an active timer
+     * to detect undo expire on possible game ends
+     */
+    private void sendActionsToCurrentPlayer()
+    {
+        var nextActions = match.getNextActions();
+
+        if(match.isEnded()) // no more actions to do for a player that caused the game to end
+        {
+            sendCommand(EndGameCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getWinner()));
+            alreadySentEndGame = true;
+            return;
+        }
+        else
+        {
+            if(nextActions == null) // no action for a player; player lost in 3p match (will be detected by end game checks)
+                nextActions = match.getNextActions();
+
+            // start active timer to check undo action expire only if its used as last possible action
+            if(nextActions.size() == 1 && hasUndoAction(nextActions))
+                startUndoLoseCheckTimer();
+        }
+
+        sendCommand(ActionCommand.makeRequest(network.getServerID(), match.getCurrentPlayer().getId(), nextActions));
+    }
+
+
+    /**
+     * Execute an Action Command
+     * If command is correct an action is run then the new map is updated. After action run a new Action command is issued for the current player or for the next
+     * one if the turn changed after the execution
+     * This is the last and final game state that is ended only when a end game check detects that the match is ended
+     * If command is not correct the previous action command is issued
+     *
+     * Notice that if undo is enabled in the game (by default it is) next actions sent to clients expire due to undo "timer"
+     * If timer ends for an undo action it wont be returned as next action, but no active notification is sent to clients when their undo move
+     * is not available anymore. If an undo command fails because of the timer and the player tries to run that action it will fail
+     * as other action with wrong data and a new action command is issued to the same client.
+     * @param cmd action command to execute
+     * @throws NotAllowedOperationException if sender of the command can't run the command
+     */
+    private void runActionCommand(ActionCommand cmd) throws NotAllowedOperationException
+    {
+        if(cmd == null || match.getCurrentState() != Game.GameState.GAME)
+        {
+            System.out.println("[CONTROLLER] Unexpected "+ cmd +" when game is in "+ match.getCurrentState());
+            return;
+        }
+
+        var selectedAction = cmd.getSelectedAction();
+        int res = match.executeAction(getPlayer(cmd.getSender()), selectedAction.getWorkerID(), selectedAction.getActionID(), selectedAction.getPosition());
+        stopUndoLoseCheckTimer();
+
+        // send map update only if action run successfully
+        if(res > 0)
+        {
+            sendCommand(UpdateCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getCurrentMap()));
+        }
+        else if(res == 0 && match.isEnded()) // player who run the actions lost (single player lose is handled by endGameCheck after turn execution)
+        {
+            sendCommand(EndGameCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getWinner()));
+            alreadySentEndGame = true;
+            return;
+        }
+
+        // create next actions (error, different turn phase, new player)
+        sendActionsToCurrentPlayer();
+    }
+
+    /**
+     * Run checks to understand if game is ended and send END_GAME notifications if end is found
+     * @param prevPlayers player list before command execution
+     */
+    private void runEndGameDetection(Player[] prevPlayers)
+    {
+        if(alreadySentEndGame) return;
+
+        if(match.playerCount() < prevPlayers.length && match.getCurrentState() != Game.GameState.WAIT)
+        {
+            System.out.println("[CONTROLLER] Player count decreased, from "+ prevPlayers.length +" to "+ match.playerCount());
+            if(match.getCurrentState() == Game.GameState.END)
+            {
+                // match ended
+                sendCommand(EndGameCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getWinner()));
+                return;
+            }
+
+            // lose inside match
+            for(int i = 0; i < prevPlayers.length; i++)
+            {
+                if (!match.getPlayers().contains(prevPlayers[i]))
+                {
+                    System.out.println("[CONTROLLER] Detected player "+ prevPlayers[i]+ " lost");
+                    sendCommand(EndGameCommand.makeLoseSingle(network.getServerID(), prevPlayers[i].getId()));
+                    connectedPlayers.remove(prevPlayers[i]);
+                }
+            }
+        }
+    }
+
+
+    //****************************************************************************************************************
+    // Undo
+
+    /**
+     * Create a timer that checks if the undo timer is ended,
+     * if true run endGameChecks to check if a player lost because he has only undo as last action
+     * and didn't run it in the allowed time interval
+     */
+    private void startUndoLoseCheckTimer()
+    {
+        if(undoCheckTimer != null)
+            undoCheckTimer.cancel();
+        System.out.println("[CONTROLLER] Starting undo check");
+        undoCheckTimer = new Timer();
+        undoCheckTimer.schedule(new TimerTask() {
+            @Override
+            public void run()
+            {
+                match.getNextActions(); // force game to update
+                runEndGameDetection(prevPlayers);
+                System.out.println("[CONTROLLER] Undo check done");
+            }
+        }, Turn.MAX_UNDO_MILLI + 1);
+    }
+
+
+    /**
+     * Cancel the undo lose check timer if its currently running
+     * otherwise this function does nothing
+     */
+    private void stopUndoLoseCheckTimer()
+    {
+        if(undoCheckTimer != null)
+            undoCheckTimer.cancel();
     }
 }

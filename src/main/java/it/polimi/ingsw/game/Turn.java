@@ -58,7 +58,10 @@ public class Turn
      * Select worker for the selected turn
      * @param target index of player's Worker
      */
-    public void selectWorker(int target) { this.worker = player.getWorkers().get(target);}
+    public void selectWorker(int target)
+    {
+        this.worker = player.getWorkers().get(target);
+    }
 
     /**
      * Remove selected worker
@@ -74,6 +77,16 @@ public class Turn
      */
     public Worker getWorker(){
         return worker;
+    }
+
+
+    /**
+     * Get the player that owns the turn
+     * @return player that is "running" the turn
+     */
+    public Player getPlayer()
+    {
+        return player;
     }
 
     /**
@@ -93,7 +106,6 @@ public class Turn
         // undo enabled, it's appended at the end so its id is the same as next actions size
         if(allowUndo && worker != null && id == graph.getCurrentNode().getChildNodes().size())
         {
-
             if(isUndoTimerExpired(graph.getCurrentNode()))
             {
                 throw new NotAllowedMoveException();
@@ -144,7 +156,7 @@ public class Turn
         // append undo only if a worker is selected. Also check if already used for this action
         if(allowUndo && worker != null && !isUndoTimerExpired(graph.getCurrentNode()))
         {
-            nextActions.add(new NextAction("Undo", worker, lastTargetPosition));
+            nextActions.add(new NextAction("Undo", worker, lastTargetPosition, true));
             // add only once
             if(!usedUndos.containsKey(graph.getCurrentNode()))
                 usedUndos.put(graph.getCurrentNode(), Instant.now());
