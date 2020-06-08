@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class StartCommand extends BaseCommand {
     private int[] playersID;
-
+    private String[] username;
 
     /**
      * (Server) Used to inform all the clients that the match they have joined
@@ -26,6 +26,7 @@ public class StartCommand extends BaseCommand {
     public StartCommand(int sender, int target, List<Player> connectedPlayers) {
         super(sender, target);
         this.playersID = idsToArray(connectedPlayers);
+        this.username = usernameToArray(connectedPlayers);
     }
 
     /**
@@ -47,6 +48,12 @@ public class StartCommand extends BaseCommand {
     }
 
     /**
+     * Return stored array of players username
+     * @return array of players username
+     */
+    public String[] getUsername() { return username; }
+
+    /**
      * Convert a list of player ids into an array
      * @return array id of every player
      */
@@ -57,6 +64,19 @@ public class StartCommand extends BaseCommand {
             ids[i] = connectedPlayers.get(i).getId();
 
         return ids;
+    }
+
+    /**
+     * Convert a list of players username into an array
+     * @return string array of every player's username
+     */
+    private String[] usernameToArray(List<Player> connectedPlayers) {
+        String[] username = new String[connectedPlayers.size()];
+
+        for(int i = 0; i<connectedPlayers.size(); i++)
+            username[i] = connectedPlayers.get(i).getUsername();
+
+        return username;
     }
 
     /**

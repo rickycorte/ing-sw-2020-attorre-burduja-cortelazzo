@@ -1,5 +1,6 @@
 package it.polimi.ingsw.view.cli;
 
+import java.util.List;
 import java.util.Random;
 
 public enum Color {
@@ -21,4 +22,5 @@ public enum Color {
     public String escape(){
         return escape;
     }
+
 }
