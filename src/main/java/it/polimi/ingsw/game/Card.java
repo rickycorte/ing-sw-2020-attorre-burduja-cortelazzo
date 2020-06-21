@@ -9,13 +9,15 @@ package it.polimi.ingsw.game;
 public class Card {
     private int id;
     private String name;
-    private transient BehaviourGraph graph;
+    private BehaviourGraph graph;
+    private GameConstraints.Constraint constraintToClear;
 
 
     public Card(int id, String name, BehaviourGraph graph) {
         this.id = id;
         this.name = name;
         this.graph = graph;
+        constraintToClear = GameConstraints.Constraint.NONE;
     }
 
     /**
@@ -43,6 +45,24 @@ public class Card {
     public BehaviourGraph getGraph()
     {
         return graph;
+    }
+
+    /**
+     * Get the constraint that should be cleared when this card is removed from the game
+     * @return constraint to remove
+     */
+    public GameConstraints.Constraint getConstraintToClear()
+    {
+        return constraintToClear;
+    }
+
+    /**
+     * Set the constraint that should be cleared when this card is removed form the game
+     * @param constraintToClear constraint to clear
+     */
+    public void setConstraintToClear(GameConstraints.Constraint constraintToClear)
+    {
+        this.constraintToClear = constraintToClear;
     }
 
 }

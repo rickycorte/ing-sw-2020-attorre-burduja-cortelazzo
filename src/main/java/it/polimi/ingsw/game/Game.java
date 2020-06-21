@@ -663,6 +663,11 @@ public final class Game
             return;
 
         players.remove(loser);
+
+        // clear constraint added by god when the player is removed
+        // do nothing if no constraint should be cleared
+        globalConstraints.remove(loser.getGod().getConstraintToClear());
+
         // after this line current player is the next one
         // because we removed the loser
         if(currentPlayer >= playerCount())

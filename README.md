@@ -71,4 +71,4 @@ If you have set the Java path correctly you should be able to also use a double 
 
 If you want to create a CLI client you can run:
 
-`java -jar AM44.jar`
+`java -jar AM44.jar -cli`

@@ -55,27 +55,5 @@ public enum CommandType
     private CommandType(int val) {
         this.val = val;
     }
-
-    /**
-     * Convert a constraint into a integer
-     * @return integer representation of a constraint
-     */
-    public int toInt(){
-        return val;
-    }
-
-    /**
-     * Convert an integer to enum value
-     * @param val integer value to convert
-     * @return enum type associated to that integer, null if nothing is found
-     */
-    public static CommandType fromInt(int val)
-    {
-        for(CommandType t : values())
-        {
-            if(t.toInt() == val)
-                return t;
-        }
-        return  null;
-    }
+    
 }

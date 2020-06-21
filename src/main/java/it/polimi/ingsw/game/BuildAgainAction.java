@@ -32,10 +32,6 @@ public class BuildAgainAction extends BuildAction {
 
     }
 
-    public BuildAgainAction() {
-        this(GameConstraints.Constraint.NONE);
-    }
-
 
     @Override
     protected boolean isValidMove(Worker w, Vector2 target, Map m, GameConstraints gc)

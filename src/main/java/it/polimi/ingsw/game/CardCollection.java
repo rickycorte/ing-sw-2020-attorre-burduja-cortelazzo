@@ -38,13 +38,19 @@ public class CardCollection {
                                 .setNext(new EndTurnAction())
                                 .getRoot())
         )));
+
         // Athena
-        cardCollection.add(new Card(3, "Athena", BehaviourGraph.makeEmptyGraph().appendSubGraph(
+        var athena = new Card(3, "Athena", BehaviourGraph.makeEmptyGraph().appendSubGraph(
                 BehaviourNode.makeRootNode(new MoveAction(GameConstraints.Constraint.SET_BLOCK_MOVE_UP))
                         .setNext(new BuildAction())
                         .setNext(new EndTurnAction())
                         .getRoot()
-        )));
+        ));
+
+        athena.setConstraintToClear(GameConstraints.Constraint.BLOCK_MOVE_UP);
+
+        cardCollection.add(athena);
+
         // Atlas
         cardCollection.add(new Card(4, "Atlas", BehaviourGraph.makeEmptyGraph().appendSubGraph(
                 BehaviourNode.makeRootNode(new MoveAction())

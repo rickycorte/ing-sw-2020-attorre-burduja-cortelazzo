@@ -162,7 +162,6 @@ class BehaviourGraphTest
     {
         try
         {
-
             return g.getCurrentNode().getNextNode(id).getAction().displayName();
         }
         catch (OutOfGraphException e)
@@ -182,6 +181,7 @@ class BehaviourGraphTest
         var actions = testSeq.getNextActions(w1, null, null);
         assertEquals(1, actions.size());
         assertEquals(getActionName(testSeq,0), actions.get(0).getActionName());
+        assertFalse(actions.get(0).isUndo());
         assertEquals(ta.possibleCells(null,null, null), actions.get(0).getAvailablePositions());
     }
 
