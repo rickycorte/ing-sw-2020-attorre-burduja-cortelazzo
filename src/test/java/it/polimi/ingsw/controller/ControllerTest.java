@@ -1,5 +1,6 @@
 package it.polimi.ingsw.controller;
 
+import com.sun.jdi.ClassType;
 import it.polimi.ingsw.game.*;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
@@ -7,6 +8,11 @@ import it.polimi.ingsw.network.TPCNetwork;
 import it.polimi.ingsw.network.server.Server;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ControllerTest
@@ -15,10 +21,13 @@ public class ControllerTest
 
     private Controller controller;
     private INetworkAdapter adapter;
+    private List<CommandWrapper> commandHistory;
 
     @BeforeEach
     void setUp() {
+        commandHistory = new ArrayList<>();
         adapter = new INetworkAdapter() {
+
             @Override
             public void startServer(int port) {
 
@@ -64,7 +73,7 @@ public class ControllerTest
 
             @Override
             public void send(CommandWrapper packet) {
-
+                commandHistory.add(packet);
             }
             @Override
             public int getClientID(){
@@ -84,6 +93,19 @@ public class ControllerTest
         controller = new Controller(adapter);
     }
 
+
+    // get the last command of the required type
+    // form sent command history
+    private CommandWrapper getLastHistoryCommandOfType(CommandType ctype)
+    {
+        for(int i = commandHistory.size()-1; i >= 0; i--)
+        {
+            if(commandHistory.get(i).getType().equals(ctype))
+                return commandHistory.get(i);
+        }
+        return null;
+    }
+
     //utility method for join command incoming
     private CommandWrapper createJoinCommand(int sender,String username,boolean isJoin){
         JoinCommand cmd = new JoinCommand(sender,SERVER_ID,username,isJoin);
@@ -95,12 +117,20 @@ public class ControllerTest
     @Test
     void shouldConnectOnePlayer(){
         assertEquals(0,controller.getConnectedPlayers().size());
+
         //player 1 connect to game
         controller.onConnect(createJoinCommand(1,"Kekko",true));
 
         assertEquals(1,controller.getConnectedPlayers().size());
         assertEquals("Kekko",controller.getConnectedPlayers().get(0).getUsername());
         assertEquals(1,controller.getConnectedPlayers().get(0).getId());
+
+        assertEquals(CommandType.JOIN, controller.getLastSent().getType());
+        var jcmd = controller.getLastSent().getCommand(JoinCommand.class);
+        assertTrue(jcmd.isJoin());
+        assertTrue(jcmd.isValidUsername());
+        assertEquals(1, jcmd.getHostPlayerID());
+
     }
 
     @Test
@@ -192,7 +222,10 @@ public class ControllerTest
         assertEquals(2,controller.getConnectedPlayers().get(1).getId());
         //a game not start until a start command is sent by host
         assertFalse(controller.getMatch().isStarted());
-        assertEquals(CommandType.JOIN,controller.getLastSent().getType());
+        assertEquals(CommandType.JOIN, controller.getLastSent().getType());
+
+        //check host is still player 1
+        assertEquals(1, controller.getLastSent().getCommand(JoinCommand.class).getHostPlayerID());
     }
 
     //phase helper method
@@ -210,10 +243,7 @@ public class ControllerTest
 
     //utility method for start command incoming
     private CommandWrapper createStartCommand(int sender){
-        StartCommand cmd = new StartCommand(sender,SERVER_ID);
-        CommandWrapper wrapper = new CommandWrapper(CommandType.START,cmd);
-        wrapper.Serialize();
-        return wrapper;
+        return StartCommand.makeRequest(sender, SERVER_ID);
     }
 
 
@@ -1025,10 +1055,7 @@ public class ControllerTest
     }
 
     private CommandWrapper createLeaveCommand(int sender){
-        LeaveCommand cmd = new LeaveCommand(sender, SERVER_ID);
-        CommandWrapper wrapper = new CommandWrapper(CommandType.LEAVE,cmd);
-        wrapper.Serialize();
-        return  wrapper;
+        return LeaveCommand.makeRequest(sender, SERVER_ID);
     }
 
     @Test
@@ -1071,5 +1098,142 @@ public class ControllerTest
     }
 
     //TODO : win condition from an ended game test
+
+    @Test
+    void shouldDetectPlayerLostDuringMatch()
+    {
+        // join with 3 players
+        controller.onConnect(JoinCommand.makeRequest(1, SERVER_ID, "Gompachiro"));
+
+        controller.onConnect(JoinCommand.makeRequest(2, SERVER_ID, "Nezuko"));
+        controller.onConnect(JoinCommand.makeRequest(3, SERVER_ID, "Inosuke"));
+
+        // check start command send to clients
+        var strwpr = getLastHistoryCommandOfType(CommandType.START);
+        assertNotNull(strwpr); // game must be started with 3 players
+        var strcmd = strwpr.getCommand(StartCommand.class);
+        assertEquals(3, strcmd.getPlayersID().length);
+        assertEquals(3, strcmd.getUsername().length);
+        // players should have the same order as login
+        assertTrue(strcmd.getUsername()[0].equals("Gompachiro"));
+        assertTrue(strcmd.getUsername()[1].equals("Nezuko"));
+        assertTrue(strcmd.getUsername()[2].equals("Inosuke"));
+
+        assertEquals(Game.GameState.GOD_FILTER, controller.getMatch().getCurrentState());
+
+        // pick 3 gods
+        controller.onCommand(FilterGodCommand.makeReply(1, SERVER_ID, new int[]{1,2,3}));
+
+        assertEquals(Game.GameState.GOD_PICK, controller.getMatch().getCurrentState());
+
+        //chose gods p2/3
+        controller.onCommand(PickGodCommand.makeReply(2, SERVER_ID, 1));
+        controller.onCommand(PickGodCommand.makeReply(3, SERVER_ID, 2));
+
+        assertEquals(Game.GameState.FIRST_PLAYER_PICK, controller.getMatch().getCurrentState());
+
+        //select first player
+        controller.onCommand(FirstPlayerPickCommand.makeReply(1, SERVER_ID, 1));
+
+        assertEquals(Game.GameState.WORKER_PLACE, controller.getMatch().getCurrentState());
+
+        // place workers with following schema starting from 0,0:
+        // p1 | p1 | p3
+        // p2 | p2 | p3
+        // this will make p1 lose at the beginning of the game
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(1, SERVER_ID, new Vector2[]{new Vector2(0,0), new Vector2(0,1)}));
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(2, SERVER_ID, new Vector2[]{new Vector2(1,0), new Vector2(1,1)}));
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(3, SERVER_ID, new Vector2[]{new Vector2(0,2), new Vector2(1,2)}));
+
+        assertEquals(Game.GameState.GAME, controller.getMatch().getCurrentState());
+
+        // notification that first client lost
+        assertEquals(CommandType.END_GAME, controller.getLastSent().getType());
+
+        var lcmd = controller.getLastSent().getCommand(EndGameCommand.class);
+        assertEquals(1, lcmd.getTarget());
+        assertTrue(lcmd.isTargetLoser());
+        assertTrue(lcmd.isMatchStillRunning());
+        assertFalse(lcmd.isMatchInterrupted());
+
+        // check map
+        var updwrp = getLastHistoryCommandOfType(CommandType.UPDATE);
+        assertNotNull(updwrp);
+        var updcmd = updwrp.getCommand(UpdateCommand.class);
+        var map = updcmd.getUpdatedMap();
+        // same cell heights and domes
+        for(int x = 0; x < map.getHeight(); x++)
+        {
+            for(int y = 0; y < map.getLength(); y++)
+            {
+                int originalLvl = controller.getMatch().getCurrentMap().getLevel(new Vector2(x,y));
+                boolean originalDome = controller.getMatch().getCurrentMap().isCellDome(new Vector2(x,y));
+                assertEquals(originalLvl, map.getLevel(x,y));
+                assertEquals(originalDome, map.isDome(x,y));
+            }
+        }
+        //same workers
+        assertEquals(controller.getMatch().getCurrentMap().getWorkers().size(), map.getWorkers().length);
+        for(int i=0; i < map.getWorkers().length; i++)
+        {
+            var originalWorker = controller.getMatch().getCurrentMap().getWorkers().get(i);
+            assertEquals(originalWorker.getId(), map.getWorkers()[i].getWorkerID());
+            assertEquals(originalWorker.getOwner().getId(), map.getWorkers()[i].getOwnerID());
+            assertEquals(originalWorker.getPosition(), map.getWorkers()[i].getPosition());
+        }
+
+    }
+
+    @Test
+    void shouldStartActiveUndoTimerAndSendLoseAfterTimeout() throws InterruptedException
+    {
+        // join with 2 players
+        controller.onConnect(JoinCommand.makeRequest(1, SERVER_ID, "Gompachiro"));
+
+        controller.onConnect(JoinCommand.makeRequest(2, SERVER_ID, "Nezuko"));
+
+        controller.onCommand(StartCommand.makeRequest(1,SERVER_ID));
+
+        // pick 2 gods
+        // Prometheus (id 10) required to make this test simple
+        controller.onCommand(FilterGodCommand.makeReply(1, SERVER_ID, new int[]{10,2}));
+
+        //chose gods p2/3
+        controller.onCommand(PickGodCommand.makeReply(2, SERVER_ID, 2));
+
+        //select first player
+        controller.onCommand(FirstPlayerPickCommand.makeReply(1, SERVER_ID, 1));
+
+        // place workers with following schema starting from 0,0:
+        // p1 | p1 | p2
+        // D  |    | D
+        //    | p2 |
+        // this will make p1 lose at the beginning of the game
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(1, SERVER_ID, new Vector2[]{new Vector2(0,0), new Vector2(0,1)}));
+
+        // we cheat and place domes
+        controller.getMatch().getCurrentMap().buildDome(new Vector2(1,0));
+        controller.getMatch().getCurrentMap().buildDome(new Vector2(1,2));
+
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(2, SERVER_ID, new Vector2[]{new Vector2(0,2), new Vector2(2,1)}));
+
+        // p1 turn, we make a move to trigger the undo
+        // with prometeus wi build first so we lock our capability to move up
+        // and end up being blocked with only undo action left
+        controller.onCommand(ActionCommand.makeReply(1, SERVER_ID, 1, 1, new Vector2(1,1)));
+        var lastAct = controller.getLastSent().getCommand(ActionCommand.class);
+        assertEquals(1, lastAct.getAvailableActions().length);
+        assertTrue(lastAct.getAvailableActions()[0].isUndo());
+
+        Thread.sleep(Turn.MAX_UNDO_MILLI + 1000); // wait for timeout
+
+        assertTrue(controller.getMatch().isEnded()); // player lost due to missed undo as last move
+        assertEquals(CommandType.END_GAME, controller.getLastSent().getType());
+        var egc = controller.getLastSent().getCommand(EndGameCommand.class);
+        assertEquals(2, egc.getWinnerID());
+        assertFalse(egc.isMatchStillRunning());
+        assertFalse(egc.isMatchInterrupted());
+
+    }
 
 }
