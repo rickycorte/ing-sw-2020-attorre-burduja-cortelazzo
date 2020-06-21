@@ -39,12 +39,12 @@ Every command is also serialized as a JSON and encapsulated in CommandWrapper as
 
 
 ### Types of Commands
-This are all possible values of `CommandType` and they represent all possible commands sent between server and clientDELETE.
+This are all possible values of `CommandType` and they represent all possible commands sent between server and client.
 
 | Type                | Client | Server | 
 |---------------------|---------------------|---------------------|
-| JOIN                | Request to join a match | -- |
-| LEAVE               | Request to quit a match | -- | 
+| JOIN                | Request to join a match | Notification that a player connected to the wait lobby |
+| LEAVE               | Request to quit a match | Notification that a player disconnected from the wait lobby | 
 | START               | Ask the server to start a match (setup phase) | Request made by the host to start a match
 | FILTER_GODS         | Request the host to pick the gods for the match | List of gods that should be used in the match |  
 | PICK_GOD            | Request to to pick a god from the provided list | God pick by a player
@@ -54,7 +54,7 @@ This are all possible values of `CommandType` and they represent all possible co
 | UPDATE              | Update on the new map status | --
 | END_GAME            | Win/Lose notification | --
 
-Note that all the commands "order" to do something but this "forced actions" can also be game updates that the clientDELETE should process, for example a map change.
+Note that all the commands "order" to do something but this "forced actions" can also be game updates that the client should process, for example a map change.
 
 ## Errors
 
@@ -90,8 +90,11 @@ All the next schemas don't show broadcast interactions, we display only meaningf
 | Seq | CommandType  | Sender   | Receiver | Payload |
 |-----|--------------|----------|----------|---------|
 | 1   | LeaveCommand | 1        | ServerID | --      |
+| 2   | LeaveCommand | ServerID | 2        | LeftPlayerID: `1`<br> newHostPlayerID: `2`, numberRemainingPlayers: `1` |
 
 When a connection dies for every reason, the network layer generates a virtual `LeaveCommand` and passes it to the Controller.
+
+This command is also used as notification during pre-match to inform that a client disconnected from the lobby.
 
 ## Setup
 
@@ -125,7 +128,7 @@ With three players the start command is not necessary, because the match has rea
 | 2   | ActionCommand | 1        | ServerID | selectedAction: `{actionID: 0, worker: 0, postions: {0,0}}`                                  |
 | 2   | UpdateCommand | ServerID | *        | map: `{map: [[1,1,1,1,1], ...], workers: [{ownerID: 1, workerID: 1, postions: {0,0}}, ...]}` |
 
-The above schema applies to every to every turn for every player, no distinction is made
+The above schema applies to every to every turn for every player, no distinction is made.
 
 ## End Game
 

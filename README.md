@@ -20,8 +20,8 @@ Software engineering project AA2019-2020 Politecnico di Milano
 | Basic rules |[![GREEN](https://placehold.it/15/44bb44/44bb44)](#) |
 | Complete rules | [![GREEN](https://placehold.it/15/44bb44/44bb44)](#) |
 | Socket | [![GREEN](https://placehold.it/15/44bb44/44bb44)](#) |
-| GUI | [![YELLOW](https://placehold.it/15/ffdd00/ffdd00)](#) |
-| CLI | [![YELLOW](https://placehold.it/15/ffdd00/ffdd00)](#) |
+| GUI | [![GREEN](https://placehold.it/15/44bb44/44bb44)](#) |
+| CLI | [![GREEN](https://placehold.it/15/44bb44/44bb44)](#) |
 | Multiple games | [![GREEN](https://placehold.it/15/44bb44/44bb44)](#) |
 | Persistence | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |
 | Advanced Gods | [![RED](https://placehold.it/15/f03c15/f03c15)](#) |

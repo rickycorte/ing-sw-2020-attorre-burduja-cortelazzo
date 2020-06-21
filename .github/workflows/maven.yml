@@ -45,10 +45,7 @@ jobs:
         mv target/AM44-jar-with-dependencies.jar deliverables/AM44.jar
         mkdir apidocs
         mv target/site/apidocs apidocs
-        mv target/site/jacoco coverage
-        rm coverage/jacoco.xml
-        rm coverage/jacoco.csv
-        tar cvfz apidocs.tar.gz apidocs coverage
+        tar cvfz apidocs.tar.gz apidocs
         mv apidocs.tar.gz deliverables/
         mkdir release
         mv src release/src
