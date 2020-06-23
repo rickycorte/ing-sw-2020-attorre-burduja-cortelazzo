@@ -123,7 +123,8 @@ public class Client {
                         commandReceiver.onConnect(cmd);
                         break;
                     case LEAVE:
-                        break; // client never receive Leave request but we still filter them to prevent errors
+                        commandReceiver.onDisconnect(cmd);
+                        break;
                     default:
                         commandReceiver.onCommand(cmd);
                 }

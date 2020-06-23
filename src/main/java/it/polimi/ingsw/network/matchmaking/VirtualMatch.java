@@ -133,6 +133,9 @@ public class VirtualMatch implements INetworkForwarder
             //use indexof because removing with a int is used as "index" and not as a search item
             players.remove(players.indexOf(id));
             controller.onDisconnect(cmd);
+
+            if(players.size() > 0 && !isStarted.get())
+                send(LeaveCommand.makeReply(Server.SERVER_ID, Server.BROADCAST_ID, id, getPlayerIDs()[0], players.size()));
         }
     }
 
