@@ -58,4 +58,6 @@ public class NextAction {
     {
         return isUndoAction;
     }
+
+    public boolean isEndTurnAction() { return this.actionName.equals(EndTurnAction.class.toString(  )); }
 }

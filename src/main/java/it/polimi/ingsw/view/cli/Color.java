@@ -4,11 +4,18 @@ import java.util.List;
 import java.util.Random;
 
 public enum Color {
-    RED("\u001b[31m"),
-    GREEN("\u001b[32m"),
-    YELLOW("\u001b[33m"),
-    BLUE("\u001b[34m"),
-    PURPLE("\u001b[35m"),
+    LIME("\33[38;5;112m"),
+    SUNSET("\33[38;5;210m"),
+    SUNRISE("\33[38;5;229m"),
+    MIDNIGHT("\33[38;5;20m"),
+    PURPLE_PUNCH("\33[38;5;56m"),
+    SMALL_FIRE("\33[38;5;134m"),
+    BIG_FIRE("\033[38;5;196m"),
+
+    BLUE("\033[38;5;21m"),
+    WHITE("\u001b[37m"),
+    BOLD_ON("\033[1m"),
+    CLICKABLE("\033[38;5;137m"),
     SOFT_WHITE("\u001b[90m");
 
     static final String RESET = "\u001B[0m";

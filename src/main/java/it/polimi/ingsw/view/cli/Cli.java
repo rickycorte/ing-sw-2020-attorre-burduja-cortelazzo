@@ -4,6 +4,7 @@ import it.polimi.ingsw.controller.*;
 import it.polimi.ingsw.controller.compact.CompactMap;
 import it.polimi.ingsw.controller.compact.CompactWorker;
 import it.polimi.ingsw.game.Game;
+import it.polimi.ingsw.game.Map;
 import it.polimi.ingsw.game.NextAction;
 import it.polimi.ingsw.game.Vector2;
 import it.polimi.ingsw.network.ICommandReceiver;
@@ -46,7 +47,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     private MatchState currentState;
 
     private boolean shouldStop;
-    private enum ExecutionResponse {SUCCESS, FAIL, QUIT, ENDED_GAME}
+    private enum ExecutionResponse {SUCCESS, FAIL, QUIT, ENDED_GAME, BACK}
 
 
 
@@ -61,7 +62,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         cardCollection = new CardCollection();
         players = new ArrayList<>();
         availableColors = new ArrayList<>();
-        availableColors.addAll(Arrays.asList(Color.values()));
+        availableColors.addAll(Arrays.asList(Color.values()).subList(0,7));
     }
 
     @Override
@@ -74,7 +75,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             if (cmd.isJoin())
                 successfulJoin(cmd);
             else {
-                if (!cmd.isValidUsername()) stream.println("Can't join a game right now, try another time.");
+                if (cmd.isValidUsername()) stream.println("Can't join a game right now, try another time.");
                 else retryJoin(cmd);
             }
 
@@ -86,9 +87,6 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             }
         }
     }
-
-    //TODO: handle username player in select first player (and other ?)
-
 
     @Override
     public void start() {
@@ -108,7 +106,6 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         
         if (virtualServer.connect(ip, virtualServer.getDefaultPort(), user)) {
 
-            //TODO: change sleep with wait condition
             do{
                 try {
                     Thread.sleep(1000);
@@ -124,8 +121,27 @@ public class Cli implements IHumanInterface, ICommandReceiver {
 
     @Override
     public void onDisconnect(CommandWrapper cmdWrapper) {
-        stream.println("lost server connection.");
-        setCurrentState(MatchState.QUIT);
+        if(cmdWrapper == null) {
+            stream.println("lost server connection.");
+            setCurrentState(MatchState.QUIT);
+        }else{
+            LeaveCommand leaveCommand = cmdWrapper.getCommand(LeaveCommand.class);
+            players.remove(getPlayer(leaveCommand.getLeftPlayerID()));
+            if(idHost == leaveCommand.getLeftPlayerID()){
+                idHost = leaveCommand.getNewHostPlayerID();
+                if(idHost == idPlayer){
+                    stream.println("You are new host for this game, type 'start' or wait 3rd player...");
+                    setCurrentState(MatchState.WAIT);
+                }
+            }
+
+
+            //*
+            if(leaveCommand.getLeftPlayerID() == idPlayer){
+                setCurrentState(MatchState.QUIT);
+            }
+        }
+
     }
 
     @Override
@@ -134,11 +150,10 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         int targetId = baseCommand.getTarget();
         if (targetId != idPlayer && targetId != virtualServer.getBroadCastID()) {
             if(cmdWrapper.getType() != CommandType.END_GAME)
-                stream.println("Turn of player n. " + targetId + " wait until " + getPlayer(targetId).escapePlayerColor() + cmdWrapper.getType().toString() + Color.RESET);
+                stream.println("Turn of " + getPlayer(targetId).escapePlayerColor() + getPlayer(targetId).getUsername() + Color.RESET + " wait until " + cmdWrapper.getType().toString());
             setCurrentState(MatchState.WAIT_NEXT);
             return;
         }
-
         switch (cmdWrapper.getType()) {
             case START:
                 StartCommand startCommand = cmdWrapper.getCommand(StartCommand.class);
@@ -171,6 +186,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                 setLastCompactMap(updateCommand.getUpdatedMap());
                 showMap(updateCommand.getUpdatedMap(),null);
                 break;
+
         }
 
     }
@@ -267,11 +283,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     private void placeWorkerSetup(WorkerPlaceCommand workerPlaceCommand) {
         setAvailablePositions(workerPlaceCommand);
         showMap(getLastCompactMap(),getAvailablePositions());
-
-        for (int i = 0; i < workerPlaceCommand.getPositions().length; i++)
-            stream.print(i + ".(" + workerPlaceCommand.getPositions()[i].getX() + "," + workerPlaceCommand.getPositions()[i].getY() + ") ");
-
-        stream.println();
+        stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
 
         stream.println("Select 2 available positions by its identifiers: \n<int1> <int2>");
 
@@ -280,10 +292,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     private void selectFirstPlayerSetup() {
-        int i = 1;
-        for(Player player : players){
-            stream.print(i + "." + player.escapePlayerColor() + player.getUsername() + Color.RESET + " ");
-            i++;
+        clearScreen();
+        stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
+
+        for(int i = 1; i<=players.size(); i++){
+            stream.print(i + "." + players.get(i-1).escapePlayerColor() + players.get(i-1).getUsername() + Color.RESET + " ");
         }
         stream.println();
 
@@ -294,6 +307,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     private void pickGodSetup(PickGodCommand pickGodCommand) {
+        clearScreen();
+        stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
+
         printGods(pickGodCommand.getAllowedGodsIDS());
         stream.println("Pick a god by selecting id : \n<int1>");
 
@@ -302,6 +318,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     private void filterGodSetup() {
+        clearScreen();
+        stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
+
         printGods();
         stream.println("Select " + players.size() + " IDs you want to be allowed for this game :");
         for (int i = 1; i <= players.size(); i++) stream.print("<int" + i + "> ");
@@ -345,6 +364,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     private void startSetup(StartCommand startCommand) {
         String[] username = startCommand.getUsername();
         int[] ids = startCommand.getPlayersID();
+
         int userIndex= 0;
         for (int id : ids) {
             if (getPlayer(id) == null) {
@@ -354,10 +374,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             userIndex++;
         }
 
-        stream.println(getPlayer(idPlayer).escapePlayerColor() + "GAME IS NOW STARTED !!!" + Color.RESET);
+        stream.println("\nGAME IS NOW STARTED !!!\n");
     }
 
     private void actionTimeSetup(ActionCommand actionCommand) {
+        stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
 
         setNextActions(actionCommand);
 
@@ -367,7 +388,6 @@ public class Cli implements IHumanInterface, ICommandReceiver {
 
         //if can auto-select worker
         if (canAutoSelectWorker(nextActions)) {
-            stream.println("Auto-selection worker n." + getPlayer(idPlayer).escapePlayerColor() + availableWorker.get(0) + Color.RESET);
             int idWorker = availableWorker.get(0);
 
             List<NextAction> actionForWorker = clearNextActions(nextActions,idWorker);
@@ -375,12 +395,13 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             //if can auto-select action also
             if (canAutoSelectAction(actionForWorker)) {
                 int actionId = 0;
-                stream.print("Time to " + actionForWorker.get(actionId).getActionName() + "...");
 
                 List<Vector2> positionForAction = actionForWorker.get(actionId).getAvailablePositions();
 
                 //if can auto-select position also
                 if (canAutoSelectPosition(positionForAction)) {
+                    stream.println("Auto-selection worker n." + getPlayer(idPlayer).escapePlayerColor() + availableWorker.get(0) + Color.RESET);
+                    stream.print("Time to " + actionForWorker.get(actionId).getActionName() + "...");
                     stream.println(" to (" + positionForAction.get(0).getX() + "," + positionForAction.get(0).getY() + ")");
                     Vector2 target = positionForAction.get(0);
                     setCurrentState(MatchState.WAIT_NEXT);
@@ -392,6 +413,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                     List<Vector2> possiblePositions = getAvailablePosition(nextAction);
                     stream.print("\n");
                     showMap(getLastCompactMap(),possiblePositions.toArray(Vector2[]::new));
+
+                    stream.println("Auto-selection worker n." + getPlayer(idPlayer).escapePlayerColor() + availableWorker.get(0) + Color.RESET);
+                    stream.print("Time to " + actionForWorker.get(actionId).getActionName() + "...");
+
+
                     stream.println("\nSelect a position n. where you want to execute action: ");
                     for(int i = 0; i < possiblePositions.size(); i++){
                         stream.print(i + ".(" + possiblePositions.get(i).getX() + "," + possiblePositions.get(i).getY() + ")   ");
@@ -415,9 +441,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
 
         } else {
             for (Integer integer : availableWorker) {
-                stream.print(integer + "   ");
+                stream.print(getPlayer(idPlayer).escapePlayerColor() + "W" + integer + "   ");
             }
-            stream.println();
+            stream.println(Color.RESET);
 
             stream.println("Select id of worker you want to move :\n<int1>");
 
@@ -433,6 +459,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     private boolean canAutoSelectAction(List<NextAction> actions){
         if(actions == null) return false;
         return actions.size() == 1;
+    }
+
+    private boolean canAutoSelectEndTurn(List<NextAction> actions){
+        if(actions == null) return false;
+        return actions.size() == 1 && actions.get(0).isEndTurnAction();
     }
 
     private boolean canAutoSelectPosition(List<Vector2> possiblePositions){
@@ -537,8 +568,8 @@ public class Cli implements IHumanInterface, ICommandReceiver {
 
                 boolean retry = false;
                 ExecutionResponse response;
+                boolean canGoBack = true;
                 do {
-
                     if (retry) {
                         input = scanner.nextLine();
                         inputArray = input.split("\\s+");
@@ -546,27 +577,29 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                         endGame = endGameCheck(inputArray);
                     }
                     if(!shouldStop && !endGame)
-                        response = matchState(inputArray, state, nextActions, availableVectors);
+                        response = matchState(inputArray, state, nextActions, availableVectors, canGoBack);
                     else if(endGame)
                         response = ExecutionResponse.ENDED_GAME;
                     else
                         response = ExecutionResponse.SUCCESS;
 
+                    if(response == ExecutionResponse.BACK) canGoBack = false;
                     retry = true;
-                } while (response == ExecutionResponse.FAIL);
+                } while (response == ExecutionResponse.FAIL || response == ExecutionResponse.BACK);
 
                 if(response == ExecutionResponse.QUIT) shouldStop = true;
             }
-            //TODO : after select god -> printa oak echoed
+
             if(currentState == MatchState.WAIT_NEXT && !quitCheck(inputArray))
-                printFail();
+                printFail(inputArray);
 
         } while (!shouldStop);
 
     }
 
-    private void printFail(){
-        stream.println("Oak's words echoed... There's a time and a place for everything, but not now.");
+    private void printFail(String[] inputArray){
+        if(inputArray.length > 0 && !inputArray[0].equals(""))
+            stream.println("Oak's words echoed... There's a time and a place for everything, but not now.");
     }
 
     private boolean checkStatelessInput(String[] inputArray,MatchState currentState) {
@@ -575,8 +608,10 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                 virtualServer.send(StartCommand.makeRequest(idPlayer,virtualServer.getServerID()));
             else if(inputArray.length == 1 && inputArray[0].equals("start"))
                 stream.println("can't start this game now...");
+            else if(quitCheck(inputArray))
+                return true;
             else
-                printFail();
+                printFail(inputArray);
         }else
                 return quitCheck(inputArray);
 
@@ -584,14 +619,14 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     private boolean quitCheck(String[] inputArray) {
-        if (inputArray.length <= 1 && inputArray[0].equals("quit")) {
+        if (inputArray.length == 1 && inputArray[0].equals("quit")) {
             virtualServer.send(LeaveCommand.makeRequest(idPlayer, virtualServer.getServerID()));
             return true;
         }else
             return getCurrentState() == MatchState.QUIT;
     }
 
-    private ExecutionResponse matchState(String[] inputArray, MatchState state, NextAction[] nextActions, Vector2[] availablePositions) {
+    private ExecutionResponse matchState(String[] inputArray, MatchState state, NextAction[] nextActions, Vector2[] availablePositions, boolean canGoBack) {
         switch (state) {
 
             case GOD_SELECT:
@@ -619,8 +654,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             case FIRST_PLAYER_SELECT:
                 if (canConvertInputToInt(inputArray) && inputArray.length == 1) {
                     int[] firstPlayer = inputToInt(inputArray);
-                    virtualServer.send(FirstPlayerPickCommand.makeReply(idPlayer, virtualServer.getServerID(), firstPlayer[0]));
-                    return ExecutionResponse.SUCCESS;
+                    if(firstPlayer[0]>0 && firstPlayer[0] <=players.size()){
+
+                        virtualServer.send(FirstPlayerPickCommand.makeReply(idPlayer, virtualServer.getServerID(), players.get(firstPlayer[0]-1).getId()));
+                        return ExecutionResponse.SUCCESS;
+                    }
                 }
                 stream.println("Select first player for this game, please try again: \n<int1>");
                 return ExecutionResponse.FAIL;
@@ -696,8 +734,8 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                         int[] input = inputToInt(inputArray);
                         int workerID = input[0];
                         if (workerID >= 0 && workerID < N_WORKER) {
-                            List<NextAction> actions = clearNextActions(nextActions, workerID);
-                            return actionSelection(actions);
+                            List<NextAction> actions = clearNextActions(nextActions,workerID);
+                            return actionSelection(nextActions, actions,canGoBack);
                         }
                         stream.println("Worker not available, please try again: \n<int1>");
                         return ExecutionResponse.FAIL;
@@ -732,44 +770,56 @@ public class Cli implements IHumanInterface, ICommandReceiver {
      *
      * @param actions already cleared NextActions List, avery element has the same (selected) worker
      */
-    private ExecutionResponse actionSelection(List<NextAction> actions) {
-        if(canAutoSelectAction(actions)){
+    private ExecutionResponse actionSelection(NextAction[] nextActions, List<NextAction> actions, boolean canGoBack) {
+        if((canAutoSelectEndTurn(actions)) || (!canGoBack && canAutoSelectAction(actions))){
             stream.println("Time to " + actions.get(0).getActionName() + "...");
             int actionID = 0;
-            NextAction  nextAction = getSelectedNextAction(actions,actionID);
+            NextAction nextAction = getSelectedNextAction(actions, actionID);
             List<Vector2> availablePositions = getAvailablePosition(nextAction);
-            return positionSelection(actions, availablePositions , actionID);
+            return positionSelection(actions, availablePositions, actionID);
         }else{
             stream.println("Select the identifier of action you want to carry out: ");
-            for(int i = 0; i<actions.size(); i++){
+            int i = 0;
+            for(; i<actions.size(); i++){
                 stream.print(i + "." + actions.get(i).getActionName() + "   ");
             }
+            stream.print(i + ".Back");
             stream.println("\n<int1>");
 
             boolean shouldStop;
             boolean endGame;
             String[] inputArray;
             int actionID = -1;
+            boolean retry = false;
             do {
-
+                if(retry) {
+                    stream.println("Select the identifier of action you want to carry out, please try again: \n<int1>");
+                }
                 inputArray = scanner.nextLine().split("\\s+");
                 shouldStop = quitCheck(inputArray);
                 endGame = endGameCheck(inputArray);
-
                 if(canConvertInputToInt(inputArray) && inputArray.length == 1){
                     actionID = inputToInt(inputArray)[0];
-                }else{
-                    if(!shouldStop && !endGame){
-                        stream.println("Select the identifier of action you want to carry out, please try again: \n<int1>");
-                    }
                 }
-
-            } while (!shouldStop && (actionID < 0 || actionID >= actions.size()) );
+                retry = true;
+            } while (!shouldStop && (actionID < 0 || actionID > actions.size()) );
 
             if(!shouldStop && !endGame) {
-                NextAction nextAction = getSelectedNextAction(actions,actionID);
-                List<Vector2> possiblePositions = getAvailablePosition(nextAction);
-                return positionSelection(actions, possiblePositions, actionID);
+                if(actionID == i){
+                    Integer[] availableWorker = getAvailableWorker(nextActions).toArray(new Integer[0]);
+                    for (Integer integer : availableWorker) {
+                        stream.print(getPlayer(idPlayer).escapePlayerColor() + "W" + integer + "   ");
+                    }
+                    stream.println(Color.RESET);
+
+                    stream.println("Select id of worker you want to move :\n<int1>");
+                    return ExecutionResponse.BACK;
+                }
+                else{
+                    NextAction nextAction = getSelectedNextAction(actions, actionID);
+                    List<Vector2> possiblePositions = getAvailablePosition(nextAction);
+                    return positionSelection(actions, possiblePositions, actionID);
+                }
             }else if(endGame)
                 return ExecutionResponse.ENDED_GAME;
             else
@@ -795,19 +845,20 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             boolean endGame;
             String[] inputArray;
             int targetID = -1;
+            boolean retry = false;
             do {
+                if(retry){
+                    stream.println("Select the identifier n. of position you want to execute on, please try again: \n<int1>");
+                }
                 inputArray = scanner.nextLine().split("\\s+");
                 shouldStop = quitCheck(inputArray);
                 endGame = endGameCheck(inputArray);
 
                 if(canConvertInputToInt(inputArray) && inputArray.length == 1){
                     targetID = inputToInt(inputArray)[0];
-                }else{
-                    if(!shouldStop && !endGame){
-                        stream.println("Select the identifier n. of position you want to execute on, please try again: \n<int1>");
-                    }
                 }
 
+                retry = true;
             } while (!shouldStop && !endGame && (targetID < 0 || targetID >= possiblePositions.size()) );
 
             if(!shouldStop && !endGame) {
@@ -838,6 +889,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                     availableColors.clear();
                     availableColors.addAll(Arrays.asList(Color.values()));
                     idPlayer = -1;
+                    lastCompactMap = new CompactMap(new Map());
                     virtualServer.send(JoinCommand.makeRequest(currentID,virtualServer.getServerID(),currentUsername));
                     break;
                 }else if(inputArray[0].equals("n") && inputArray.length == 1){
@@ -885,14 +937,16 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         CompactWorker[] compactWorkers = compactMap.getWorkers();
 
         clearScreen();
-
         StringBuilder string = new StringBuilder();
 
-        string.append(Color.SOFT_WHITE.escape());
+        string.append(Color.SOFT_WHITE.escape() + "\n");
         for(int i = 0; i<HEIGHT; i++){
 
             //FIRST LEVEL
+            string.append("                ");
             for(int j = 0; j<LENGTH ; j++) {
+                if (availablePositions != null && isAvailablePosition(availablePositions,i,j)) string.append(Color.RESET).append(Color.CLICKABLE.escape());
+                else string.append(Color.RESET).append(Color.SOFT_WHITE.escape());
                 string.append(" █");
                 string.append("▀".repeat(8));
                 string.append("█");
@@ -900,86 +954,100 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             string.append("\n");
 
             //SECOND LEVEL
+            string.append("                ");
             for(int j = 0; j<LENGTH ; j++) {
 
+                if (availablePositions != null && isAvailablePosition(availablePositions,i,j)) string.append(Color.RESET).append(Color.CLICKABLE.escape());
+                else string.append(Color.RESET).append(Color.SOFT_WHITE.escape());
                 string.append(" █");
                 string.append(Color.RESET);
 
                 string.append(" ");
                 if(compactMap.isDome(i,j)){
-                    string.append("D").append(Color.BLUE.escape()).append("●").append(Color.RESET);
+                    string.append(Color.BLUE.escape()).append(Color.BOLD_ON.escape()).append(" ████").append(Color.RESET);
                 }else{
                     int level = compactMap.getLevel(i,j);
                     switch (level){
                         case 1 :
                             string.append(level);
-                            string.append("░");
+                            string.append(Color.BOLD_ON.escape()).append("░ ").append(Color.RESET);
                             break;
                         case 2 :
                             string.append(level);
-                            string.append("▒");
+                            string.append(Color.BOLD_ON.escape()).append("▒ ").append(Color.RESET);
                             break;
                         case 3 :
                             string.append(level);
-                            string.append("▓");
+                            string.append(Color.BOLD_ON.escape()).append("▓ ").append(Color.RESET);
                             break;
                         default:
-                            string.append(" ".repeat(2));
+                            string.append(" ".repeat(3));
                             break;
                     }
+                    string.append(" ".repeat(1));
                 }
 
-                string.append(" ".repeat(2));
 
                 if(canPrintWorker(i,j,compactWorkers)){
                     int ownerID = getOwnerForWorker(compactWorkers, i, j);
                     int workerID = getWorkerID(compactWorkers,i,j);
-                    string.append(getPlayer(ownerID).escapePlayerColor()).append("₩").append(Color.RESET);
-                    string.append(getPlayer(ownerID).escapePlayerColor()).append(workerID).append(Color.RESET);
+                    string.append(getPlayer(ownerID).escapePlayerColor()).append(Color.BOLD_ON.escape()).append("₩").append(Color.RESET);
+                    string.append(getPlayer(ownerID).escapePlayerColor()).append(Color.BOLD_ON.escape()).append(workerID).append(Color.RESET);
                     string.append(" ".repeat(1));
-                }else{
+                }else if(compactMap.isDome(i,j)){
+                    string.append(" ".repeat(2));
+                }else
                     string.append(" ".repeat(3));
-                }
 
-                string.append(Color.SOFT_WHITE.escape());
+                if (availablePositions != null && isAvailablePosition(availablePositions,i,j)) string.append(Color.RESET).append(Color.CLICKABLE.escape());
+                else string.append(Color.RESET).append(Color.SOFT_WHITE.escape());
                 string.append("█");
             }
             string.append("\n");
 
             //THIRD LEVEL
+            string.append("                ");
             for(int j = 0; j<LENGTH ; j++) {
+                if (availablePositions != null && isAvailablePosition(availablePositions,i,j)) string.append(Color.RESET).append(Color.CLICKABLE.escape());
+                else string.append(Color.RESET).append(Color.SOFT_WHITE.escape());
                 string.append(" █");
                 string.append(Color.RESET);
+
 
                 if(availablePositions != null && isAvailablePosition(availablePositions,i,j)){
                     string.append(" ".repeat(3));
 
-                    string.append(Color.GREEN.escape()).append("»").append(getPositionIdentifier(availablePositions,i,j)).append(Color.RESET);
+                    string.append(Color.CLICKABLE.escape()).append(Color.BOLD_ON.escape()).append("»").append(getPositionIdentifier(availablePositions,i,j)).append(Color.RESET);
 
                     if(getPositionIdentifier(availablePositions,i,j) > 9)
                         string.append(" ".repeat(2));
                     else
                         string.append(" ".repeat(3));
+                }else if(compactMap.isDome(i,j)) {
+                    string.append(Color.BLUE.escape()).append(Color.BOLD_ON.escape()).append("  ████  ");
                 }else{
                     string.append(" ".repeat(8));
                 }
 
-
-                string.append(Color.SOFT_WHITE.escape());
+                if (availablePositions != null && isAvailablePosition(availablePositions,i,j)) string.append(Color.RESET).append(Color.CLICKABLE.escape());
+                else string.append(Color.RESET).append(Color.SOFT_WHITE.escape());
                 string.append("█");
             }
 
             string.append("\n");
 
             //FOURTH LEVEL
+            string.append("                ");
             for(int j = 0; j<LENGTH ; j++) {
+                if (availablePositions != null && isAvailablePosition(availablePositions,i,j)) string.append(Color.RESET).append(Color.CLICKABLE.escape());
+                else string.append(Color.RESET).append(Color.SOFT_WHITE.escape());
                 string.append(" █");
                 string.append("▄".repeat(8));
                 string.append("█");
             }
             string.append("\n");
         }
-        string.append(Color.RESET);
+        string.append(Color.RESET).append("\n");
         stream.print(string);
 
     }
@@ -1034,30 +1102,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     private void clearScreen() {
+        stream.println("TIME TO CLEAR SCREEN --------------------------------------------");
         System.out.print("\033[2J");
         System.out.flush();
     }
 
-    /*
-    private void initPlayers(StartCommand cmd) {
-        if (idPlayer == cmd.getPlayersID()[0]) {
-            colors.put(idPlayer, Color.BLUE);
-            colors.put(cmd.getPlayersID()[1], Color.RED);
-            if (playersNumber > 2)
-                colors.put(cmd.getPlayersID()[2], Color.YELLOW);
-
-        } else if (idPlayer == cmd.getPlayersID()[1]) {
-            colors.put(idPlayer, Color.BLUE);
-            colors.put(cmd.getPlayersID()[0], Color.RED);
-            if (playersNumber > 2)
-                colors.put(cmd.getPlayersID()[2], Color.YELLOW);
-
-        } else {
-            colors.put(idPlayer, Color.BLUE);
-            colors.put(cmd.getPlayersID()[0], Color.RED);
-            if (playersNumber > 2)
-                colors.put(cmd.getPlayersID()[1], Color.YELLOW);
-        }
-    }
-     */
 }

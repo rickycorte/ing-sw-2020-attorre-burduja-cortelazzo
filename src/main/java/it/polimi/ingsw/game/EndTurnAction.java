@@ -34,4 +34,8 @@ public class EndTurnAction extends Action {
         return arr; // random valid data to make this element "selectable"
     }
 
+    @Override
+    public String toString() {
+        return displayName;
+    }
 }

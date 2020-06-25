@@ -134,6 +134,8 @@ public class Controller implements ICommandReceiver {
         System.out.println("[CONTROLLER] Disconnect "+ cmd.getSender());
         match.left(getPlayer(cmd.getSender()));
 
+        connectedPlayers.remove(getPlayer(cmd.getSender()));
+
         if(match.getCurrentState() == Game.GameState.END)
         {
             sendCommand(EndGameCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getWinner()));
