@@ -90,7 +90,7 @@ BehaviourGraph.makeEmptyGraph().appendSubGraph(
 It's important to understand that Actions are stateless and execute the moves based on the game state data passed to them. 
 Graphs are not stateless and keep a state to know what the player should do next! This state can be imagined as the current turn point of execution.
 
-# Virtual Matches
+## Virtual Matches
 
 Virtual matches are an alternative way to execute the server code. The main class is `VirtualMatchamaker` and replaces `TCPNetwork` only on server side. These two are fully compatible (example: A `TCPNetwork` client can communicate with the matchmaker without changes) but not interchangeable.
 Matchmaking is designed to run only on server and should never be run on client, with this in mind we decided that this class should not implement `INetworkAdapter`.
@@ -101,3 +101,27 @@ Controller and Model have no idea that they are not using the network layer dire
 ![Virtual Matches](img/VirtualMatches.png)
 
 With the matchmaker update we also introduced "fine locks" that lock only little parts of the running games to provide truly parallelism with great performance. 
+
+## Undo
+
+Undo in our implementation are unique per for every action that a player can run in his turn. We locked to just one undo/action because 
+"Errare humanum est, perseverare autem diabolicum" and leaving "unlimited" undos would make "smart" player abuse this function to try out every possible move indefinitely.
+
+To ensure the required timing checks that invalidate the action (undos have a time scope where they can be run), we made two type of timers.
+Using this two type of timers give the server great performance and keeps the code really simple because we minimize background processing that requires careful (and slow) syncronization.
+
+#### Passive timers
+
+This timers don't really exist, they are just a point in the time recorded when an undo action is generated.
+This solution is rather simple and efficient because does not require fancy parallel tasks that have a huge startup overhead. Its just a transparent subtraction with the current time.
+If the delta is less than the allowed time scope the undo command is accepted and the game simulation is rolled back to the previous state.
+If the delta is allowed the action is rejected and a new `ActionCommand` is issued to the client.
+
+Please note that undo is added to the allowed command list only if the current action is not the first of the turn, and the delta with the first generation is still less that the max allowed value.
+
+At the end this type of timer allows us to filter out undo commands when they expire and also check their validity at the cost of a simple subtraction.
+
+#### Active timers
+
+Passive timer sure are great but they don't cover a few edge cases where the match should end when a undo expire because the player has no more actions to run.
+To handle this rare cases we start a background task that detects undo timeout and then performs end game checks to end the match.
