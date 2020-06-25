@@ -112,8 +112,8 @@ Using this two type of timers give the server great performance and keeps the co
 
 #### Passive timers
 
-This timers don't really exist, they are just a point in the time recorded when an undo action is generated.
-This solution is rather simple and efficient because does not require fancy parallel tasks that have a huge startup overhead. Its just a transparent subtraction with the current time.
+Those timers don't really exist, they are just a point in the time recorded when an undo action is generated.
+This solution is rather simple and efficient because it doesn't require fancy parallel tasks that have a huge startup overhead. It's just a transparent subtraction with the current time.
 If the delta is less than the allowed time scope the undo command is accepted and the game simulation is rolled back to the previous state.
 If the delta is allowed the action is rejected and a new `ActionCommand` is issued to the client.
 
@@ -123,5 +123,22 @@ At the end this type of timer allows us to filter out undo commands when they ex
 
 #### Active timers
 
-Passive timer sure are great but they don't cover a few edge cases where the match should end when a undo expire because the player has no more actions to run.
-To handle this rare cases we start a background task that detects undo timeout and then performs end game checks to end the match.
+Passive timers sure are great but they don't cover a few edge cases where the match should end when an undo expires because the player has no more actions to run.
+To handle those rare cases we start a background task that detects undo timeout and then performs end game checks to end the match.
+
+## GUI
+
+#### GuiManager
+The view's `ICommandReceiver` is represented by the `GuiManager`. This class is constructed with the singleton pattern in mind. It is decorated with the various scene controllers as the game progresses. Those controllers can access it via the ` getInstance()` method.
+
+#### Styling 
+To design the application a number of tools were used. SceneBuilder allowed us to easily create FXML files with the basic scene layout.
+To maintain the style consistent through the various scenes and to have reusable styled objects, a `.css` file was used. This file contains the characteristics of various buttons, labels and images used in the application, this also eases the work in case of a redesign as changes to this file will affect the whole application.
+
+#### Resizable windows
+The whole UI is resizable. This was archived simply by maintaining a **16:9** aspect ratio (used in most modern displays as of 2020).
+
+#### How the Game Scene works
+
+The whole scene is a **Border Pane**. The top and bottom regions are not used. The left region is a static *my god* info panel. The right region contains useful info about the flow of the game and the controls (buttons). The center region is basically a **Grid Pane** where each cell is a `Tile` class which extends **Stack Pane**. Various images are then placed onto each tile.
+![Game Scene](img/GameSceneCenterRegion.jpg)
