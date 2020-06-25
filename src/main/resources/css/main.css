@@ -9,23 +9,20 @@
 
 #blue_button {
     -fx-background-image: url("../img/buttons/btn_blue.png");
-
     -fx-background-size: stretch;
     -fx-background-radius: 50;
     -fx-background-insets: 2, 2, 2, 2;
     -fx-text-alignment: center;
     -fx-text-fill: white;
     -fx-font-family: "Arial";
-    -fx-font-size: 20px;
+    -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-content-display: CENTER;
     -fx-pref-height: 45;
     -fx-pref-width: 200;
     -fx-padding: 0 0 7 0;
-
-
-
 }
+
 #blue_button:pressed{
     -fx-background-image: url("../img/buttons/btn_blue_pressed.png");
     -fx-background-size: stretch;
@@ -40,7 +37,7 @@
     -fx-text-alignment: center;
     -fx-text-fill: white;
     -fx-font-family: "Arial";
-    -fx-font-size: 20px;
+    -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-content-display: CENTER;
     -fx-pref-height: 45;
@@ -53,6 +50,25 @@
     -fx-background-size: stretch;
 }
 
+#powerButton{
+    -fx-background-image: url("../img/buttons/btn_godPower.png");
+    -fx-background-size: stretch;
+    -fx-background-radius: 50;
+    -fx-background-insets: 2, 2, 2, 2;
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-family: "Arial";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-content-display: CENTER;
+    -fx-pref-height: 45;
+    -fx-pref-width: 200;
+    -fx-padding: 0 0 7 0;
+}
+#powerButton:pressed{
+    -fx-background-image: url("../img/buttons/btn_godPowerPressed.png");
+    -fx-background-size: stretch;
+}
 
 
 .mainPane{
@@ -74,32 +90,22 @@
     -fx-font-family: "Arial";
     -fx-font-weight: bold;
     -fx-content-display: CENTER;
-    -fx-font-size: 20pt;
+    -fx-font-size: 18pt;
     -fx-text-alignment: center;
     -fx-text-fill: white;
 }
 
-#gen_button {
-    -fx-background-color:
-            #000000,
-            linear-gradient(#7ebcea, #2f4b8f),
-            linear-gradient(#426ab7, #263e75),
-            linear-gradient(#395cab, #223768);
-    -fx-background-insets: 0,1,2,3;
-    -fx-background-radius: 3,2,2,2;
+.inputTextField{
+    -fx-background-color: transparent;
+    -fx-border-color: white;
+    -fx-border-width: 0px 0px 2px 0px;
     -fx-text-fill: white;
-    -fx-font-size: 12px;
-
 }
-#gen_button Text{
-    -fx-effect: dropshadow( one-pass-box , rgba(0,0,0,0.8) , 0, 0.0 , 0 , 1);
-}
-
-#gen_button:hover{
-    -fx-effect: dropshadow(gaussian, #ffffff, 15, 0.2, 0, 0);
-}
-
 
 #logoImage {
     -fx-image: url("../img/common/logo.png");
+}
+#rightPane{
+    -fx-background-image: url("../img/common/rightPanel.png");
+    -fx-background-size: stretch;
 }

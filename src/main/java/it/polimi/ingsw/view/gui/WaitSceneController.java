@@ -1,17 +1,23 @@
 package it.polimi.ingsw.view.gui;
 
-import it.polimi.ingsw.controller.CommandType;
-import it.polimi.ingsw.controller.CommandWrapper;
-import it.polimi.ingsw.controller.StartCommand;
+import it.polimi.ingsw.controller.*;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
-
 import javafx.scene.control.Button;
 
-public class WaitSceneController {
 
-    private GuiManager guiManager;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+
+import static javafx.scene.paint.Color.RED;
+import static javafx.scene.paint.Color.WHITE;
+
+public class WaitSceneController {
 
     @FXML
     private Pane mainPane;
@@ -19,32 +25,42 @@ public class WaitSceneController {
     private Label centerLabel;
     @FXML
     private Button startGameButton;
+    @FXML
+    private ImageView loadingImage;
 
     @FXML
     public void initialize() {
-        guiManager = GuiManager.getInstance();
-        guiManager.setWaitSceneController(this);
+        GuiManager.getInstance().setWaitSceneController(this);
         startGameButton.setDisable(true);
         startGameButton.setText("Start Game");
-        centerLabel.setText("Waiting for a worthy opponent...");
+
+        if(GuiManager.getInstance().imHost())
+            centerLabel.setText("Waiting for worthy opponents...");
+        else
+            centerLabel.setText("Waiting for the host to start the game...");
+
+        URL url = getClass().getResource("/img/common/blue_loading.gif");
+        try (InputStream stream = url.openStream()) {
+            loadingImage.setImage(new Image(stream));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-    //TODO check that the ack join is true, disable in case the second client has disconnected meanwhile
 
     /**
      * Handles the start button click
      */
     @FXML
-    void onStartGameButtonClick(){
+    void onStartGameButtonClick() {
         GuiManager.getInstance().getServerConnection().send(StartCommand.makeRequest(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID()));
-
-        //GuiManager.getInstance().getServerConnection().send(new CommandWrapper(CommandType.START, new StartCommand(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID())));
     }
 
     /**
      * Allows the host to start the game in 2 player mode
      */
-    void onSecondClientConnection(){
-        centerLabel.setText("A second player has connected, you can start the game or wait for a third player");
+    void onSecondClientConnection(CommandWrapper cmd) {
+        String secondUsername = cmd.getCommand(JoinCommand.class).getUsername();
+        centerLabel.setText("A player named "+ secondUsername +" has connected\nYou can now start the game or wait for a third player");
         startGameButton.setDisable(false);
     }
 
@@ -54,7 +70,13 @@ public class WaitSceneController {
      */
     void onStart(StartCommand startCommand) {
         GuiManager.setLayout("fxml/chooseGodsScene.fxml");
+    }
 
+    public void onDisconnect(CommandWrapper cmd) {
+        if (cmd.getCommand(LeaveCommand.class).getNumberRemainingPlayers() < 2) {
+            centerLabel.setText("A player has disconnected\nNot enough players to start a game\nWaiting...");
+            startGameButton.setDisable(true);
+        }
     }
 }
 

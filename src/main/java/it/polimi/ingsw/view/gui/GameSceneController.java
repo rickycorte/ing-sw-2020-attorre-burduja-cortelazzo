@@ -6,6 +6,7 @@ import it.polimi.ingsw.controller.compact.CompactSelectedAction;
 import it.polimi.ingsw.controller.compact.CompactWorker;
 import it.polimi.ingsw.game.NextAction;
 import it.polimi.ingsw.game.Vector2;
+import it.polimi.ingsw.view.CardCollection;
 import javafx.animation.KeyFrame;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
@@ -18,8 +19,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -31,14 +31,17 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 
+import static javafx.scene.paint.Color.BLUE;
+import static javafx.scene.paint.Color.RED;
+
 public class GameSceneController implements Initializable {
 
 
     private boolean my_turn;            //true if it's my turn
 
     private int state;                  // 0 - waiting for other players/for game to start
-                                        // 1 - placing workers state
-                                        // 2 - running action state
+    // 1 - placing workers state
+    // 2 - running action state
     private Tile[][] tiles;             //bi dimensional array holding a reference to all my Tiles
 
     private GuiManager guiManager;
@@ -60,14 +63,16 @@ public class GameSceneController implements Initializable {
 
     private int actionID;
 
+    private int godPowerActionID;
+
     private int currentPlayerID;
 
-    private Timer timer;
+    private CardCollection cardCollection;
 
     @FXML
-    private HBox rootleft;
+    private AnchorPane rootLeft;
     @FXML
-    private HBox rootright;
+    private AnchorPane rootRight;
     @FXML
     private AnchorPane rootcenter;
     @FXML
@@ -93,13 +98,15 @@ public class GameSceneController implements Initializable {
     @FXML
     private ImageView map;
     @FXML
-    private ImageView player1_god;
-    @FXML
-    private ImageView player2_god;
-    @FXML
     private ImageView myGod;
     @FXML
     private GridPane mapGrid;
+    @FXML
+    private StackPane myPane;
+    @FXML
+    private GridPane controllsGrid;
+    @FXML
+    private VBox rightBox;
 
     @FXML
     public void initialize() {
@@ -109,32 +116,33 @@ public class GameSceneController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         guiManager = GuiManager.getInstance();
         guiManager.setGameSceneController(this);
-        Scene scene = guiManager.getScene();
+        //GuiManager.getInstance().setGameSceneController(this);
+
+        cardCollection = new CardCollection();
+
         idsUsernamesMap = GuiManager.getInstance().getIDsUsernameMap();
         idsGodsMap = GuiManager.getInstance().getIDsGodsMap();
-        //initializeGodsImages();
 
         workerImages = new HashMap<>();
-        if (guiManager.getAllPlayerIds().size() > 0)
-            mapPlayers();
         my_workers = new Vector2[2];
 
         state = 0;
         my_turn = false;
 
-        /*
-        URL url = getClass().getResource("/img/common/SantoriniBoard_nomap.png");
-        try (InputStream stream = url.openStream()) {
-            background.setImage(new Image(stream));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        background.setPreserveRatio(false);
-         */
+        initializeBindings();
+        initializeTiles();
+        disableAllButtons(true);
+        gameLabel.setText("Waiting for the game to start");
+    }
 
+    /**
+     * Initializes height and width bindings to make everything resizable
+     */
+    private void initializeBindings() {
         background.fitWidthProperty().bind(borderpane.widthProperty());
         background.fitHeightProperty().bind(borderpane.heightProperty());
 
+        Scene scene = guiManager.getScene();
         root.prefWidthProperty().bind(scene.widthProperty());
         root.prefHeightProperty().bind(scene.heightProperty());
 
@@ -144,51 +152,70 @@ public class GameSceneController implements Initializable {
         rootcenter.maxHeightProperty().bind(borderpane.heightProperty().multiply(0.75));
         rootcenter.maxWidthProperty().bind(borderpane.widthProperty().multiply(0.75));
 
-        rootright.minWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
-        rootright.maxWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
-        myGod.fitWidthProperty().bind(rootright.widthProperty().multiply(0.5));
-        myGod.fitHeightProperty().bind(rootright.heightProperty());
+        rootRight.minWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
+        rootRight.maxWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
 
-        rootleft.minWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
-        rootleft.maxWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
-        player1_god.fitWidthProperty().bind(rootright.widthProperty().multiply(0.5));
-        player1_god.fitHeightProperty().bind(rootright.heightProperty().multiply(0.5));
-        player2_god.fitWidthProperty().bind(rootright.widthProperty().multiply(0.5));
-        player2_god.fitHeightProperty().bind(rootright.heightProperty().multiply(0.5));
+        rootRight.minHeightProperty().bind(borderpane.heightProperty());
+        rootRight.maxHeightProperty().bind(borderpane.heightProperty());
 
-        map.setPreserveRatio(true);
+        rootLeft.minHeightProperty().bind(borderpane.heightProperty());
+        rootLeft.maxHeightProperty().bind(borderpane.heightProperty());
+
+        rootLeft.minWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
+        rootLeft.maxWidthProperty().bind(borderpane.widthProperty().multiply(0.25));
+
 
         StackPane.setAlignment(map, Pos.CENTER);
         StackPane.setAlignment(mapGrid, Pos.CENTER);
         mapGrid.setAlignment(Pos.CENTER);
 
-
+        map.setPreserveRatio(true);
         map.fitWidthProperty().bind(stack_id.widthProperty().multiply(0.95));
         map.fitHeightProperty().bind(stack_id.heightProperty().multiply(0.95));
 
-        initializeTiles();
+        rightBox.maxWidthProperty().bind(rootRight.widthProperty().multiply(0.75));
+        rightBox.maxHeightProperty().bind(rootRight.heightProperty().multiply(0.8));
 
-        initializeButtons();
-        disableAllButtons(true);
-    }
-
-    private void initializeGodsImages() {
-        int myGodID = idsGodsMap.get(GuiManager.getInstance().getServerConnection().getClientID());
-        URL url1 = getClass().getResource(String.format("/img/gods/podium/%02d.png", myGodID));
-        myGod = getImageImageViewByURL(url1);
-        //myGod.setImage(getImageImageViewByURL(url1));
+        controllsGrid.maxWidthProperty().bind(rightBox.widthProperty().multiply(0.9));
+        //controllsGrid.maxHeightProperty().bind(rootRight.heightProperty().multiply(0.45));
+        controllsGrid.setTranslateY(-20);
 
     }
+
+    /**
+     * Initializes my god pane by placing the right image
+     */
+    private void initializeMyGod() {
+        int myGodID = idsGodsMap.get(guiManager.getServerConnection().getClientID());
+        URL url1 = getClass().getResource(String.format("/img/gods/noinfo/%02d.png", myGodID));
+        myGod = (getImageImageViewByURL(url1));
+        myGod.setPreserveRatio(true);
+        myGod.setTranslateY(-40);
+        myGod.fitWidthProperty().bind(rootLeft.widthProperty().multiply(0.95));
+        myPane.getChildren().add(myGod);
+
+        URL panelURL = getClass().getResource("/img/common/leftPanel.png");
+        ImageView panel = getImageImageViewByURL(panelURL);
+        panel.setPreserveRatio(true);
+
+        panel.fitHeightProperty().bind(rootLeft.heightProperty());
+        myPane.getChildren().add(panel);
+    }
+
 
     /**
      * This method handles the Place Workers command by highlighting the available positions
      * @param cmd Place Workers command
      */
     void onPlaceWorkersCommand(CommandWrapper cmd) {
+        if (guiManager.getAllPlayerIds().size() > 0)
+            mapPlayers();
+        initializeButtons();
+        initializeMyGod();
         if (GuiManager.getInstance().isForMe(cmd)) {
             my_turn = true;
             state = 1; // means it's my turn to place workers
-            gameLabel.setText("It's your turn, choose two tiles the map to place your workers");
+            gameLabel.setText("It's your turn, choose where to place your workers");
             workers_placement = new ArrayList<>();
             chosenWorkerPos = new Vector2[2];
 
@@ -219,7 +246,7 @@ public class GameSceneController implements Initializable {
         for (int col = 0; col < mapGrid.getColumnCount(); col++) {
             for (int row = 0; row < mapGrid.getRowCount(); row++) {
                 Tile tileToUnhighlight = tiles[col][row];
-                tileToUnhighlight.unhighlight();
+                tileToUnhighlight.unhighlight("highlight");
             }
         }
     }
@@ -228,72 +255,76 @@ public class GameSceneController implements Initializable {
      * Handle mouse clicks on a tile
      * @param mouseEvent user mouse click
      */
-    private void onTileClick(javafx.scene.input.MouseEvent mouseEvent){
-        if(my_turn){
-            if(state == 1){ // workers placement phase
+    private void onTileClick(javafx.scene.input.MouseEvent mouseEvent) {
+        if (my_turn) {
+            if (state == 1) { // workers placement phase
                 Tile clickedTile = findTileByMouseEvent(mouseEvent);
-                if(clickedTile.workerId == -1) {
+                if (clickedTile.workerId == -1) {
                     workers_placement.add(clickedTile.pos);
 
                     clickedTile.putWorker(workers_placement.size() - 1, GuiManager.getInstance().getServerConnection().getClientID());
                     clickedTile.render();
-                    if( workers_placement.size() == 2){
+                    if (workers_placement.size() == 2) {
                         my_workers = workers_placement.toArray(my_workers);
                         sendMyWorkers(my_workers);
                         disableAllButtons(true);
+                        unHighlightTiles();
                         my_turn = false;
                         state = 0;
                     }
+                }else{
+                    gameLabel.setText("There's already a worker on this tile...");
                 }
-            }else if(state == 2){ // i'm in the move/build phase
+            } else if (state == 2) { // i'm in the move/build phase
                 Tile clickedTile = findTileByMouseEvent(mouseEvent);
-                if(selectedWorker == -1){ // if I haven't selected a worker yet
+                if (selectedWorker == -1) { // if I haven't selected a worker yet
                     if ((clickedTile.workerId != -1)
                             && clickedTile.workerOwnerID == GuiManager.getInstance().getServerConnection().getClientID()         //the worker I just clicked is mine
                             && getAvailableWorkers().contains(clickedTile.workerId)) {                                           // the worker is available to be chosen
                         selectedWorker = clickedTile.workerId;
                         unHighlightWorkers();
-
+                        gameLabel.setText("Now choose a position");
+                        if (getAvailableWorkers().size() > 1)
+                            cancellWorkerSelection.setDisable(false);
                         NextAction[] availableActions = receivedCommand.getAvailableActions();  //all the actions
                         List<NextAction> actionsForWorker = actionsForWorker(availableActions); //all the actions for the selected worker
                         bindButtonsActions();
-                        if( actionsForWorker.size() == 1) { // i have one possible action
+                        if (actionsForWorker.size() == 1) { // i have one possible action
                             actionID = 0;
                             List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
                             Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
                             cellsToHighlight = possibleCells.toArray(cellsToHighlight);
                             highlightAvailableTiles(cellsToHighlight);
-                            cancellWorkerSelection.setDisable(false);
-                        }else{ // the worker has multiple possible actions
+                        } else { // the worker has multiple possible actions
                             List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
                             Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
                             cellsToHighlight = possibleCells.toArray(cellsToHighlight);
-                            if(!(availableActions[actionID].getActionName().startsWith("End Turn")) && !(availableActions[actionID].getActionName().startsWith("Undo"))) {
+                            if (!(availableActions[actionID].getActionName().startsWith("End Turn")) && !(availableActions[actionID].getActionName().startsWith("Undo"))) {
                                 highlightAvailableTiles(cellsToHighlight);
                             }
-                            //cancellWorkerSelection.setDisable(false);
                         }
-                    }else{
+                    } else {
                         // the worker is either not mine or there is no worker at all or is not available to be chosen
                     }
-                }else { // handle execution, I've already selected a worker
-                    cancellWorkerSelection.setDisable(false);
+                } else { // handle execution, I've already selected a worker
+                    if (getAvailableWorkers().size() > 1)
+                        cancellWorkerSelection.setDisable(false);
                     Vector2 posToSend = clickedTile.pos;
                     GuiManager.getInstance().send(ActionCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), actionID, selectedWorker, posToSend));
-
                     unHighlightTiles();
                     disableAllButtons(true);
                     my_turn = false;
                     state = 0;
                 }
             }
-        }else{
+        } else {
             gameLabel.setText("Wait, it's " + idsUsernamesMap.get(currentPlayerID) + "'s turn");
         }
     }
 
     /**
      * Handles Action commands
+     *
      * @param cmd action command to handle
      */
     void onActionCommand(CommandWrapper cmd) {
@@ -334,6 +365,7 @@ public class GameSceneController implements Initializable {
                 highlightAvailableWorkers(getAvailableWorkers());
                 gameLabel.setText("Click on a Worker you want to select");
             } else {
+                selectedWorker = getAvailableWorkers().get(0);
                 actionID = 0;
                 bindButtonsActions();
                 List<NextAction> actionsForWorker = actionsForWorker(receivedCommand.getAvailableActions());
@@ -354,7 +386,7 @@ public class GameSceneController implements Initializable {
     /**
      * Method that binds buttons to the respective incoming available actions
      */
-    void bindButtonsActions(){
+    private void bindButtonsActions() {
         int actionIndex = 0;
         actionsForWorker(receivedCommand.getAvailableActions());
         receivedCommand.getAvailableActions();
@@ -365,9 +397,10 @@ public class GameSceneController implements Initializable {
             else if (actionName.startsWith("End Turn"))
                 endTurnButton.setDisable(false);
             else if (actionName.contains("Again") || actionName.startsWith("Build Dome") || actionIndex > 0) {
-                System.out.println("Found a god power");
-                godPowerButton.setId(String.valueOf(actionIndex));
-                godPowerButton.setText(actionName);
+                //System.out.println("Found a god power");
+                godPowerActionID = actionIndex;
+                //godPowerButton.setId(String.valueOf(actionIndex));
+                //godPowerButton.setText(actionName);
                 godPowerButton.setDisable(false);
             }
             actionIndex++;
@@ -378,7 +411,7 @@ public class GameSceneController implements Initializable {
      * This method checks if Undo is an available action
      * @return true / false accordingly
      */
-    private boolean isUndoAvailable(){
+    private boolean isUndoAvailable() {
         NextAction[] availableActions = receivedCommand.getAvailableActions();
         List<NextAction> actionsForWorker = actionsForWorker(availableActions);
         for (NextAction nextAction : actionsForWorker) {
@@ -394,32 +427,75 @@ public class GameSceneController implements Initializable {
      * @param availableActions array of available actions for all workers
      * @return List of NextActions representing the actions selected worker can run
      */
-    private List<NextAction> actionsForWorker(NextAction[] availableActions){
+    private List<NextAction> actionsForWorker(NextAction[] availableActions) {
         List<NextAction> actions = new ArrayList<>();
-        for(NextAction anAction : availableActions){
-            if(anAction.getWorkerID() == selectedWorker)
+        for (NextAction anAction : availableActions) {
+            if (anAction.getWorkerID() == selectedWorker)
                 actions.add(anAction);
         }
         return actions;
-
     }
 
     /**
      * This method initializes buttons by setting their text / background / onAction method
      */
-    private void initializeButtons(){
-        godPowerButton.setText("Use god power");
-        godPowerButton.setOnMouseClicked(this :: onGodPowerButtonClick);
+    private void initializeButtons() {
+        String powerName = getPowerName();
+        if(powerName.equals("Passive")){
+            godPowerButton.setDisable(true);
+            godPowerButton.setOpacity(0);
+        }else {
+            godPowerButton.setText(powerName);
+            godPowerButton.setOnMouseClicked(this::onGodPowerButtonClick);
+        }
 
         endTurnButton.setText("End Turn");
-        endTurnButton.setOnMouseClicked(this :: onEndTurnButtonClick);
+        endTurnButton.setOnMouseClicked(this::onEndTurnButtonClick);
 
-        cancellWorkerSelection.setText("Cancel W.Sel");
-        cancellWorkerSelection.setOnMouseClicked(this :: onCancellWorkerSelectionClick);
+        cancellWorkerSelection.setText("Cancel Selection");
+        cancellWorkerSelection.setOnMouseClicked(this::onCancellWorkerSelectionClick);
 
         undoButton.setText("Undo");
-        undoButton.setOnMouseClicked(this:: onUndoButtonClick);
+        undoButton.setOnMouseClicked(this::onUndoButtonClick);
 
+        quitButton.setText("Leave Game");
+        quitButton.setOnMouseClicked(this::onQuitButtonClick);
+
+    }
+
+    /**
+     * Handles the leave game button click by asking for confirmation
+     * @param mouseEvent user's click
+     */
+    private void onQuitButtonClick(MouseEvent mouseEvent) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setContentText("You sure you want to leave?\nYou will lose");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK) {
+            guiManager.send(LeaveCommand.makeRequest(guiManager.getServerConnection().getClientID(), guiManager.getServerConnection().getServerID()));
+            GuiManager.setLayout("fxml/mainScene.fxml");
+        }
+    }
+
+    /**
+     * Gets god's special power name
+     * @return power name
+     */
+    private String getPowerName(){
+        int myGodID =idsGodsMap.get(guiManager.getServerConnection().getClientID());
+        switch (myGodID){
+            case 2:
+                return "Move Again";
+            case 4:
+                return "Build Dome";
+            case 5:
+            case 6:
+                return "Build Again";
+            case 10:
+                return "Build";
+            default:
+                return "Passive";
+        }
     }
 
     /**
@@ -440,6 +516,10 @@ public class GameSceneController implements Initializable {
         undoButton.setDisable(true);
     }
 
+    /**
+     * Returns the position construct the undo command with
+     * @return undo position
+     */
     private List<Vector2> posForUndo(){
         NextAction[] nextActions = receivedCommand.getAvailableActions();
         for(int i = 0; i< nextActions.length;i++){
@@ -448,7 +528,6 @@ public class GameSceneController implements Initializable {
         }
         return null;
     }
-
 
     /**
      * Handle user's click on cancel worker selection button
@@ -470,7 +549,7 @@ public class GameSceneController implements Initializable {
         endTurnButton.setDisable(par);
         godPowerButton.setDisable(par);
         cancellWorkerSelection.setDisable(par);
-        quitButton.setDisable(par);
+        //quitButton.setDisable(par);
         undoButton.setDisable(par);
     }
 
@@ -485,11 +564,16 @@ public class GameSceneController implements Initializable {
                 GuiManager.getInstance().getServerConnection().getServerID(),
                 actionID,
                 selectedWorker,
-                new Vector2(0,0))); //TODO change this to the received pos
+                new Vector2(0,0)));
         disableAllButtons(true);
     }
 
-    int getActionID(String actionName){
+    /**
+     * Gets the action id given it's name
+     * @param actionName representing action's name
+     * @return action's id
+     */
+    private int getActionID(String actionName){
         NextAction[] actions = receivedCommand.getAvailableActions();
         for(int i = 0; i < actions.length; i++){
             if(actions[i].getActionName().startsWith(actionName))
@@ -516,7 +600,7 @@ public class GameSceneController implements Initializable {
      * @param mouseEvent user click on the button
      */
     private void onGodPowerButtonClick(MouseEvent mouseEvent) {
-        actionID = Integer.parseInt(godPowerButton.getId());
+        actionID = godPowerActionID;
         unHighlightTiles();
         NextAction[] availableActions = receivedCommand.getAvailableActions();  //all the actions
         List<NextAction> actionsForWorker = actionsForWorker(availableActions); //actions for selected worker
@@ -554,8 +638,11 @@ public class GameSceneController implements Initializable {
         GuiManager.getInstance().send(WorkerPlaceCommand.makeWrapped(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), w_pos));
     }
 
-
-
+    /**
+     * Checks if my only two options are undo and end turn
+     * @param receivedCommand command received from the server
+     * @return true if my only options are undo and end turn
+     */
     private boolean onlyEndTurnAndUndoAvailable(ActionCommand receivedCommand) {
         if( receivedCommand.getAvailableActions().length == 2);
             if (receivedCommand.getAvailableActions()[0].getActionName().startsWith("End Turn") || receivedCommand.getAvailableActions()[0].getActionName().startsWith("Undo"))
@@ -611,7 +698,7 @@ public class GameSceneController implements Initializable {
         for (int col = 0; col < 5; col++) {
             for (int row = 0; row < 5; row++) {
                 Tile tile = tiles[col][row];
-                tile.unHighlightWorker();
+                tile.unhighlight("highlight_worker");
             }
         }
     }
@@ -627,7 +714,6 @@ public class GameSceneController implements Initializable {
 
         updateLevels(updatedMap);
         updateWorkers(updatedCompactWorkers);
-
         renderTiles();
     }
 
@@ -640,13 +726,10 @@ public class GameSceneController implements Initializable {
 
         for (int i = 0; i < updatedMap.getLength() * updatedMap.getHeight(); i++) {
             Tile tileToUpdate = tiles[row][col];
-
             int newLevel = updatedMap.getLevel(row, col);
             boolean hasDome = updatedMap.isDome(row, col);
-            //tileToUpdate.buildLevel(newLevel);
-            //tileToUpdate.buildLevel(0);
-            tileToUpdate.setHasDome(hasDome);
-            tileToUpdate.buildLevel(newLevel);
+            tileToUpdate.level = newLevel;
+            tileToUpdate.hasDome = hasDome;
 
             col++;
             if (col == 5) {
@@ -670,6 +753,9 @@ public class GameSceneController implements Initializable {
             CompactWorker compactWorker = updatedWorkers[i];
             Tile tileToUpdate = tiles[compactWorker.getPosition().getX()][compactWorker.getPosition().getY()];
             tileToUpdate.putWorker(compactWorker.getWorkerID(), compactWorker.getOwnerID());
+            tileToUpdate.ownerUsername = idsUsernamesMap.get(compactWorker.getOwnerID());
+            //tileToUpdate.godName = cardCollection.getCard(  idsGodsMap.get(guiManager.getServerConnection().getClientID())).getName();
+            tileToUpdate.godName = cardCollection.getCard(idsGodsMap.get(compactWorker.getOwnerID())).getName();
         }
     }
 
@@ -689,10 +775,6 @@ public class GameSceneController implements Initializable {
      * This method initializes the mapGrid pane by placing a Tile on each cell
      */
     private void initializeTiles() {
-        //mapGrid.setMinSize(map.getFitWidth(), map.getFitHeight());
-        double tileW = map.getFitWidth() / 5;
-        double tileH = map.getFitHeight() / 5;
-
         tiles = new Tile[5][5];
         for (int row = 0; row < 5; row++) {
             for (int col = 0; col < 5; col++) {
@@ -702,32 +784,24 @@ public class GameSceneController implements Initializable {
                     onTileClick(e);
                     ///
                 });
-                //System.out.println("[GAME SCENE] Set on tile col: " + col + " row: " + row);
-                //tile.setId(String.valueOf(col) + String.valueOf(row));
-                //System.out.println("[GAME SCENE] Tile ID: " + tile.getId());
+
                 tile.pos = new Vector2(row, col);
-                //tile.getChildren().add(new Label("row: " + tile.pos.getX() + " col: " + tile.pos.getY()));
                 tile.workerImages = workerImages;
-                //tile.setMinSize(tileW, tileH);
                 mapGrid.add(tile, col, row);
                 tile.setMapGrid(mapGrid);
                 tile.minWidthProperty().bind(map.fitWidthProperty().multiply(0.165));
                 tile.minHeightProperty().bind(map.fitHeightProperty().multiply(0.198));
 
-                //tile.maxWidthProperty().bind(map.fitWidthProperty().multiply(0.22));
-                //tile.maxHeightProperty().bind(map.fitHeightProperty().multiply(0.2));
-
-
-                tile.setStyle("-fx-border-color: yellow; -fx-border-radius: 5");
-
                 tiles[row][col] = tile;
             }
         }
-        mapGrid.setGridLinesVisible(true);
-
-
     }
 
+    /**
+     * Utility method - gets the ImageView fron and URL
+     * @param url URL representing the address of the image
+     * @return ImageView accessed via the URL
+     */
     private ImageView getImageImageViewByURL(URL url) {
         ImageView imageView = new ImageView();
         try(InputStream inputStream = url.openStream()){
@@ -741,11 +815,10 @@ public class GameSceneController implements Initializable {
 
     /**
      * This method maps each client to a specific worker color image URL
+     * Method called by the GuiManager on the FirstPlayerPick command
      */
     void mapPlayers() {
-
         List<Integer> clientIds = guiManager.getAllPlayerIds();
-        //System.out.printf("player idssssss %s\n", clientIds);
         Collections.sort(clientIds);
         Queue<URL> images = new ArrayDeque<>(Arrays.asList(
                 getClass().getResource("/img/workers/worker_blue.png"),
@@ -758,15 +831,6 @@ public class GameSceneController implements Initializable {
         }
     }
 
-
-
-
-    void onEndGame(CommandWrapper cmd) {
-        GuiManager.setLayout("fxml/endGameScene.fxml");
-    }
-
-
-
     //------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -775,6 +839,8 @@ public class GameSceneController implements Initializable {
      */
     private static class Tile extends StackPane {
         private int workerOwnerID = -1;         //initially has no worker owner id
+        private String ownerUsername = null;
+        private String godName = null;
         private int workerId = -1;              //initially has no worker id
         private int level = 0;                  //initially the Tile has no building on it
         private boolean hasDome = false;        //initially the Tile has no dome on it
@@ -782,33 +848,6 @@ public class GameSceneController implements Initializable {
         private Map<Integer, URL> workerImages; //map to have a reference of each player's worker color
         private GridPane mapGrid;
 
-
-        void setMapGrid(GridPane mapGrid){
-            this.mapGrid = mapGrid;
-        }
-        /**
-         * Updates the level of this Tile
-         * @param newLevel new level of the tile
-         */
-        void buildLevel(int newLevel) {
-            this.level = newLevel;
-        }
-
-        /**
-         * Updates the tile by placing/removing dome property
-         * @param hasDome
-         */
-        void setHasDome(boolean hasDome){
-            this.hasDome = hasDome;
-        }
-
-        /**
-         * Gets the level of this Tile
-         * @return this tile's level
-         */
-        int getLevel() {
-            return this.level;
-        }
 
         /**
          * Places a worker on this Tile
@@ -829,32 +868,14 @@ public class GameSceneController implements Initializable {
         }
 
         /**
-         * Removes the highlight_worker image from the Tile if it has one
-         */
-        private void unHighlightWorker() {
-            Node toRemove = null;
-            ObservableList<Node> imagesOnTile = this.getChildren();
-            for (Node node : imagesOnTile) {
-                if (node.getId() != null) {
-                    if (node.getId().equals("highlight_worker")) {
-                        toRemove = node;
-                        break;
-                    }
-                    break;
-                }
-            }
-            this.getChildren().remove(toRemove);
-        }
-
-        /**
          * Removes the highlight image from the Tile if it has one
          */
-        private void unhighlight() {
+        private void unhighlight(String highlightType) {
             Node toRemove = null;
             ObservableList<Node> imagesOnTile = this.getChildren();
             for (Node node : imagesOnTile) {
                 if (node.getId() != null) {
-                    if (node.getId().equals("highlight")) {
+                    if (node.getId().equals(highlightType)) {
                         toRemove = node;
                         break;
                     }
@@ -871,6 +892,10 @@ public class GameSceneController implements Initializable {
             getChildren().clear();
             placeBuildingImage();
             placeWorkerImage();
+            if (this.workerId != -1) {
+                Tooltip.install(this, new Tooltip("Owner: " + ownerUsername + "\nGod: " + godName + "\nLvL: " + level ));
+            } else
+                Tooltip.install(this, new Tooltip("LvL: " + level));
         }
 
         /**
@@ -884,7 +909,6 @@ public class GameSceneController implements Initializable {
                 return;
             }
             URL url = workerImages.get(workerOwnerID);
-            //System.out.printf("DEbug %d, %d, %s || %s\n", workerID, workerOwnerID, url, workerImages);
             ImageView my_worker = getImageImageViewByURL(url);
             my_worker.setPreserveRatio(true);
             double workerScaleFactor = getScaleFactor(this);
@@ -940,14 +964,13 @@ public class GameSceneController implements Initializable {
                     this.getChildren().add(levelImage);
                     break;
                 }
-
             }
             if (hasDome) {
                 URL url = getClass().getResource("/img/buildings/dome.png");
-                ImageView levelImage = getImageImageViewByURL(url);
-                levelImage.setPreserveRatio(true);
-                levelImage.fitWidthProperty().bind(this.widthProperty().multiply(0.9));
-                this.getChildren().add(levelImage);
+                ImageView domeImage = getImageImageViewByURL(url);
+                domeImage.setPreserveRatio(true);
+                domeImage.fitWidthProperty().bind(this.widthProperty().multiply(0.9));
+                this.getChildren().add(domeImage);
             }
         }
 
@@ -975,6 +998,11 @@ public class GameSceneController implements Initializable {
             return imageView;
         }
 
+        /**
+         * Returns an ImageView of the desired highlight
+         * @param highlightType specifies the type of the highlight
+         * @return ImageView of the highlight
+         */
         ImageView initializeHighlight(String highlightType){
             URL highlightURL = getClass().getResource("/img/common/"+highlightType+".png");
             ImageView highlight = getImageImageViewByURL(highlightURL);
@@ -991,6 +1019,14 @@ public class GameSceneController implements Initializable {
             scaleTransition.play();
 
             return highlight;
+        }
+
+        /**
+         * Setter for the map grid
+         * @param mapGrid map grid to set
+         */
+        void setMapGrid(GridPane mapGrid) {
+            this.mapGrid = mapGrid;
         }
     }
 }

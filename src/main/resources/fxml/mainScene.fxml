@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.paint.*?>
-<?import javafx.scene.text.*?>
-<?import javafx.scene.effect.*?>
-<?import javafx.geometry.*?>
-<?import java.lang.*?>
-<?import java.net.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
 <?import java.net.URL?>
-<?import javafx.scene.image.ImageView?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<VBox fx:id="mainPane" minHeight="480.0" minWidth="853.0" prefHeight="720.0" prefWidth="1280.0" styleClass="mainPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.MainSceneController">
+<VBox fx:id="mainPane" minHeight="480.0" minWidth="853.0" prefHeight="720.0" prefWidth="1280.0" styleClass="mainPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.MainSceneController">
 
 
     <stylesheets>
@@ -21,7 +17,7 @@
     </stylesheets>
    <children>
    
-       <ImageView id="logo.png" fitHeight="151.0" fitWidth="461.0" preserveRatio="true" scaleX="1.2" scaleY="1.2" scaleZ="1.2">
+       <ImageView fx:id="logo" id="logo.png" fitHeight="151.0" fitWidth="461.0" preserveRatio="true" scaleX="1.2" scaleY="1.2" scaleZ="1.2">
          <image>
             <Image url="@../img/common/logo.png" />
          </image>
@@ -33,15 +29,16 @@
          </effect></ImageView>
       <Button id="blue_button" fx:id="startButton" alignment="CENTER" mnemonicParsing="false" onAction="#onStartButtonClick" prefHeight="45.0" prefWidth="200.0" stylesheets="@../css/main.css" text="Start" textAlignment="CENTER" textFill="WHITE">
          <VBox.margin>
-             <Insets top="5.0" bottom="5.0"/>
+             <Insets bottom="5.0" top="5.0" />
          </VBox.margin>
          <font>
             <Font name="Constantia" size="20.0" />
          </font>
       </Button>
+      <Button id="blue_button" alignment="CENTER" mnemonicParsing="false" onAction="#onGodsButtonClick" stylesheets="@../css/main.css" text="Gods" />
       <Button id="red_button" fx:id="exitButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#onExitButtonClick" prefHeight="45.0" prefWidth="200.0" stylesheets="@../css/main.css" text="Exit" textAlignment="CENTER" textFill="WHITE">
          <VBox.margin>
-            <Insets top="5.0" bottom="5.0"/>
+            <Insets bottom="5.0" top="5.0" />
          </VBox.margin>
          <font>
             <Font name="System Bold" size="20.0" />

@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.gui;
 
 import it.polimi.ingsw.controller.*;
 import it.polimi.ingsw.controller.compact.CompactPlayer;
+import it.polimi.ingsw.game.Game;
 import it.polimi.ingsw.network.ICommandReceiver;
 import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.network.server.Server;
@@ -9,7 +10,6 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
-import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
@@ -20,19 +20,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * Handle the interactions between Client and Gui
  */
 public class GuiManager implements ICommandReceiver {
+    private Game.GameState state;                                               //Game state indicator, helps directing incoming commands
+    private static GuiManager instance = null;                                  //GuiManager instance (singleton pattern)
+    private Scene aScene;                                                       //Reference to the scene, used for .setRoot()
+    private INetworkAdapter serverConnection;                                   //Interface to communicate with the server
+    private boolean isConnected = false;                                        //Flag to indicate whether i'm connected or not
 
-    private static GuiManager instance = null;
-    private Scene aScene;
-    private INetworkAdapter serverConnection;
-    private int[] connectedPlayersIDS;              //is constructed at the incoming Start command
-    private boolean isConnected = false;
+    private String myUsername;
+    private int[] connectedPlayersIDS;                                          //Constructed at Start command
+    private Map<Integer, String> idUsernameMap = new ConcurrentHashMap<>();     //Constructed at incoming FirstPlayerPick command
+    private Map<Integer, Integer> idGodMap = new HashMap<>();                   //Constructed at incoming FirstPlayerPick command
+    private int winnerID;                                                       //Set at End Game command
+    private int hostID;                                                         //Set at Start command
 
-    private Map<Integer, String> idUsernameMap = new ConcurrentHashMap<>();     //is constructed at incoming FirstPlayerPick command
-    private Map<Integer, Integer> idGodMap = new HashMap<>();                   //is constructed at incoming FirstPlayerPick command
-    private int winnerID;
-
-    private int hostID;
-    //SceneControllers
+    //--------------SceneControllers------------------------------------------------------------------------------------
 
     private MainSceneController mainSceneController;
     private LogInSceneController logInSceneController;
@@ -42,16 +43,14 @@ public class GuiManager implements ICommandReceiver {
     private GameSceneController gameSceneController;
     private EndGameController endGameController;
 
-
-
+    //------------------------------------------------------------------------------------------------------------------
 
     GuiManager(){
         super();
     }
 
-
     /**
-     * Gets GuiManager instance
+     * Gets GuiManager instance (singleton pattern)
      * @return GuiManager instance
      */
      synchronized static GuiManager getInstance(){
@@ -61,10 +60,8 @@ public class GuiManager implements ICommandReceiver {
         return instance;
     }
 
-
     /**
      * This method sets a layout from an FXML file and returns the scene controller
-     *
      * @param path  path to the layout file
      * @param <T> type of scene controller
      * @return scene controller
@@ -77,9 +74,9 @@ public class GuiManager implements ICommandReceiver {
         Pane pane;
         try{
             pane = loader.load();
-            //System.out.println("[GuiManager] Pane loaded");
+            //System.out.println("[Gui Manager] Pane loaded");
         }catch (IOException e){
-            System.out.println("[Gui_Manager] Couldn't load pane" );
+            System.out.println("[Gui Manager] Couldn't load pane");
             e.printStackTrace();
             return null;
         }
@@ -87,9 +84,7 @@ public class GuiManager implements ICommandReceiver {
         return loader.getController();
     }
 
-
-    //Scene Controllers
-
+    //----------------------------Scene Controller Setters--------------------------------------------------------------
 
     void setMainSceneController(MainSceneController mainSceneController){
         this.mainSceneController = mainSceneController;
@@ -102,9 +97,11 @@ public class GuiManager implements ICommandReceiver {
     void setWaitSceneController(WaitSceneController waitSceneController){
         this.waitSceneController = waitSceneController;
     }
+
     void setChooseGodsSceneController(ChooseGodsSceneController chooseGodsSceneController){
         this.chooseGodsSceneController = chooseGodsSceneController;
     }
+
     void setFirstPlayerPickSceneController(FirstPlayerPickSceneController firstPlayerPickSceneController) {
         this.firstPlayerPickSceneController = firstPlayerPickSceneController;
     }
@@ -112,32 +109,62 @@ public class GuiManager implements ICommandReceiver {
     void setGameSceneController(GameSceneController gameSceneController){
         this.gameSceneController = gameSceneController;
     }
+
     void setEndGameController(EndGameController endGameController){
         this.endGameController = endGameController;
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Setts the INetworkAdapter (connection to the server)
+     * @param serverConnection adapter representing the connection wo the server
+     */
     void setServerConnection(INetworkAdapter serverConnection) {
         this.serverConnection = serverConnection;
     }
 
+    /**
+     * Getts the INetworkAdapter (connection to the server)
+     * @return adapter to communicate with the server
+     */
      INetworkAdapter getServerConnection(){
         return serverConnection;
     }
 
+    /**
+     * Setter for the scene
+     * @param scene scene to set
+     */
     void setScene(Scene scene){
         this.aScene = scene;
     }
 
     /**
+     * Setter for my username
+     * @param username my username
+     */
+    void setMyUsername(String username){
+        myUsername = username;
+    }
+
+    /**
+     * Getter for my username
+     * @return my username
+     */
+    String getMyUsername(){
+        return myUsername;
+    }
+
+    /**
      * checks if an incoming command is directed to me
      * @param cmd received command
-     * @return true / false accordingly
+     * @return true if command's target is me or broadcast
      */
     boolean isForMe(CommandWrapper cmd){
         BaseCommand command = cmd.getCommand(BaseCommand.class);
         return GuiManager.getInstance().getServerConnection().getClientID() == command.getTarget() || command.getTarget() == Server.BROADCAST_ID;
     }
-
 
     /**
      * ICommandReceiver interface onConnect implementation
@@ -146,6 +173,8 @@ public class GuiManager implements ICommandReceiver {
     @Override
     public void onConnect(CommandWrapper cmd) {
         if(isForMe(cmd)) {
+            hostID = cmd.getCommand(JoinCommand.class).getHostPlayerID();
+            state = Game.GameState.WAIT;
             if (cmd.getType() == CommandType.JOIN) {
                 Platform.runLater(() -> {
                     GuiManager.getInstance().logInSceneController.onAckJoin(cmd);
@@ -154,22 +183,23 @@ public class GuiManager implements ICommandReceiver {
         }else{
             if (cmd.getType() == CommandType.JOIN){
                 Platform.runLater(() -> {
-                    GuiManager.getInstance().waitSceneController.onSecondClientConnection();
+                    GuiManager.getInstance().waitSceneController.onSecondClientConnection(cmd);
                 });
             }
         }
     }
-
+    //TODO handle this better
     /**
      * ICommandReceiver interface onDisconnect implementation
      * @param cmd disconnect command
      */
     @Override
     public void onDisconnect(CommandWrapper cmd) {
-        //handle Leave
-        if(isForMe(cmd)){
-
-        }
+        if (cmd == null) {
+            setLayout("fxml/mainScene.fxml");
+            Platform.runLater(() -> mainSceneController.onServerShutDown());
+        } else if (state == Game.GameState.WAIT)
+            Platform.runLater(() -> waitSceneController.onDisconnect(cmd));
     }
 
     /**
@@ -187,30 +217,48 @@ public class GuiManager implements ICommandReceiver {
                     });
                     break;
                 case FILTER_GODS:
+                    state = Game.GameState.GOD_FILTER;
                     setHostID(cmd.getCommand(FilterGodCommand.class).getTarget());
                     Platform.runLater(() -> chooseGodsSceneController.onFilterGodsCommand(cmd));
                     break;
                 case PICK_GOD:
+                    state = Game.GameState.GOD_PICK;
                     Platform.runLater(() -> chooseGodsSceneController.onPickGodCommand(cmd));
                     break;
                 case SELECT_FIRST_PLAYER:
+                    state = Game.GameState.FIRST_PLAYER_PICK;
                     mapPlayers(cmd.getCommand(FirstPlayerPickCommand.class));
                     if (isForMe(cmd))
                         Platform.runLater(() -> firstPlayerPickSceneController.onFirstPlayerPickCommand(cmd));
                     break;
                 case PLACE_WORKERS:
+                    state = Game.GameState.GAME;
                     Platform.runLater(() -> GuiManager.getInstance().gameSceneController.onPlaceWorkersCommand(cmd));
                     break;
                 case ACTION_TIME: {
+                    state = Game.GameState.GAME;
                     Platform.runLater(() -> gameSceneController.onActionCommand(cmd));
                     break;
                 }
-                case END_GAME:{
-                    winnerID = cmd.getCommand(EndGameCommand.class).getWinnerID();
-                    Platform.runLater(() -> gameSceneController.onEndGame(cmd));
+                case END_GAME: {
+
+                    state = Game.GameState.END;
+                    EndGameCommand endGameCommand = cmd.getCommand(EndGameCommand.class);
+                    winnerID = endGameCommand.getWinnerID();
+
+                    if(endGameCommand.isMatchStillRunning()){
+                        if(endGameCommand.getTarget() == serverConnection.getClientID()){
+                            setLayout("fxml/endGameScene.fxml");
+                            Platform.runLater(() -> endGameController.onEndGameCommand(cmd));
+                        }
+                    }else{
+                        setLayout("fxml/endGameScene.fxml");
+                        Platform.runLater(() -> endGameController.onEndGameCommand(cmd));
+                    }
                 }
                 case UPDATE:
-                    Platform.runLater(() -> gameSceneController.onUpdateCommand(cmd));
+                    if (state == Game.GameState.GAME)
+                        Platform.runLater(() -> gameSceneController.onUpdateCommand(cmd));
                     break;
             }
     }
@@ -219,7 +267,7 @@ public class GuiManager implements ICommandReceiver {
      * Map all the connected client IDs to their respective username and godID
      * @param firstPlayerPickCommand command to get the information from
      */
-    void mapPlayers(FirstPlayerPickCommand firstPlayerPickCommand){
+    private void mapPlayers(FirstPlayerPickCommand firstPlayerPickCommand){
         CompactPlayer[] connectedCompactPlayers = firstPlayerPickCommand.getPlayers();
         int[] connectedIDs = new int[connectedCompactPlayers.length];
         String[] connectedUsernames = new String[connectedCompactPlayers.length];
@@ -237,18 +285,10 @@ public class GuiManager implements ICommandReceiver {
             idUsernameMap.put(connectedIDs[i], connectedUsernames[i]);
             idGodMap.put(connectedIDs[i], connectedGods[i]);
         }
-
-        System.out.printf("MAP players:: %s,, %s,, %s\n", Arrays.toString(connectedIDs), Arrays.toString(connectedUsernames),
-                Arrays.toString(connectedGods));
-        Platform.runLater(()-> {
-            if (gameSceneController != null) {
-                gameSceneController.mapPlayers();
-            }
-        });
     }
 
     /**
-     * Method used by the scenes to send a command
+     * Method used by scene controllers to send a command
      * @param cmd command to send
      */
     public void send(CommandWrapper cmd){
@@ -266,48 +306,95 @@ public class GuiManager implements ICommandReceiver {
     }
 
     /**
+     * Method user to connect to a server with an username, a server IP and a port
+     * @param serverIP server's address
+     * @param serverPort port to connect to
+     * @param username username to connect with
+     */
+    public void connect(String serverIP, int serverPort, String username) {
+        getServerConnection().connect(serverIP, serverPort, username);
+    }
+    /**
      * Method used to disconnect from a server
      */
     public void disconnect() {
         if (isConnected) {
             getServerConnection().disconnect();
+            send(LeaveCommand.makeRequest(serverConnection.getClientID(),serverConnection.getServerID()));
             isConnected = false;
         }
     }
 
+    /**
+     *Getter for the map of [ K - ClientID : V - Client Username ]
+     * @return id - username map
+     */
     Map<Integer, String> getIDsUsernameMap(){
         return this.idUsernameMap;
     }
 
+    /**
+     * Getter for the connected players IDS
+     * @return an array of connected players IDs
+     */
     int[] getConnectedIDS(){
         return this.connectedPlayersIDS;
     }
 
+    /**
+     * Getter for the connected players IDs
+     * @return an arrayList of connected players IDs
+     */
     List<Integer> getAllPlayerIds() {
         return new ArrayList<>(this.idUsernameMap.keySet());
     }
 
+    /**
+     * Getter for the map of [ K - ClientID : V - GodID ]
+     * @return client ID - god ID map
+     */
     Map<Integer, Integer> getIDsGodsMap() {
         return this.idGodMap;
     }
 
-    public Scene getScene() {
+    /**
+     * Gets the reference to the scene
+     * @return scene reference
+     */
+    Scene getScene() {
         return aScene;
     }
 
-    public int getWinnerID() {
+    /**
+     * Getter for the winner's client ID
+     * @return winner's client ID
+     */
+    int getWinnerID() {
         return winnerID;
     }
 
-    public void setHostID(int hostID) {
+    /**
+     * Setter for host client ID
+     * @param hostID ID to set
+     */
+    private void setHostID(int hostID) {
         this.hostID = hostID;
     }
 
-    public int getHostID() {
+    /**
+     * Getter for the host client ID
+     * @return host client ID
+     */
+    int getHostID() {
         return hostID;
     }
 
-    public void connect(String serverIP, int serverPort, String username) {
-        getServerConnection().connect(serverIP, serverPort, username);
+    /**
+     * Method to know if i'm the host or not
+     * @return true if i'm the host of the game, false otherwise
+     */
+    boolean imHost(){
+        return serverConnection.getClientID() == hostID;
     }
+
 }

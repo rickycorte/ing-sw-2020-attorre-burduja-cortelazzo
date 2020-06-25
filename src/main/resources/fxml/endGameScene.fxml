@@ -3,36 +3,32 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="491.0" prefWidth="885.0" styleClass="mainPane" stylesheets="@../css/main.css" fx:controller="it.polimi.ingsw.view.gui.EndGameController" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="491.0" prefWidth="885.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.EndGameController">
    <children>
-      <VBox alignment="CENTER" layoutX="63.0" layoutY="42.0" prefHeight="406.0" prefWidth="758.0" styleClass="ambientPane" stylesheets="@../css/main.css" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="30.0">
+      <VBox fx:id="ambientPane" alignment="CENTER" layoutX="63.0" layoutY="42.0" prefHeight="406.0" prefWidth="758.0" styleClass="ambientPane" stylesheets="@../css/main.css" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="30.0">
          <children>
             <Label fx:id="infoLabel" styleClass="menuLabel" stylesheets="@../css/main.css" text="Label">
                <VBox.margin>
                   <Insets bottom="5.0" top="5.0" />
                </VBox.margin>
             </Label>
-            <HBox alignment="CENTER" prefHeight="360.0" prefWidth="686.0">
+            <HBox fx:id="outerBox" alignment="CENTER" prefHeight="360.0" prefWidth="686.0">
                <children>
-                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
+                  <ImageView fx:id="leftImage" fitHeight="200.0" fitWidth="164.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../img/common/fireworks.gif" />
+                     </image>
+                  </ImageView>
+                  <VBox fx:id="innerBox" alignment="CENTER" prefHeight="325.0" prefWidth="436.0">
                      <children>
-                        <StackPane fx:id="secondPlayerPane" prefHeight="150.0" prefWidth="200.0">
-                           <children>
-                              <ImageView fx:id="player2God" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
-                           </children>
-                        </StackPane>
-                     </children>
-                  </VBox>
-                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
-                     <children>
-                        <StackPane fx:id="winnerPane" prefHeight="150.0" prefWidth="200.0">
+                        <StackPane fx:id="winnerPane" alignment="BOTTOM_CENTER" prefHeight="323.0" prefWidth="333.0">
                            <children>
                               <ImageView fx:id="winnerGlow" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                               <ImageView fx:id="winnerGod" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
@@ -40,25 +36,21 @@
                         </StackPane>
                      </children>
                   </VBox>
-                  <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0">
-                     <children>
-                        <StackPane fx:id="thirdPlayerPane" prefHeight="150.0" prefWidth="200.0">
-                           <children>
-                              <ImageView fx:id="player3God" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
-                           </children>
-                        </StackPane>
-                     </children>
-                  </VBox>
+                  <ImageView fx:id="rightImage" fitHeight="173.0" fitWidth="213.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../img/common/fireworks.gif" />
+                     </image>
+                  </ImageView>
                </children>
             </HBox>
             <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                <children>
-                  <Button id="red_button" mnemonicParsing="false" stylesheets="@../css/main.css" text="Quit">
+                  <Button id="red_button" mnemonicParsing="false" onAction="#onQuitButtonClick" stylesheets="@../css/main.css" text="Quit">
                      <HBox.margin>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </HBox.margin>
                   </Button>
-                  <Button id="blue_button" mnemonicParsing="false" text="Another One">
+                  <Button id="blue_button" mnemonicParsing="false" onAction="#onAnotherButtonClick" text="Play Again">
                      <HBox.margin>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </HBox.margin>

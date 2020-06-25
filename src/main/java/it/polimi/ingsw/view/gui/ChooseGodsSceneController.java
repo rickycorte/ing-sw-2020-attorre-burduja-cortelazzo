@@ -3,6 +3,8 @@ package it.polimi.ingsw.view.gui;
 import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.FilterGodCommand;
 import it.polimi.ingsw.controller.PickGodCommand;
+import it.polimi.ingsw.view.CardCollection;
+import javafx.animation.FadeTransition;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -12,12 +14,14 @@ import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,14 +34,12 @@ import java.util.ResourceBundle;
 public class ChooseGodsSceneController implements Initializable {
 
     private List<Integer> chosenGodsList;
-
     private int chosenGod;
-
     private State state;
-
     private enum State{
         WAITING, PICKING, FILTERING
     }
+    private CardCollection cardCollection;
 
     @FXML
     private GridPane gridPane;
@@ -49,19 +51,15 @@ public class ChooseGodsSceneController implements Initializable {
     private Button cancelButton;
 
     @FXML
-    public void initialize()  {
+    public void initialize()  { }
 
-    }
-
-    //TODO add cards info panel
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         GuiManager.getInstance().setChooseGodsSceneController(this);
-        int numberOfConnectedPlayers = GuiManager.getInstance().getConnectedIDS().length;
-        //chosenGodIDsArray = new int[numberOfConnectedPlayers];
         chosenGodsList = new ArrayList<>();
+        cardCollection = new CardCollection();
         state = State.WAITING;
-        topLabel.setText("HERE ARE ALL THE AVAILABLE GODS");
+        topLabel.setText("Here are all the available gods");
         initializeButtons();
         enableButtons(false);
         initializeImages();
@@ -72,14 +70,14 @@ public class ChooseGodsSceneController implements Initializable {
      */
     private void initializeButtons() {
         cancelButton.setText("Cancel Selection");
-        if (imTheHost())
-            sendButton.setText("Send Gods");
+        if (GuiManager.getInstance().imHost())
+            sendButton.setText("Choose Gods");
         else
             sendButton.setText("Choose God");
     }
 
     /**
-     * This method enables all the buttons
+     * This method enables/disables all the buttons
      */
     private void enableButtons(boolean enable){
         sendButton.setDisable(!enable);
@@ -102,7 +100,6 @@ public class ChooseGodsSceneController implements Initializable {
      */
     @FXML
     public void onCancelButtonClick(ActionEvent actionEvent) {
-        //chosenGodIDsArray = new Integer[GuiManager.getInstance().getConnectedIDS().length];
         chosenGodsList = new ArrayList<>();
         chosenGod = 0;
         resetImagesEffect();
@@ -116,7 +113,7 @@ public class ChooseGodsSceneController implements Initializable {
      */
     @FXML
     public void onSendButtonClick(ActionEvent actionEvent) {
-        if(imTheHost()){
+        if(GuiManager.getInstance().imHost()){
             int[] chosenGodIDsArray = listToArray(chosenGodsList);
             GuiManager.getInstance().send(FilterGodCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), chosenGodIDsArray));
             enableButtons(false);
@@ -133,20 +130,12 @@ public class ChooseGodsSceneController implements Initializable {
      * @param chosenGodsList list to convert
      * @return converted list
      */
-    int[] listToArray(List<Integer> chosenGodsList){
+    private int[] listToArray(List<Integer> chosenGodsList){
         int[] chosenGodsArray = new int[chosenGodsList.size()];
         for(int i = 0; i < chosenGodsList.size(); i++){
             chosenGodsArray[i] = chosenGodsList.get(i);
         }
         return chosenGodsArray;
-    }
-
-    /**
-     * This method checks if i'm the host or not
-     * @return true if i'm the host, false otherwise
-     */
-    private boolean imTheHost() {
-        return GuiManager.getInstance().getServerConnection().getClientID() == GuiManager.getInstance().getHostID();
     }
 
     /**
@@ -164,27 +153,22 @@ public class ChooseGodsSceneController implements Initializable {
 
             DropShadow dropShadow = new DropShadow();
             dropShadow.setColor(Color.GREEN);
-            dropShadow.setRadius(15.0);
-
+            dropShadow.setRadius(17.0);
             my_image.setEffect(dropShadow);
 
             int godToAdd = Integer.parseInt(my_image.getId());
             if(!chosenGodsList.contains(godToAdd)) {
                 chosenGodsList.add(Integer.parseInt(my_image.getId()));
             }
-            //chosenGodIDs[index] = Integer.parseInt(my_image.getId());
-            //index++;
+
             if (chosenGodsList.size() == GuiManager.getInstance().getConnectedIDS().length ) {
                 sendButton.setDisable(false);
                 enableControls(false);
             }
-            System.out.println("Image pressed");
         } else if (state == State.PICKING) {
             DropShadow dropShadow = new DropShadow();
             dropShadow.setColor(Color.GREEN);
             my_image.setEffect(dropShadow);
-
-
 
             chosenGod = Integer.parseInt(my_image.getId());
             enableButtons(true);
@@ -195,7 +179,7 @@ public class ChooseGodsSceneController implements Initializable {
     /**
      * Loads all the images on the grid pane
      */
-    void initializeImages() {
+    private void initializeImages() {
         int row = 0;
         int col = 0;
         for (int i = 1; i < 11; i++) {
@@ -210,8 +194,9 @@ public class ChooseGodsSceneController implements Initializable {
 
             image.setId(String.valueOf(i));
             image.setOnMouseEntered((e)-> {
-                if(!chosenGodsList.contains(Integer.valueOf( image.getId())))
+                if(!chosenGodsList.contains(Integer.valueOf( image.getId()))) {
                     image.setStyle("-fx-effect: dropshadow(gaussian, #ffffff, 15, 0.2, 0, 0)");
+                }
             });
             image.setOnMouseExited((e)-> {
                 image.setStyle(null);
@@ -221,14 +206,16 @@ public class ChooseGodsSceneController implements Initializable {
             sat.setSaturation(-0.8);
             image.setEffect(sat);
 
+            String description = cardCollection.getCard(i).getPower();
+            Tooltip.install(image, new Tooltip(description));
+
             gridPane.add(image, row, col);
             col++;
             if(col == 3) {
                 col = 0;
                 row++;
             }
-            //image.setFitHeight(112);
-            //image.setFitWidth(175);
+
             image.fitHeightProperty().bind((gridPane.heightProperty().multiply(0.29)));
             image.fitWidthProperty().bind((gridPane.widthProperty().multiply(0.29)));
             image.setOnMouseClicked(this::onClicked);
@@ -247,9 +234,10 @@ public class ChooseGodsSceneController implements Initializable {
         if(GuiManager.getInstance().isForMe(cmd)){
             startFilterMode();
         }else{
-            topLabel.setText("WAIT, THE HOST IS CHOOSING THE ALLOWED CARDS");
+            topLabel.setText("The host is picking the allowed Gods");
         }
     }
+
 
     /**
      * Handle the pick god command by entering pick state
@@ -260,15 +248,15 @@ public class ChooseGodsSceneController implements Initializable {
             int[] allowedIDs = cmd.getCommand(PickGodCommand.class).getAllowedGodsIDS();
             startPickMode(allowedIDs);
         }else{
-            topLabel.setText("WAIT, OTHER PLAYERS ARE CHOOSING THEIR GOD");
+            topLabel.setText("Other players are picking their God, wait for your turn");
         }
     }
 
     /**
      * Starts the filtering mode by enabling the controls
      */
-    void startFilterMode(){
-        topLabel.setText("CHOOSE GODS YOU WANT IN THIS GAME");
+    private void startFilterMode(){
+        topLabel.setText("Choose the Gods you want to be allowed in this game");
         this.state = State.FILTERING;
         resetImagesEffect();
         enableControls(true);
@@ -277,11 +265,10 @@ public class ChooseGodsSceneController implements Initializable {
     /**
      * This method resets the effect of all the images on the grid
      */
-    void resetImagesEffect(){
+    private void resetImagesEffect(){
         ObservableList<Node> images = gridPane.getChildren();
         for(Node aNode: images){
             aNode.setEffect(null);
-            //aNode.setStyle(null);
         }
     }
 
@@ -289,8 +276,8 @@ public class ChooseGodsSceneController implements Initializable {
      * Starts picking state by removing all the not allowed IDs
      * @param ids IDs allowed for this game
      */
-    void startPickMode(int[] ids) {
-        topLabel.setText("CLICK ON A CARD TO CHOOSE IT");
+    private void startPickMode(int[] ids) {
+        topLabel.setText("Your turn to choose, click on a God to choose it");
         enableControls(true);
         this.state = State.PICKING;
         List<Node> list = new ArrayList<>();
@@ -299,7 +286,6 @@ public class ChooseGodsSceneController implements Initializable {
             if (aChild instanceof ImageView) {
                 for (int i : ids) {
                     if (i == Integer.parseInt(aChild.getId())) {
-                        //aChild.setDisable(true);
                         aChild.setEffect(null);
                         should_remove = false;
                         break;
