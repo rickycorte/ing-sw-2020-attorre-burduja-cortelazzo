@@ -514,6 +514,8 @@ public class Controller implements ICommandReceiver {
                 {
                     System.out.println("[CONTROLLER] Detected player "+ prevPlayers[i]+ " lost");
                     sendCommand(EndGameCommand.makeLoseSingle(network.getServerID(), prevPlayers[i].getId()));
+                    // update map with removed player
+                    sendCommand(UpdateCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getCurrentMap()));
                     connectedPlayers.remove(prevPlayers[i]);
                 }
             }

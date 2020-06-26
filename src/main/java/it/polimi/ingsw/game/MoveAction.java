@@ -53,7 +53,9 @@ public class MoveAction extends Action {
      */
     protected boolean canMoveUp(GameConstraints gc)
     {
-        return !gc.check(GameConstraints.Constraint.BLOCK_MOVE_UP);
+        // check if BLOCk_MOVE_UP is enabled, but also ignore it if SET_BLOCK_MOVE_UP is enabled because
+        // this here removes the moveup block
+        return !gc.check(GameConstraints.Constraint.BLOCK_MOVE_UP) || localConstrains.check(GameConstraints.Constraint.SET_BLOCK_MOVE_UP);
     }
 
     /**
