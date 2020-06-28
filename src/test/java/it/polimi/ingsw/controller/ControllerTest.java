@@ -1156,6 +1156,11 @@ public class ControllerTest
         assertTrue(lcmd.isMatchStillRunning());
         assertFalse(lcmd.isMatchInterrupted());
 
+        //check command order
+        assertEquals(CommandType.END_GAME, commandHistory.get(commandHistory.size()-3).getType());
+        assertEquals(CommandType.UPDATE, commandHistory.get(commandHistory.size()-2).getType());
+        assertEquals(CommandType.ACTION_TIME, commandHistory.get(commandHistory.size()-1).getType());
+
         // check map
         var updwrp = getLastHistoryCommandOfType(CommandType.UPDATE);
         assertNotNull(updwrp);
@@ -1233,6 +1238,92 @@ public class ControllerTest
         assertEquals(2, egc.getWinnerID());
         assertFalse(egc.isMatchStillRunning());
         assertFalse(egc.isMatchInterrupted());
+
+    }
+
+
+    @Test
+    void shouldWinGoingToLevelThree()
+    {
+        // join with 2 players
+        controller.onConnect(JoinCommand.makeRequest(1, SERVER_ID, "Gompachiro"));
+        controller.onConnect(JoinCommand.makeRequest(2, SERVER_ID, "Nezuko"));
+        controller.onCommand(StartCommand.makeRequest(1,SERVER_ID));
+
+        // pick 2 gods
+        controller.onCommand(FilterGodCommand.makeReply(1, SERVER_ID, new int[]{10,2}));
+
+        //chose gods p2/3
+        controller.onCommand(PickGodCommand.makeReply(2, SERVER_ID, 2));
+
+        //select first player
+        controller.onCommand(FirstPlayerPickCommand.makeReply(1, SERVER_ID, 1));
+
+        // place workers with following schema starting from 0,0:
+        // p1 | p1 | p2 | p2
+        // l3 |    |
+        // this will make p1 lose at the beginning of the game
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(1, SERVER_ID, new Vector2[]{new Vector2(0,0), new Vector2(0,1)}));
+
+        // we cheat and level 2 under p1 worker and place a level 3 near so we can win right at the beginning
+        controller.getMatch().getCurrentMap().build(new Vector2(0,0));
+        controller.getMatch().getCurrentMap().build(new Vector2(0,0));
+
+        controller.getMatch().getCurrentMap().build(new Vector2(1,0));
+        controller.getMatch().getCurrentMap().build(new Vector2(1,0));
+        controller.getMatch().getCurrentMap().build(new Vector2(1,0));
+
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(2, SERVER_ID, new Vector2[]{new Vector2(0,2), new Vector2(0,3)}));
+
+        controller.onCommand(ActionCommand.makeReply(1, SERVER_ID, 0,0, new Vector2(1,0)));
+
+        var endGWrap = getLastHistoryCommandOfType(CommandType.END_GAME);
+        assertNotNull(endGWrap);
+        assertTrue(controller.getMatch().isEnded());
+        assertEquals(1, endGWrap.getCommand(EndGameCommand.class).getWinnerID());
+
+    }
+
+    @Test
+    void shouldEndGameIfAPlayerHasNoMoreMoves()
+    {
+        // join with 2 players
+        controller.onConnect(JoinCommand.makeRequest(1, SERVER_ID, "Gompachiro"));
+        controller.onConnect(JoinCommand.makeRequest(2, SERVER_ID, "Nezuko"));
+        controller.onCommand(StartCommand.makeRequest(1,SERVER_ID));
+
+        // pick 2 gods
+        controller.onCommand(FilterGodCommand.makeReply(1, SERVER_ID, new int[]{10,2}));
+
+        //chose gods p2/3
+        controller.onCommand(PickGodCommand.makeReply(2, SERVER_ID, 2));
+
+        //select first player
+        controller.onCommand(FirstPlayerPickCommand.makeReply(1, SERVER_ID, 1));
+
+        // place workers with following schema starting from 0,0:
+        // p1 |    | p1 |
+        // p2 | p2 |    |
+        // this will make p1 lose at the beginning of the game
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(1, SERVER_ID, new Vector2[]{new Vector2(0,0), new Vector2(0,2)}));
+
+        controller.onCommand(WorkerPlaceCommand.makeWrapped(2, SERVER_ID, new Vector2[]{new Vector2(1,0), new Vector2(1,1)}));
+
+        // move back to
+        // p1 | p1 |    |
+        // p2 | p2 |    |
+        controller.onCommand(ActionCommand.makeReply(1, SERVER_ID, 0,1, new Vector2(0,1)));
+
+        // we cheat an place domes to trap p1 and force lose during this turn by running the build action
+        controller.getMatch().getCurrentMap().buildDome(new Vector2(0,2));
+        controller.getMatch().getCurrentMap().buildDome(new Vector2(1,2));
+
+        controller.onCommand(ActionCommand.makeReply(1, SERVER_ID, 0, 1, new Vector2(0,2)));
+
+        var endGWrap = getLastHistoryCommandOfType(CommandType.END_GAME);
+        assertNotNull(endGWrap);
+        assertTrue(controller.getMatch().isEnded());
+        assertEquals(2, endGWrap.getCommand(EndGameCommand.class).getWinnerID());
 
     }
 
