@@ -227,11 +227,12 @@ public class MoveAction extends Action {
      * @param prev_pos the pos i started the turn in, used to check for "WIN_BY_GOING_DOWN" constraint
      * @return 1 if i won, 0 else
      */
-    protected int winCheck(Worker w, Map m, GameConstraints gc, Vector2 prev_pos){
-            if(m.getLevel(w.getPosition()) == 3)
+    protected int winCheck(Worker w, Map m, GameConstraints gc, Vector2 prev_pos)
+    {
+            int difference = m.getLevel(w.getPosition()) - m.getLevel(prev_pos);
+            if(m.getLevel(w.getPosition()) == 3 && difference >= 1)
                 return 1;
-            int difference =  m.getLevel(prev_pos) - m.getLevel(w.getPosition());
-            if((difference > 1) && (gc.check(GameConstraints.Constraint.WIN_BY_GOING_DOWN)))
+            if((difference < -1) && (gc.check(GameConstraints.Constraint.WIN_BY_GOING_DOWN)))
                 return 1;
         return 0;
     }

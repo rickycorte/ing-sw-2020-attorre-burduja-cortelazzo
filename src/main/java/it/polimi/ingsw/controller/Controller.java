@@ -443,6 +443,7 @@ public class Controller implements ICommandReceiver {
                 startUndoLoseCheckTimer();
         }
 
+        runEndGameDetection(prevPlayers);
         sendCommand(ActionCommand.makeRequest(network.getServerID(), match.getCurrentPlayer().getId(), nextActions));
     }
 
@@ -485,6 +486,8 @@ public class Controller implements ICommandReceiver {
             return;
         }
 
+        runEndGameDetection(prevPlayers);
+
         // create next actions (error, different turn phase, new player)
         sendActionsToCurrentPlayer();
     }
@@ -504,6 +507,8 @@ public class Controller implements ICommandReceiver {
             {
                 // match ended
                 sendCommand(EndGameCommand.makeWrapped(network.getServerID(), network.getBroadCastID(), match.getWinner()));
+                // update global list to prevent multiple sends of the same update
+                this.prevPlayers = match.getPlayers().toArray(Player[]::new);
                 return;
             }
 
@@ -520,6 +525,10 @@ public class Controller implements ICommandReceiver {
                 }
             }
         }
+
+        // update global list to prevent multiple sends of the same update
+        this.prevPlayers = match.getPlayers().toArray(Player[]::new);
+
     }
 
 

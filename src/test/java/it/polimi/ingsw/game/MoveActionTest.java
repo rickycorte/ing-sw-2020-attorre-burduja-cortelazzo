@@ -566,4 +566,20 @@ public class MoveActionTest {
             fail("No exception should be thrown with valid moves");
         }
     }
+
+    @Test
+    void shouldNotWinOnHorizontalMoveAtLevelThree() throws NotAllowedMoveException
+    {
+        m = new Map(); // clear map
+        //build two level 3 towers
+        buildPos(m, 0,0,3);
+        buildPos(m, 0,1,3);
+
+        //worker on top of on tower
+        w1p1.setPosition(new Vector2(0,0));
+        // add p1 workers (the one above)
+        m.setWorkers(p1);
+
+        assertEquals(0, moveAct.run(w1p1, new Vector2(0,1),m,gc));
+    }
 }

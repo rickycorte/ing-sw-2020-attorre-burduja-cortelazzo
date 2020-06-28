@@ -21,3 +21,5 @@ report.xml
 # IntelliJ
 out/
 target/
+*.plantuml
+src/**/*.svg

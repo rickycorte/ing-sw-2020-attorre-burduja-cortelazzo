@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="533px" preserveAspectRatio="none" style="width:425px;height:533px;" version="1.1" viewBox="0 0 425 533" width="425px" zoomAndPan="magnify"><defs><filter height="300%" id="f1rf53oa8wijbv" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacingAndGlyphs" text-decoration="underline" textLength="178" x="114.5" y="18.6855">VIEW's Class Diagram</text><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacingAndGlyphs" textLength="0" x="206" y="41.3262"/><!--MD5=[432dd831305d7709bed0fe1447e3cfc7]
+cluster it.polimi.ingsw--><polygon fill="#FFFFFF" filter="url(#f1rf53oa8wijbv)" points="16,51.2813,122,51.2813,129,74.8906,403,74.8906,403,466.2813,16,466.2813,16,51.2813" style="stroke: #000000; stroke-width: 1.5;"/><line style="stroke: #000000; stroke-width: 1.5;" x1="16" x2="129" y1="74.8906" y2="74.8906"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="100" x="20" y="67.8145">it.polimi.ingsw</text><!--MD5=[bbbf6caa2b7c4b0aafaa7eb57467afab]
+cluster it.polimi.ingsw.view--><polygon fill="#FFFFFF" filter="url(#f1rf53oa8wijbv)" points="40,95.2813,79,95.2813,86,118.8906,379,118.8906,379,442.2813,40,442.2813,40,95.2813" style="stroke: #000000; stroke-width: 1.5;"/><line style="stroke: #000000; stroke-width: 1.5;" x1="40" x2="86" y1="118.8906" y2="118.8906"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="33" x="44" y="111.8145">view</text><!--MD5=[de9ffcdaa0b426b14ba5826edaa37faf]
+class it.polimi.ingsw.view.Card--><rect fill="#FEFECE" filter="url(#f1rf53oa8wijbv)" height="172.5234" id="it.polimi.ingsw.view.Card" style="stroke: #A80036; stroke-width: 1.5;" width="116" x="56" y="131.2813"/><ellipse cx="96.65" cy="147.2813" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M99.4156,143.1563 Q99.5719,142.9375 99.7594,142.8281 Q99.9469,142.7188 100.1656,142.7188 Q100.5406,142.7188 100.775,142.9844 Q101.0094,143.2344 101.0094,143.8438 L101.0094,145.2969 Q101.0094,145.9063 100.775,146.1719 Q100.5406,146.4375 100.1656,146.4375 Q99.8219,146.4375 99.6188,146.2344 Q99.4156,146.0469 99.3063,145.5313 Q99.2594,145.1719 99.0719,144.9844 Q98.7438,144.6094 98.1344,144.3906 Q97.525,144.1719 96.9,144.1719 Q96.1344,144.1719 95.4938,144.5 Q94.8688,144.8281 94.3688,145.5781 Q93.8844,146.3281 93.8844,147.3594 L93.8844,148.4531 Q93.8844,149.6875 94.775,150.5156 Q95.6656,151.3281 97.2594,151.3281 Q98.1969,151.3281 98.8531,151.0781 Q99.2438,150.9219 99.6656,150.4844 Q99.9313,150.2188 100.0719,150.1406 Q100.2281,150.0625 100.4313,150.0625 Q100.7594,150.0625 101.0094,150.3281 Q101.275,150.5781 101.275,150.9219 Q101.275,151.2656 100.9313,151.6719 Q100.4313,152.25 99.6344,152.5781 Q98.5563,153.0313 97.2594,153.0313 Q95.7438,153.0313 94.5406,152.4063 Q93.5563,151.9063 92.8688,150.8438 Q92.1813,149.7656 92.1813,148.4844 L92.1813,147.3281 Q92.1813,146 92.7906,144.8594 Q93.4156,143.7031 94.5094,143.0938 Q95.6031,142.4688 96.8375,142.4688 Q97.5719,142.4688 98.2125,142.6406 Q98.8688,142.7969 99.4156,143.1563 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="27" x="116.35" y="152.1914">Card</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="57" x2="171" y1="163.2813" y2="163.2813"/><rect fill="none" height="6" style="stroke: #C82930; stroke-width: 1.0;" width="6" x="64" y="171.2813"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="90" x="76" y="178.7002">description : String</text><rect fill="none" height="6" style="stroke: #C82930; stroke-width: 1.0;" width="6" x="64" y="185.1172"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="28" x="76" y="192.5361">id : int</text><rect fill="none" height="6" style="stroke: #C82930; stroke-width: 1.0;" width="6" x="64" y="198.9531"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="63" x="76" y="206.3721">name : String</text><rect fill="none" height="6" style="stroke: #C82930; stroke-width: 1.0;" width="6" x="64" y="212.7891"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="69" x="76" y="220.208">power : String</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="57" x2="171" y1="226.625" y2="226.625"/><ellipse cx="67" cy="237.625" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="31" x="76" y="242.0439">Card()</text><ellipse cx="67" cy="251.4609" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="77" x="76" y="255.8799">getDescription()</text><ellipse cx="67" cy="265.2969" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="31" x="76" y="269.7158">getId()</text><ellipse cx="67" cy="279.1328" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="50" x="76" y="283.5518">getName()</text><ellipse cx="67" cy="292.9688" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="55" x="76" y="297.3877">getPower()</text><!--MD5=[7ab1c8c7b2ede37ca7a72b49e10c5a50]
+class it.polimi.ingsw.view.CardCollection--><rect fill="#FEFECE" filter="url(#f1rf53oa8wijbv)" height="117.1797" id="it.polimi.ingsw.view.CardCollection" style="stroke: #A80036; stroke-width: 1.5;" width="155" x="207.5" y="159.2813"/><ellipse cx="240.95" cy="175.2813" fill="#ADD1B2" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M243.7156,171.1563 Q243.8719,170.9375 244.0594,170.8281 Q244.2469,170.7188 244.4656,170.7188 Q244.8406,170.7188 245.075,170.9844 Q245.3094,171.2344 245.3094,171.8438 L245.3094,173.2969 Q245.3094,173.9063 245.075,174.1719 Q244.8406,174.4375 244.4656,174.4375 Q244.1219,174.4375 243.9188,174.2344 Q243.7156,174.0469 243.6063,173.5313 Q243.5594,173.1719 243.3719,172.9844 Q243.0438,172.6094 242.4344,172.3906 Q241.825,172.1719 241.2,172.1719 Q240.4344,172.1719 239.7938,172.5 Q239.1688,172.8281 238.6688,173.5781 Q238.1844,174.3281 238.1844,175.3594 L238.1844,176.4531 Q238.1844,177.6875 239.075,178.5156 Q239.9656,179.3281 241.5594,179.3281 Q242.4969,179.3281 243.1531,179.0781 Q243.5438,178.9219 243.9656,178.4844 Q244.2313,178.2188 244.3719,178.1406 Q244.5281,178.0625 244.7313,178.0625 Q245.0594,178.0625 245.3094,178.3281 Q245.575,178.5781 245.575,178.9219 Q245.575,179.2656 245.2313,179.6719 Q244.7313,180.25 243.9344,180.5781 Q242.8563,181.0313 241.5594,181.0313 Q240.0438,181.0313 238.8406,180.4063 Q237.8563,179.9063 237.1688,178.8438 Q236.4813,177.7656 236.4813,176.4844 L236.4813,175.3281 Q236.4813,174 237.0906,172.8594 Q237.7156,171.7031 238.8094,171.0938 Q239.9031,170.4688 241.1375,170.4688 Q241.8719,170.4688 242.5125,170.6406 Q243.1688,170.7969 243.7156,171.1563 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="82" x="259.05" y="180.1914">CardCollection</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="208.5" x2="361.5" y1="191.2813" y2="191.2813"/><rect fill="none" height="6" style="stroke: #C82930; stroke-width: 1.0;" width="6" x="215.5" y="199.2813"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="129" x="227.5" y="206.7002">cardCollection : List&lt;Card&gt;</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="208.5" x2="361.5" y1="213.1172" y2="213.1172"/><ellipse cx="218.5" cy="224.1172" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="77" x="227.5" y="228.5361">CardCollection()</text><ellipse cx="218.5" cy="237.9531" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="81" x="227.5" y="242.3721">getAvailableIds()</text><ellipse cx="218.5" cy="251.7891" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="46" x="227.5" y="256.208">getCard()</text><polygon fill="#4177AF" points="218.5,261.625,214.5,267.625,222.5,267.625" style="stroke: #1963A0; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" lengthAdjust="spacingAndGlyphs" textLength="44" x="227.5" y="270.0439">getSize()</text><!--MD5=[8718a607b363e143d2140510b810b9f0]
+class it.polimi.ingsw.view.IHumanInterface--><rect fill="#FEFECE" filter="url(#f1rf53oa8wijbv)" height="61.8359" id="it.polimi.ingsw.view.IHumanInterface" style="stroke: #A80036; stroke-width: 1.5;" width="125" x="56.5" y="364.2813"/><ellipse cx="71.5" cy="380.2813" fill="#B4A7E5" rx="11" ry="11" style="stroke: #A80036; stroke-width: 1.0;"/><path d="M72.4531,376.9219 L72.4531,383.5781 L74.1719,383.5781 Q74.7813,383.5781 75.0469,383.8125 Q75.3125,384.0469 75.3125,384.4375 Q75.3125,384.8125 75.0469,385.0469 Q74.7813,385.2813 74.1719,385.2813 L69.0313,385.2813 Q68.4219,385.2813 68.1563,385.0469 Q67.8906,384.8125 67.8906,384.4219 Q67.8906,384.0469 68.1563,383.8125 Q68.4219,383.5781 69.0313,383.5781 L70.75,383.5781 L70.75,376.9219 L69.0313,376.9219 Q68.4219,376.9219 68.1563,376.6875 Q67.8906,376.4531 67.8906,376.0625 Q67.8906,375.6875 68.1563,375.4531 Q68.4219,375.2188 69.0313,375.2188 L74.1719,375.2188 Q74.7813,375.2188 75.0469,375.4531 Q75.3125,375.6875 75.3125,376.0625 Q75.3125,376.4531 75.0469,376.6875 Q74.7813,376.9219 74.1719,376.9219 L72.4531,376.9219 Z "/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="93" x="85.5" y="385.1914">IHumanInterface</text><line style="stroke: #A80036; stroke-width: 1.5;" x1="57.5" x2="180.5" y1="396.2813" y2="396.2813"/><line style="stroke: #A80036; stroke-width: 1.5;" x1="57.5" x2="180.5" y1="404.2813" y2="404.2813"/><ellipse cx="67.5" cy="415.2813" fill="#84BE84" rx="3" ry="3" style="stroke: #038048; stroke-width: 1.0;"/><text fill="#000000" font-family="sans-serif" font-size="11" font-style="italic" lengthAdjust="spacingAndGlyphs" textLength="30" x="76.5" y="419.7002">start()</text><!--MD5=[793b238370128fee1837751e125d6658]
+link it.polimi.ingsw.view.Card to it.polimi.ingsw.view.CardCollection--><!--MD5=[e141ceb7d90b53b7cd56b4dc1abec105]
+link it.polimi.ingsw.view.Card to it.polimi.ingsw.view.IHumanInterface--><text fill="#888888" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="0" x="407" y="482.6621"/><text fill="#888888" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="0" x="407" y="495.2402"/><text fill="#888888" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="392" x="15" y="507.8184">PlantUML diagram generated by SketchIt! (https://bitbucket.org/pmesmeur/sketch.it)</text><text fill="#888888" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="394" x="13" y="520.3965">For more information about this tool, please contact philippe.mesmeur@gmail.com</text><!--MD5=[ee2a37a565982ee2fe800e01ac25807c]
+@startuml
+
+title __VIEW's Class Diagram__\n
+
+  namespace it.polimi.ingsw {
+    namespace view {
+      class it.polimi.ingsw.view.Card {
+          - description : String
+          - id : int
+          - name : String
+          - power : String
+          + Card()
+          + getDescription()
+          + getId()
+          + getName()
+          + getPower()
+      }
+    }
+  }
+  
+
+  namespace it.polimi.ingsw {
+    namespace view {
+      class it.polimi.ingsw.view.CardCollection {
+          - cardCollection : List<Card>
+          + CardCollection()
+          + getAvailableIds()
+          + getCard()
+          ~ getSize()
+      }
+    }
+  }
+  
+
+  namespace it.polimi.ingsw {
+    namespace view {
+      interface it.polimi.ingsw.view.IHumanInterface {
+          {abstract} + start()
+      }
+    }
+  }
+  
+
+
+
+right footer
+
+
+PlantUML diagram generated by SketchIt! (https://bitbucket.org/pmesmeur/sketch.it)
+For more information about this tool, please contact philippe.mesmeur@gmail.com
+endfooter
+
+@enduml
+
+PlantUML version 1.2020.14(Sat Jun 20 16:14:34 CEST 2020)
+(GPL source distribution)
+Java Runtime: Java(TM) SE Runtime Environment
+JVM: Java HotSpot(TM) 64-Bit Server VM
+Default Encoding: Cp1252
+Language: it
+Country: IT
+--></g></svg>

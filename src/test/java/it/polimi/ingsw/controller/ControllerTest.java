@@ -1148,9 +1148,9 @@ public class ControllerTest
         assertEquals(Game.GameState.GAME, controller.getMatch().getCurrentState());
 
         // notification that first client lost
-        assertEquals(CommandType.END_GAME, controller.getLastSent().getType());
-
-        var lcmd = controller.getLastSent().getCommand(EndGameCommand.class);
+        var lasteg = getLastHistoryCommandOfType(CommandType.END_GAME);
+        assertNotNull(lasteg);
+        var lcmd = lasteg.getCommand(EndGameCommand.class);
         assertEquals(1, lcmd.getTarget());
         assertTrue(lcmd.isTargetLoser());
         assertTrue(lcmd.isMatchStillRunning());
