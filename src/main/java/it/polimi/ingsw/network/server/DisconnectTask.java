@@ -18,6 +18,6 @@ public class DisconnectTask extends TimerTask {
     @Override
     public void run() {
         System.out.println("[TIMER] Timeout reached for client " + client_handler.getId());
-        client_handler.disconnect();
+        client_handler.sendClientTimeout();
     }
 }

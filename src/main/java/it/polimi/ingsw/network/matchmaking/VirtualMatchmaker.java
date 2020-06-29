@@ -179,7 +179,11 @@ public class VirtualMatchmaker implements ICommandReceiver
     {
         System.out.println("[MATCHMAKER] Disconnect got " + cmd.toString());
         LeaveCommand lcm = cmd.getCommand(LeaveCommand.class);
-        if(lcm == null) return;
+        if(lcm == null)
+        {
+            System.out.println("[MATCHMAKER] Invalid leave command received");
+            return;
+        }
 
         var vm =  matchCache.get(lcm.getSender());
         if(vm != null)
