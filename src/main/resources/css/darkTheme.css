@@ -1,0 +1,130 @@
+.button:pressed{
+    -fx-scale-x: 0.90;
+    -fx-scale-y: 0.90;
+}
+
+.button:hover{
+    -fx-effect: dropshadow(gaussian, #ffffff, 15, 0.2, 0, 0);
+}
+
+#blue_button {
+    -fx-background-image: url("../img/buttons/btn_blue.png");
+    -fx-alignment: center;
+    -fx-background-size: stretch;
+    -fx-background-radius: 50;
+    -fx-background-insets: 2, 2, 2, 2;
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-family: "Arial";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-content-display: CENTER;
+    -fx-pref-height: 45;
+    -fx-pref-width: 200;
+    -fx-padding: 0 0 7 0;
+}
+
+#blue_button:pressed{
+    -fx-background-image: url("../img/buttons/btn_blue_pressed.png");
+    -fx-background-size: stretch;
+}
+
+
+#red_button{
+    -fx-background-image: url("../img/buttons/btn_red.png");
+    -fx-alignment: center;
+    -fx-background-size: stretch;
+    -fx-background-radius: 50;
+    -fx-background-insets: 2, 2, 2, 2;
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-family: "Arial";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-content-display: CENTER;
+    -fx-pref-height: 45;
+    -fx-pref-width: 200;
+    -fx-padding: 0 0 7 0;
+
+}
+#red_button:pressed{
+    -fx-background-image: url("../img/buttons/btn_red_pressed.png");
+    -fx-background-size: stretch;
+}
+
+#powerButton{
+    -fx-background-image: url("../img/buttons/btn_godPower.png");
+    -fx-alignment: center;
+    -fx-background-size: stretch;
+    -fx-background-radius: 50;
+    -fx-background-insets: 2, 2, 2, 2;
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-family: "Arial";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-content-display: CENTER;
+    -fx-pref-height: 45;
+    -fx-pref-width: 200;
+    -fx-padding: 0 0 7 0;
+}
+#powerButton:pressed{
+    -fx-background-image: url("../img/buttons/btn_godPowerPressed.png");
+    -fx-background-size: stretch;
+}
+
+
+.mainPane{
+    -fx-background-image: url("../img/common/dark/bluredBackgroundDark.png");
+    -fx-background-size: cover;
+    -fx-alignment: center;
+}
+
+.gamePane{
+    -fx-alignment: center;
+}
+
+.ambientPane{
+    -fx-background-color: rgba(0 ,0, 0, 0.4);
+    -fx-alignment: center;
+}
+
+.menuLabel{
+    -fx-font-family: "Arial";
+    -fx-font-weight: bold;
+    -fx-content-display: CENTER;
+    -fx-font-size: 18pt;
+    -fx-text-alignment: center;
+    -fx-text-fill: white;
+}
+
+.inputTextField{
+    -fx-background-color: transparent;
+    -fx-border-color: white;
+    -fx-border-width: 0px 0px 2px 0px;
+    -fx-text-fill: white;
+}
+#board{
+    -fx-background-image: url("../img/common/dark/SantoriniBoardDark.png");
+    -fx-background-size: stretch;
+}
+
+.map{
+    -fx-background-image: url("../img/common/dark/mapDark.png");
+}
+
+.descriptionLabel{
+    -fx-text-fill: white;
+}
+#logoImage {
+    -fx-image: url("../img/common/logo.png");
+}
+.gameLabel{
+    -fx-font-size: 20pt;
+    -fx-text-fill: rgba(0,154,255,1) ;
+}
+
+#rightPane{
+    -fx-background-image: url("../img/common/dark/rightPanelDark.png");
+    -fx-background-size: stretch;
+}

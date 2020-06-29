@@ -4,11 +4,12 @@
 }
 
 .button:hover{
-    -fx-effect: dropshadow(gaussian, #ffffff, 15, 0.2, 0, 0);
+    -fx-effect: dropshadow(gaussian, #000000, 15, 0.2, 0, 0);
 }
 
 #blue_button {
     -fx-background-image: url("../img/buttons/btn_blue.png");
+    -fx-alignment: center;
     -fx-background-size: stretch;
     -fx-background-radius: 50;
     -fx-background-insets: 2, 2, 2, 2;
@@ -28,9 +29,9 @@
     -fx-background-size: stretch;
 }
 
-
 #red_button{
     -fx-background-image: url("../img/buttons/btn_red.png");
+    -fx-alignment: center;
     -fx-background-size: stretch;
     -fx-background-radius: 50;
     -fx-background-insets: 2, 2, 2, 2;
@@ -45,6 +46,7 @@
     -fx-padding: 0 0 7 0;
 
 }
+
 #red_button:pressed{
     -fx-background-image: url("../img/buttons/btn_red_pressed.png");
     -fx-background-size: stretch;
@@ -52,6 +54,7 @@
 
 #powerButton{
     -fx-background-image: url("../img/buttons/btn_godPower.png");
+    -fx-alignment: center;
     -fx-background-size: stretch;
     -fx-background-radius: 50;
     -fx-background-insets: 2, 2, 2, 2;
@@ -65,11 +68,18 @@
     -fx-pref-width: 200;
     -fx-padding: 0 0 7 0;
 }
+
 #powerButton:pressed{
     -fx-background-image: url("../img/buttons/btn_godPowerPressed.png");
     -fx-background-size: stretch;
 }
-
+#board{
+    -fx-background-image: url("../img/common/SantoriniBoard_nomap.png");
+    -fx-background-size: stretch;
+}
+#map{
+    -fx-background-image: url("../img/common/map.png");
+}
 
 .mainPane{
     -fx-background-image: url("../img/common/bluredBackground.png");
@@ -82,7 +92,7 @@
 }
 
 .ambientPane{
-    -fx-background-color: rgba(0 ,0, 0, 0.4);
+    -fx-background-color: rgba(255 ,255, 255, 0.4);
     -fx-alignment: center;
 }
 
@@ -92,19 +102,27 @@
     -fx-content-display: CENTER;
     -fx-font-size: 18pt;
     -fx-text-alignment: center;
-    -fx-text-fill: white;
+    -fx-text-fill: black;
+}
+.gameLabel{
+    -fx-font-size: 15pt;
+    -fx-text-fill: rgba(0, 17, 255, 1);
 }
 
 .inputTextField{
     -fx-background-color: transparent;
-    -fx-border-color: white;
+    -fx-border-color: black;
     -fx-border-width: 0px 0px 2px 0px;
-    -fx-text-fill: white;
+    -fx-text-fill: black;
+}
+.descriptionLabel{
+    -fx-text-fill: black;
 }
 
 #logoImage {
     -fx-image: url("../img/common/logo.png");
 }
+
 #rightPane{
     -fx-background-image: url("../img/common/rightPanel.png");
     -fx-background-size: stretch;

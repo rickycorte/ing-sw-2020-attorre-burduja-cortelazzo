@@ -6,29 +6,40 @@ import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.ResourceBundle;
 
 
 public class FirstPlayerPickSceneController implements Initializable {
 
+    private Settings settings;
+    private Map<Integer, Integer> IDsGodIDsMap;
+    private Map<Integer, String> idsUsernamesMap;
+    private FirstPlayerPickCommand receivedCommand;
+
     @FXML
-    public StackPane player1Pane;
+    private AnchorPane mainPane;
     @FXML
-    public StackPane player2Pane;
+    private StackPane player1Pane;
     @FXML
-    public StackPane player3Pane;
+    private StackPane player2Pane;
+    @FXML
+    private StackPane player3Pane;
     @FXML
     private Button button1;
     @FXML
@@ -49,33 +60,66 @@ public class FirstPlayerPickSceneController implements Initializable {
     private ImageView player3Podium;
     @FXML
     private ImageView player3God;
-
-    private Map<Integer, Integer> IDsGodIDsMap;
-
-    private Map<Integer, String> idsUsernamesMap;
-
-    private FirstPlayerPickCommand receivedCommand;
-
     @FXML
-    public void initialize(){
-    }
+    private VBox ambientPane;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         GuiManager.getInstance().setFirstPlayerPickSceneController(this);
+        settings = GuiManager.getInstance().getSettings();
+        initializeStyleSheet();
         label.setText("Wait, other players are choosing their Gods");
         disableButtons();
         setPodiums();
     }
 
+    //--------------------------------------------Initialize Methods----------------------------------------------------
+
     /**
-     * Disables all the buttons
+     * Setts the style sheet according to the settings
      */
-    private void disableButtons(){
-        button1.setDisable(true);
-        button2.setDisable(true);
-        button3.setDisable(true);
+    private void initializeStyleSheet() {
+        ArrayList<Parent> toStyle = initializeToStyleList();
+        for(Parent node: toStyle){
+            node.getStylesheets().clear();
+            if(settings.getTheme() == Settings.Themes.LIGHT)
+                node.getStylesheets().add("css/lightTheme.css");
+            else
+                node.getStylesheets().add("css/darkTheme.css");
+        }
     }
+
+    /**
+     * Collects in an array list all the parents that need to be styled
+     * @return ArrayList of parents that need to be styled
+     */
+    private ArrayList<Parent> initializeToStyleList() {
+        ArrayList<Parent> toStyle = new ArrayList<>();
+        toStyle.add(mainPane);
+        toStyle.add(button1);
+        toStyle.add(button2);
+        toStyle.add(button3);
+        toStyle.add(label);
+        toStyle.add(ambientPane);
+        return toStyle;
+    }
+
+    //----------------------------------------Button Click Handlers-----------------------------------------------------
+
+    /**
+     * Handles the button click
+     * @param mouseEvent user's button click
+     */
+    @FXML
+    void onButtonClick(MouseEvent mouseEvent){
+        Button my_button = (Button) mouseEvent.getSource();
+        disableButtons();
+        int chosenPlayerID = getKey(idsUsernamesMap, my_button.getText());
+        GuiManager.getInstance().send(FirstPlayerPickCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), chosenPlayerID));
+        GuiManager.setLayout("fxml/gameScene.fxml");
+    }
+
+    //----------------------------------------Command Handlers----------------------------------------------------------
 
     /**
      * Handles the first player pick command
@@ -88,6 +132,17 @@ public class FirstPlayerPickSceneController implements Initializable {
         setButtons();
         setGodImages();
         label.setText("Choose the first player");
+    }
+
+    //----------------------------------------Utility Methods-----------------------------------------------------------
+
+    /**
+     * Disables all the buttons
+     */
+    private void disableButtons(){
+        button1.setDisable(true);
+        button2.setDisable(true);
+        button3.setDisable(true);
     }
 
     /**
@@ -214,18 +269,5 @@ public class FirstPlayerPickSceneController implements Initializable {
             e.printStackTrace();
         }
         return imageView;
-    }
-
-    /**
-     * Handles the button click
-     * @param mouseEvent user's button click
-     */
-    @FXML
-    void onButtonClick(MouseEvent mouseEvent){
-        Button my_button = (Button) mouseEvent.getSource();
-        disableButtons();
-        int chosenPlayerID = getKey(idsUsernamesMap, my_button.getText());
-        GuiManager.getInstance().send(FirstPlayerPickCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), chosenPlayerID));
-        GuiManager.setLayout("fxml/gameScene.fxml");
     }
 }

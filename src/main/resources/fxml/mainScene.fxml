@@ -12,12 +12,10 @@
 <VBox fx:id="mainPane" minHeight="480.0" minWidth="853.0" prefHeight="720.0" prefWidth="1280.0" styleClass="mainPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.MainSceneController">
 
 
-    <stylesheets>
-        <URL value="@../css/main.css" />
-    </stylesheets>
+
    <children>
    
-       <ImageView fx:id="logo" id="logo.png" fitHeight="151.0" fitWidth="461.0" preserveRatio="true" scaleX="1.2" scaleY="1.2" scaleZ="1.2">
+       <ImageView id="logo.png" fx:id="logo" fitHeight="151.0" fitWidth="461.0" preserveRatio="true" scaleX="1.2" scaleY="1.2" scaleZ="1.2">
          <image>
             <Image url="@../img/common/logo.png" />
          </image>
@@ -27,7 +25,7 @@
          <effect>
             <DropShadow />
          </effect></ImageView>
-      <Button id="blue_button" fx:id="startButton" alignment="CENTER" mnemonicParsing="false" onAction="#onStartButtonClick" prefHeight="45.0" prefWidth="200.0" stylesheets="@../css/main.css" text="Start" textAlignment="CENTER" textFill="WHITE">
+      <Button id="blue_button" fx:id="startButton" alignment="CENTER" mnemonicParsing="false" onAction="#onStartButtonClick" prefHeight="45.0" prefWidth="200.0"  text="Start" textAlignment="CENTER" textFill="WHITE">
          <VBox.margin>
              <Insets bottom="5.0" top="5.0" />
          </VBox.margin>
@@ -35,8 +33,9 @@
             <Font name="Constantia" size="20.0" />
          </font>
       </Button>
-      <Button id="blue_button" alignment="CENTER" mnemonicParsing="false" onAction="#onGodsButtonClick" stylesheets="@../css/main.css" text="Gods" />
-      <Button id="red_button" fx:id="exitButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#onExitButtonClick" prefHeight="45.0" prefWidth="200.0" stylesheets="@../css/main.css" text="Exit" textAlignment="CENTER" textFill="WHITE">
+      <Button id="blue_button" fx:id="godsButton" alignment="CENTER" mnemonicParsing="false" onAction="#onGodsButtonClick"  text="Gods" />
+      <Button id="blue_button" fx:id="settingsButton" mnemonicParsing="false" onAction="#onSettingsButtonClick" text="Settings" />
+      <Button id="red_button" fx:id="exitButton" alignment="CENTER" contentDisplay="TOP" mnemonicParsing="false" onAction="#onExitButtonClick" prefHeight="45.0" prefWidth="200.0"  text="Exit" textAlignment="CENTER" textFill="WHITE">
          <VBox.margin>
             <Insets bottom="5.0" top="5.0" />
          </VBox.margin>

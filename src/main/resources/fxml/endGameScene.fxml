@@ -10,11 +10,11 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="491.0" prefWidth="885.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.EndGameController">
+<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="491.0" prefWidth="885.0" styleClass="mainPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.EndGameController">
    <children>
-      <VBox fx:id="ambientPane" alignment="CENTER" layoutX="63.0" layoutY="42.0" prefHeight="406.0" prefWidth="758.0" styleClass="ambientPane" stylesheets="@../css/main.css" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="30.0">
+      <VBox fx:id="ambientPane" alignment="CENTER" layoutX="63.0" layoutY="42.0" prefHeight="406.0" prefWidth="758.0" styleClass="ambientPane" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="30.0">
          <children>
-            <Label fx:id="infoLabel" styleClass="menuLabel" stylesheets="@../css/main.css" text="Label">
+            <Label fx:id="infoLabel" styleClass="menuLabel" text="Label">
                <VBox.margin>
                   <Insets bottom="5.0" top="5.0" />
                </VBox.margin>
@@ -30,7 +30,6 @@
                      <children>
                         <StackPane fx:id="winnerPane" alignment="BOTTOM_CENTER" prefHeight="323.0" prefWidth="333.0">
                            <children>
-                              <ImageView fx:id="winnerGlow" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                               <ImageView fx:id="winnerGod" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                            </children>
                         </StackPane>
@@ -45,12 +44,12 @@
             </HBox>
             <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                <children>
-                  <Button id="red_button" mnemonicParsing="false" onAction="#onQuitButtonClick" stylesheets="@../css/main.css" text="Quit">
+                  <Button id="red_button" fx:id="quitButton" mnemonicParsing="false" onAction="#onQuitButtonClick" text="Quit">
                      <HBox.margin>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </HBox.margin>
                   </Button>
-                  <Button id="blue_button" mnemonicParsing="false" onAction="#onAnotherButtonClick" text="Play Again">
+                  <Button id="blue_button" fx:id="playAgainButton" mnemonicParsing="false" onAction="#onAnotherButtonClick" text="Play Again">
                      <HBox.margin>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </HBox.margin>

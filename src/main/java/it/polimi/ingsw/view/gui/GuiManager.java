@@ -24,9 +24,10 @@ public class GuiManager implements ICommandReceiver {
     private static GuiManager instance = null;                                  //GuiManager instance (singleton pattern)
     private Scene aScene;                                                       //Reference to the scene, used for .setRoot()
     private INetworkAdapter serverConnection;                                   //Interface to communicate with the server
-    private boolean isConnected = false;                                        //Flag to indicate whether i'm connected or not
+    private boolean isConnected = false;                                        //Flag to indicate whether i'm connected to the server or not
+    private Settings settings = new Settings();                                 //Reference to the settings class
 
-    private String myUsername;
+    private String myUsername;                                                  //Constructed at Join command
     private int[] connectedPlayersIDS;                                          //Constructed at Start command
     private Map<Integer, String> idUsernameMap = new ConcurrentHashMap<>();     //Constructed at incoming FirstPlayerPick command
     private Map<Integer, Integer> idGodMap = new HashMap<>();                   //Constructed at incoming FirstPlayerPick command
@@ -42,6 +43,8 @@ public class GuiManager implements ICommandReceiver {
     private FirstPlayerPickSceneController firstPlayerPickSceneController;
     private GameSceneController gameSceneController;
     private EndGameController endGameController;
+    private SettingsSceneController settingsSceneController;
+    private GodsSceneController godsSceneController;
 
     //------------------------------------------------------------------------------------------------------------------
 
@@ -106,12 +109,16 @@ public class GuiManager implements ICommandReceiver {
         this.firstPlayerPickSceneController = firstPlayerPickSceneController;
     }
 
-    void setGameSceneController(GameSceneController gameSceneController){
-        this.gameSceneController = gameSceneController;
-    }
+    void setGameSceneController(GameSceneController gameSceneController){ this.gameSceneController = gameSceneController; }
 
     void setEndGameController(EndGameController endGameController){
         this.endGameController = endGameController;
+    }
+
+    void setSettingsController(SettingsSceneController settingsSceneController) { this.settingsSceneController = settingsSceneController; }
+
+    void setGodsController(GodsSceneController godsSceneController) {
+        this.godsSceneController = godsSceneController;
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -125,7 +132,7 @@ public class GuiManager implements ICommandReceiver {
     }
 
     /**
-     * Getts the INetworkAdapter (connection to the server)
+     * Gets the INetworkAdapter (connection to the server)
      * @return adapter to communicate with the server
      */
      INetworkAdapter getServerConnection(){
@@ -163,8 +170,10 @@ public class GuiManager implements ICommandReceiver {
      */
     boolean isForMe(CommandWrapper cmd){
         BaseCommand command = cmd.getCommand(BaseCommand.class);
-        return GuiManager.getInstance().getServerConnection().getClientID() == command.getTarget() || command.getTarget() == Server.BROADCAST_ID;
+        return serverConnection.getClientID() == command.getTarget() || command.getTarget() == Server.BROADCAST_ID;
     }
+
+    //--------------------------------ICommandReceiver methods implementation-------------------------------------------
 
     /**
      * ICommandReceiver interface onConnect implementation
@@ -172,23 +181,21 @@ public class GuiManager implements ICommandReceiver {
      */
     @Override
     public void onConnect(CommandWrapper cmd) {
-        if(isForMe(cmd)) {
-            hostID = cmd.getCommand(JoinCommand.class).getHostPlayerID();
+        JoinCommand joinCommand = cmd.getCommand(JoinCommand.class);
+        if (isForMe(cmd)) {
+            hostID = joinCommand.getHostPlayerID();
             state = Game.GameState.WAIT;
-            if (cmd.getType() == CommandType.JOIN) {
-                Platform.runLater(() -> {
-                    GuiManager.getInstance().logInSceneController.onAckJoin(cmd);
-                });
-            }
-        }else{
-            if (cmd.getType() == CommandType.JOIN){
-                Platform.runLater(() -> {
-                    GuiManager.getInstance().waitSceneController.onSecondClientConnection(cmd);
-                });
-            }
+            isConnected = joinCommand.isJoin();
+            Platform.runLater(() -> {
+                GuiManager.getInstance().logInSceneController.onAckJoin(cmd);
+            });
+        } else {
+            Platform.runLater(() -> {
+                GuiManager.getInstance().waitSceneController.onSecondClientConnection(cmd);
+            });
         }
     }
-    //TODO handle this better
+
     /**
      * ICommandReceiver interface onDisconnect implementation
      * @param cmd disconnect command
@@ -241,7 +248,6 @@ public class GuiManager implements ICommandReceiver {
                     break;
                 }
                 case END_GAME: {
-
                     state = Game.GameState.END;
                     EndGameCommand endGameCommand = cmd.getCommand(EndGameCommand.class);
                     winnerID = endGameCommand.getWinnerID();
@@ -262,6 +268,8 @@ public class GuiManager implements ICommandReceiver {
                     break;
             }
     }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     /**
      * Map all the connected client IDs to their respective username and godID
@@ -311,8 +319,9 @@ public class GuiManager implements ICommandReceiver {
      * @param serverPort port to connect to
      * @param username username to connect with
      */
-    public void connect(String serverIP, int serverPort, String username) {
-        getServerConnection().connect(serverIP, serverPort, username);
+    public boolean connect(String serverIP, int serverPort, String username) {
+        isConnected = getServerConnection().connect(serverIP, serverPort, username);
+        return isConnected;
     }
     /**
      * Method used to disconnect from a server
@@ -397,4 +406,12 @@ public class GuiManager implements ICommandReceiver {
         return serverConnection.getClientID() == hostID;
     }
 
+    public Settings getSettings() {
+        return this.settings;
+    }
+
+
+    public Game.GameState getState() {
+        return state;
+    }
 }

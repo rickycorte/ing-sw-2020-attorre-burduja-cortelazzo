@@ -9,11 +9,11 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="660.0" prefWidth="1112.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.FirstPlayerPickSceneController">
+<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="660.0" prefWidth="1112.0" styleClass="mainPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.FirstPlayerPickSceneController">
    <children>
-      <VBox alignment="CENTER" layoutX="14.0" layoutY="14.0" prefHeight="636.0" prefWidth="1081.0" styleClass="ambientPane" stylesheets="@../css/main.css" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="30.0">
+      <VBox fx:id="ambientPane" alignment="CENTER" layoutX="14.0" layoutY="14.0" prefHeight="636.0" prefWidth="1081.0" styleClass="ambientPane" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="30.0">
          <children>
-            <Label fx:id="label" alignment="CENTER" prefHeight="31.0" prefWidth="699.0" styleClass="menuLabel" stylesheets="@../css/main.css" text="Label">
+            <Label fx:id="label" alignment="CENTER" prefHeight="31.0" prefWidth="699.0" styleClass="menuLabel" text="Label">
                <VBox.margin>
                   <Insets bottom="5.0" top="5.0" />
                </VBox.margin>
@@ -42,7 +42,7 @@
                               </ImageView>
                            </children>
                         </StackPane>
-                        <Button id="blue_button" fx:id="button1" mnemonicParsing="false" onMouseClicked="#onButtonClick" stylesheets="@../css/main.css" text="Player 1">
+                        <Button id="blue_button" fx:id="button1" mnemonicParsing="false" onMouseClicked="#onButtonClick" text="Player 1">
                            <VBox.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </VBox.margin></Button>
@@ -58,7 +58,7 @@
                               <ImageView fx:id="player2God" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                               <ImageView fx:id="player2Podium" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                            </children></StackPane>
-                        <Button id="blue_button" fx:id="button2" mnemonicParsing="false" onMouseClicked="#onButtonClick" stylesheets="@../css/main.css" text="Player 2">
+                        <Button id="blue_button" fx:id="button2" mnemonicParsing="false" onMouseClicked="#onButtonClick" text="Player 2">
                            <VBox.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </VBox.margin></Button>
@@ -74,7 +74,7 @@
                               <ImageView fx:id="player3God" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                               <ImageView fx:id="player3Podium" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                            </children></StackPane>
-                        <Button id="blue_button" fx:id="button3" mnemonicParsing="false" onMouseClicked="#onButtonClick" stylesheets="@../css/main.css" text="Player 3">
+                        <Button id="blue_button" fx:id="button3" mnemonicParsing="false" onMouseClicked="#onButtonClick" text="Player 3">
                            <VBox.margin>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </VBox.margin></Button>

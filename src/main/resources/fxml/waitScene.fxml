@@ -9,13 +9,14 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="494.0" prefWidth="918.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.WaitSceneController">
+<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="494.0" prefWidth="918.0" styleClass="mainPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.WaitSceneController">
    <children>
-      <HBox alignment="CENTER" layoutX="136.0" layoutY="29.0" prefHeight="436.0" prefWidth="646.0" style="-fx-background-color: rgba(0 ,0, 0, 0.3);" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="30.0">
+      <HBox alignment="CENTER" layoutX="136.0" layoutY="29.0" prefHeight="436.0" prefWidth="646.0" styleClass="ambientPane" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0" AnchorPane.topAnchor="30.0">
          <children>
             <VBox alignment="CENTER" prefHeight="436.0" prefWidth="584.0">
                <children>
-                  <Label fx:id="centerLabel" alignment="CENTER" prefHeight="97.0" prefWidth="422.0" styleClass="menuLabel" stylesheets="@../css/main.css" textFill="WHITE" wrapText="true">
+                  <Label fx:id="hostLabel" alignment="CENTER" prefHeight="18.0" prefWidth="342.0" styleClass="descriptionLabel" text="Label" wrapText="true" />
+                  <Label fx:id="centerLabel" alignment="CENTER" prefHeight="199.0" prefWidth="422.0" styleClass="menuLabel" textFill="WHITE" wrapText="true">
                      <font>
                         <Font name="Arial Bold" size="20.0" />
                      </font>
@@ -24,7 +25,7 @@
                      </VBox.margin>
                   </Label>
                   <ImageView fx:id="loadingImage" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
-                  <Button id="blue_button" fx:id="startGameButton" mnemonicParsing="false" onAction="#onStartGameButtonClick" stylesheets="@../css/main.css" text="Button">
+                  <Button id="blue_button" fx:id="startGameButton" mnemonicParsing="false" onAction="#onStartGameButtonClick" text="Start Game">
                      <VBox.margin>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </VBox.margin>

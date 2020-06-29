@@ -12,12 +12,15 @@ import javafx.fxml.Initializable;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
@@ -29,6 +32,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 
 public class ChooseGodsSceneController implements Initializable {
@@ -40,7 +44,9 @@ public class ChooseGodsSceneController implements Initializable {
         WAITING, PICKING, FILTERING
     }
     private CardCollection cardCollection;
-
+    private Settings settings;
+    @FXML
+    private BorderPane mainPane;
     @FXML
     private GridPane gridPane;
     @FXML
@@ -50,12 +56,12 @@ public class ChooseGodsSceneController implements Initializable {
     @FXML
     private Button cancelButton;
 
-    @FXML
-    public void initialize()  { }
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         GuiManager.getInstance().setChooseGodsSceneController(this);
+        settings = GuiManager.getInstance().getSettings();
+        initializeStyleSheet();
+        chosenGod = -1;
         chosenGodsList = new ArrayList<>();
         cardCollection = new CardCollection();
         state = State.WAITING;
@@ -65,115 +71,45 @@ public class ChooseGodsSceneController implements Initializable {
         initializeImages();
     }
 
+    //--------------------------------------Initialize Methods----------------------------------------------------------
+
+    /**
+     * Setts the style sheet according to the settings
+     */
+    private void initializeStyleSheet() {
+        ArrayList<Parent> toStyle = initializeToStyleList();
+        for(Parent node: toStyle){
+                node.getStylesheets().clear();
+                if (settings.getTheme() == Settings.Themes.LIGHT)
+                    node.getStylesheets().add("css/lightTheme.css");
+                else
+                    node.getStylesheets().add("css/darkTheme.css");
+
+        }
+    }
+
+    /**
+     * Collects in an array list all the parents that need to be styled
+     * @return ArrayList of parents that need to be styled
+     */
+    private ArrayList<Parent> initializeToStyleList() {
+        ArrayList<Parent> toStyle = new ArrayList<>();
+        toStyle.add(mainPane);
+        toStyle.add(gridPane);
+        toStyle.add(sendButton);
+        toStyle.add(cancelButton);
+        toStyle.add(topLabel);
+        return toStyle;
+    }
+
     /**
      * This method initializes the buttons's text
      */
     private void initializeButtons() {
-        cancelButton.setText("Cancel Selection");
         if (GuiManager.getInstance().imHost())
             sendButton.setText("Choose Gods");
         else
             sendButton.setText("Choose God");
-    }
-
-    /**
-     * This method enables/disables all the buttons
-     */
-    private void enableButtons(boolean enable){
-        sendButton.setDisable(!enable);
-        cancelButton.setDisable(!enable);
-    }
-
-    /**
-     * Enables / Disables grid pane controls
-     * @param par boolean to indicate if to enable or disable
-     */
-    void enableControls(boolean par) {
-        for (Node aChild : gridPane.getChildren()) {
-            aChild.setDisable(!par);
-        }
-    }
-
-    /**
-     * Handles the click on Cancel Button by resetting selected gods
-     * @param actionEvent user's click on the button
-     */
-    @FXML
-    public void onCancelButtonClick(ActionEvent actionEvent) {
-        chosenGodsList = new ArrayList<>();
-        chosenGod = 0;
-        resetImagesEffect();
-        enableButtons(false);
-        enableControls(true);
-    }
-
-    /**
-     * Handles the click of Send Button by sending the selected worker/workers
-     * @param actionEvent user's click on the button
-     */
-    @FXML
-    public void onSendButtonClick(ActionEvent actionEvent) {
-        if(GuiManager.getInstance().imHost()){
-            int[] chosenGodIDsArray = listToArray(chosenGodsList);
-            GuiManager.getInstance().send(FilterGodCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), chosenGodIDsArray));
-            enableButtons(false);
-            GuiManager.setLayout("fxml/firstPlayerPickScene.fxml");
-        }else {
-            GuiManager.getInstance().send(PickGodCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), chosenGod));
-            enableButtons(false);
-            GuiManager.setLayout("fxml/gameScene.fxml");
-        }
-    }
-
-    /**
-     * Utility method, converts a list to an array
-     * @param chosenGodsList list to convert
-     * @return converted list
-     */
-    private int[] listToArray(List<Integer> chosenGodsList){
-        int[] chosenGodsArray = new int[chosenGodsList.size()];
-        for(int i = 0; i < chosenGodsList.size(); i++){
-            chosenGodsArray[i] = chosenGodsList.get(i);
-        }
-        return chosenGodsArray;
-    }
-
-    /**
-     * Handles the user's click on a tile
-     * @param mouseEvent the user's click
-     */
-    @FXML
-    private void onClicked(javafx.scene.input.MouseEvent mouseEvent) {
-        ImageView my_image = (ImageView) mouseEvent.getSource();    //Image I clicked on
-
-        if (my_image.isDisabled()) return;
-
-        if (state == State.FILTERING) {
-            cancelButton.setDisable(false);
-
-            DropShadow dropShadow = new DropShadow();
-            dropShadow.setColor(Color.GREEN);
-            dropShadow.setRadius(17.0);
-            my_image.setEffect(dropShadow);
-
-            int godToAdd = Integer.parseInt(my_image.getId());
-            if(!chosenGodsList.contains(godToAdd)) {
-                chosenGodsList.add(Integer.parseInt(my_image.getId()));
-            }
-
-            if (chosenGodsList.size() == GuiManager.getInstance().getConnectedIDS().length ) {
-                sendButton.setDisable(false);
-                enableControls(false);
-            }
-        } else if (state == State.PICKING) {
-            DropShadow dropShadow = new DropShadow();
-            dropShadow.setColor(Color.GREEN);
-            my_image.setEffect(dropShadow);
-
-            chosenGod = Integer.parseInt(my_image.getId());
-            enableButtons(true);
-            enableControls(false);
-        }
     }
 
     /**
@@ -226,6 +162,8 @@ public class ChooseGodsSceneController implements Initializable {
         }
     }
 
+    //--------------------------------------------Command Handlers------------------------------------------------------
+
     /**
      * Handles the Filter Gods command by entering filter state
      * @param cmd command from the server
@@ -238,7 +176,6 @@ public class ChooseGodsSceneController implements Initializable {
         }
     }
 
-
     /**
      * Handle the pick god command by entering pick state
      * @param cmd command from the server
@@ -250,6 +187,110 @@ public class ChooseGodsSceneController implements Initializable {
         }else{
             topLabel.setText("Other players are picking their God, wait for your turn");
         }
+    }
+
+    //-------------------------------------------User's Interaction Handlers--------------------------------------------
+
+    /**
+     * Handles the click on Cancel Button by resetting selected gods
+     * @param actionEvent user's click on the button
+     */
+    @FXML
+    public void onCancelButtonClick(ActionEvent actionEvent) {
+        chosenGodsList = new ArrayList<>();
+        chosenGod = 0;
+        resetImagesEffect();
+        enableButtons(false);
+        enableControls(true);
+    }
+
+    /**
+     * Handles the click of Send Button by sending the selected worker/workers
+     * @param actionEvent user's click on the button
+     */
+    @FXML
+    public void onSendButtonClick(ActionEvent actionEvent) {
+        if(GuiManager.getInstance().imHost()){
+            int[] chosenGodIDsArray = listToArray(chosenGodsList);
+            GuiManager.getInstance().send(FilterGodCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), chosenGodIDsArray));
+            enableButtons(false);
+            GuiManager.setLayout("fxml/firstPlayerPickScene.fxml");
+        }else {
+            GuiManager.getInstance().send(PickGodCommand.makeReply(GuiManager.getInstance().getServerConnection().getClientID(), GuiManager.getInstance().getServerConnection().getServerID(), chosenGod));
+            enableButtons(false);
+            GuiManager.setLayout("fxml/gameScene.fxml");
+        }
+    }
+
+    /**
+     * Handles the user's click on a tile
+     * @param mouseEvent the user's click
+     */
+    @FXML
+    private void onClicked(javafx.scene.input.MouseEvent mouseEvent) {
+        ImageView my_image = (ImageView) mouseEvent.getSource();    //Image I clicked on
+
+        if (my_image.isDisabled()) return;
+
+        if (state == State.FILTERING) {
+            cancelButton.setDisable(false);
+
+            DropShadow dropShadow = new DropShadow();
+            dropShadow.setColor(Color.GREEN);
+            dropShadow.setRadius(17.0);
+            my_image.setEffect(dropShadow);
+
+            int godToAdd = Integer.parseInt(my_image.getId());
+            if(!chosenGodsList.contains(godToAdd)) {
+                chosenGodsList.add(Integer.parseInt(my_image.getId()));
+            }
+
+            if (chosenGodsList.size() == GuiManager.getInstance().getConnectedIDS().length ) {
+                sendButton.setDisable(false);
+                enableControls(false);
+            }
+        } else if (state == State.PICKING) {
+            DropShadow dropShadow = new DropShadow();
+            dropShadow.setColor(Color.GREEN);
+            my_image.setEffect(dropShadow);
+
+            chosenGod = Integer.parseInt(my_image.getId());
+            enableButtons(true);
+            enableControls(false);
+        }
+    }
+
+    //----------------------------------------Utility Methods-----------------------------------------------------------
+
+    /**
+     * This method enables/disables all the buttons
+     */
+    private void enableButtons(boolean enable){
+        sendButton.setDisable(!enable);
+        cancelButton.setDisable(!enable);
+    }
+
+    /**
+     * Enables / Disables grid pane controls
+     * @param par boolean to indicate if to enable or disable
+     */
+    void enableControls(boolean par) {
+        for (Node aChild : gridPane.getChildren()) {
+            aChild.setDisable(!par);
+        }
+    }
+
+    /**
+     * Utility method, converts a list to an array
+     * @param chosenGodsList list to convert
+     * @return converted list
+     */
+    private int[] listToArray(List<Integer> chosenGodsList){
+        int[] chosenGodsArray = new int[chosenGodsList.size()];
+        for(int i = 0; i < chosenGodsList.size(); i++){
+            chosenGodsArray[i] = chosenGodsList.get(i);
+        }
+        return chosenGodsArray;
     }
 
     /**

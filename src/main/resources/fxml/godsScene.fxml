@@ -9,16 +9,16 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="481.0" prefWidth="775.0" styleClass="mainPane" stylesheets="@../css/main.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.GodsSceneController">
+<AnchorPane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="481.0" prefWidth="775.0" styleClass="mainPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.view.gui.GodsSceneController">
    <children>
-      <VBox fx:id="centerRoot" layoutX="252.0" layoutY="50.0" prefHeight="421.0" prefWidth="323.0" styleClass="ambientPane" stylesheets="@../css/main.css" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="30.0">
+      <VBox fx:id="centerRoot" layoutX="252.0" layoutY="50.0" prefHeight="421.0" prefWidth="323.0" styleClass="ambientPane" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="30.0">
          <children>
             <HBox fx:id="secondRoot" alignment="CENTER" prefHeight="285.0" prefWidth="575.0">
                <children>
                   <ImageView fx:id="godImage" fitHeight="274.0" fitWidth="242.0" pickOnBounds="true" preserveRatio="true" />
                   <VBox alignment="CENTER" prefHeight="325.0" prefWidth="234.0">
                      <children>
-                        <Label fx:id="descriptionLabel" alignment="TOP_LEFT" prefHeight="93.0" prefWidth="223.0" text="Label" textFill="WHITE" wrapText="true">
+                        <Label fx:id="descriptionLabel" alignment="TOP_LEFT" prefHeight="93.0" prefWidth="223.0" styleClass="descriptionLabel" text="Label" textFill="WHITE" wrapText="true">
                            <font>
                               <Font name="System Bold" size="24.0" />
                            </font>
@@ -26,7 +26,7 @@
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </VBox.margin>
                         </Label>
-                        <Label fx:id="powerLabel" alignment="TOP_LEFT" prefHeight="224.0" prefWidth="224.0" text="Label" textFill="WHITE" wrapText="true">
+                        <Label fx:id="powerLabel" alignment="TOP_LEFT" prefHeight="224.0" prefWidth="224.0" styleClass="descriptionLabel" text="Label" textFill="WHITE" wrapText="true">
                            <font>
                               <Font name="System Bold" size="18.0" />
                            </font>
@@ -43,21 +43,35 @@
             </HBox>
             <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                <children>
-                  <Button id="blue_button" fx:id="prevGodButton" mnemonicParsing="false" onAction="#onPrevGodClick" stylesheets="@../css/main.css" text="Prev God">
+                  <HBox alignment="CENTER_LEFT" prefHeight="90.0" prefWidth="300.0">
                      <HBox.margin>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </HBox.margin>
-                  </Button>
-                  <Button id="blue_button" fx:id="okButton" mnemonicParsing="false" onAction="#onOkButtonClick" stylesheets="@../css/main.css" text="OK">
+                     <children>
+                        <Button id="blue_button" fx:id="okButton" mnemonicParsing="false" onAction="#onOkButtonClick" text="Back">
+                           <HBox.margin>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </HBox.margin>
+                        </Button>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" prefHeight="90.0" prefWidth="355.0">
                      <HBox.margin>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </HBox.margin>
-                  </Button>
-                  <Button id="blue_button" fx:id="nextGodButton" mnemonicParsing="false" onAction="#onNextButtonClick" stylesheets="@../css/main.css" text="Next God">
-                     <HBox.margin>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </HBox.margin>
-                  </Button>
+                     <children>
+                        <Button id="blue_button" fx:id="prevGodButton" mnemonicParsing="false" onAction="#onPrevGodClick" text="Prev God">
+                           <HBox.margin>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </HBox.margin>
+                        </Button>
+                        <Button id="blue_button" fx:id="nextGodButton" mnemonicParsing="false" onAction="#onNextButtonClick" text="Next God">
+                           <HBox.margin>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </HBox.margin>
+                        </Button>
+                     </children>
+                  </HBox>
                </children>
             </HBox>
          </children>

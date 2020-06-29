@@ -3,12 +3,17 @@ package it.polimi.ingsw.view.gui;
 import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.EndGameCommand;
 import it.polimi.ingsw.controller.JoinCommand;
+import it.polimi.ingsw.game.Game;
 import javafx.animation.RotateTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -17,23 +22,25 @@ import javafx.util.Duration;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.ResourceBundle;
 
 public class EndGameController implements Initializable {
     private int winnerID;
-
     private EndGameCommand endGameCommand;
-
     private CommandWrapper commandWrapper;
+    private Settings settings;
+    private Map<Integer, String> idsUsernamesMap;
+    private Map<Integer, Integer> idsGodsMap;
+    @FXML
+    private AnchorPane mainPane;
     @FXML
     private Label infoLabel;
     @FXML
     private StackPane winnerPane;
     @FXML
     private ImageView winnerGod;
-    @FXML
-    private ImageView winnerGlow;
     @FXML
     private VBox ambientPane;
     @FXML
@@ -44,18 +51,49 @@ public class EndGameController implements Initializable {
     private ImageView leftImage;
     @FXML
     private ImageView rightImage;
-
-    private Map<Integer, String> idsUsernamesMap;
-
-    private Map<Integer, Integer> idsGodsMap;
+    @FXML
+    private Button quitButton;
+    @FXML
+    private Button playAgainButton;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         GuiManager.getInstance().setEndGameController(this);
+        settings = GuiManager.getInstance().getSettings();
+        initializeStyleSheet();
         winnerID = GuiManager.getInstance().getWinnerID();
         idsGodsMap = GuiManager.getInstance().getIDsGodsMap();
         idsUsernamesMap= GuiManager.getInstance().getIDsUsernameMap();
         initializeBindings();
+    }
+
+    //-------------------------------------Initialize Methods-----------------------------------------------------------
+
+    /**
+     * Setts the style sheet according to the settings
+     */
+    private void initializeStyleSheet() {
+        ArrayList<Parent> toStyle = initializeToStyleList();
+        for(Parent node: toStyle){
+            node.getStylesheets().clear();
+            if(settings.getTheme() == Settings.Themes.LIGHT)
+                node.getStylesheets().add("css/lightTheme.css");
+            else
+                node.getStylesheets().add("css/darkTheme.css");
+        }
+    }
+
+    /**
+     * Collects in an array list all the parents that need to be styled
+     * @return ArrayList of parents that need to be styled
+     */
+    private ArrayList<Parent> initializeToStyleList() {
+        ArrayList<Parent> toStyle = new ArrayList<>();
+        toStyle.add(mainPane);
+        toStyle.add(ambientPane);
+        toStyle.add(quitButton);
+        toStyle.add(playAgainButton);
+        return toStyle;
     }
 
     /**
@@ -73,13 +111,12 @@ public class EndGameController implements Initializable {
 
         rightImage.setPreserveRatio(true);
         rightImage.fitWidthProperty().bind(outerBox.widthProperty().multiply(0.3));
-
     }
 
     /**
      * Initializes the label
      */
-    void initializeLabel(){
+     private void initializeLabel(){
         if(winnerID > 0) {
             String winnerUsername = idsUsernamesMap.get(winnerID);
             infoLabel.setText(winnerUsername + " won, congratulations");
@@ -91,17 +128,23 @@ public class EndGameController implements Initializable {
     }
 
     /**
-     * Initializes the image god the winner god
+     * Initializes a god image
+     * @param godID ID of the god
      */
-    void initializeGods(){
-        URL podiumURL = getClass().getResource("/img/common/podium_gold.png");
+    private void initializeGod(int godID){
+        URL podiumURL;
+        if (winnerID > 0)
+            podiumURL = getClass().getResource("/img/common/podium_gold.png");
+        else
+            podiumURL = getClass().getResource("/img/common/podium.png");
         ImageView godPodium = getImageImageViewByURL(podiumURL);
         godPodium.setPreserveRatio(true);
         godPodium.fitWidthProperty().bind(winnerGod.fitWidthProperty().multiply(1.1));
         winnerPane.getChildren().add(godPodium);
 
-        int winnerGodID = idsGodsMap.get(winnerID);
-        URL url1 = getClass().getResource(String.format("/img/gods/podium/%02d.png", winnerGodID));
+
+        URL url1 = getClass().getResource(String.format("/img/gods/podium/%02d.png", godID));
+
         winnerGod = getImageImageViewByURL(url1);
         winnerGod.setPreserveRatio(true);
         //winnerGod.fitWidthProperty().bind(winnerPane.widthProperty().multiply(0.7));
@@ -111,38 +154,7 @@ public class EndGameController implements Initializable {
         //winnerGod.fitHeightProperty().bind(outerBox.heightProperty().multiply(0.9));
     }
 
-    /**
-     * Utility method - Gets an ImageView given the URL
-     * @param url URL of the ImageView
-     * @return ImageView in the given URL
-     */
-    private ImageView getImageImageViewByURL(URL url) {
-        ImageView imageView = new javafx.scene.image.ImageView();
-        try(InputStream inputStream = url.openStream()){
-            imageView.setImage(new Image(inputStream));
-        }catch (IOException e){
-            System.out.println("[GAME SCENE] Couldn't access buildings resources");
-            e.printStackTrace();
-        }
-        return imageView;
-    }
-
-    /**
-     * Handles the end game command
-     * @param cmd end game command
-     */
-    void onEndGameCommand(CommandWrapper cmd) {
-        endGameCommand = cmd.getCommand(EndGameCommand.class);
-        if(endGameCommand.getWinnerID() < 0){
-            leftImage.setImage(null);
-            rightImage.setImage(null);
-            initializeLabel();
-
-        }else {
-            initializeGods();
-            initializeLabel();
-        }
-    }
+    //-------------------------------Button Click Handlers--------------------------------------------------------------
 
     /**
      * Handles the user's click on quit game button
@@ -163,4 +175,46 @@ public class EndGameController implements Initializable {
                         GuiManager.getInstance().getMyUsername())
         );
     }
+
+    //------------------------------------Command Handler Methods-------------------------------------------------------
+
+    /**
+     * Handles the end game command
+     * @param cmd end game command
+     */
+    void onEndGameCommand(CommandWrapper cmd) {
+        endGameCommand = cmd.getCommand(EndGameCommand.class);
+        if(endGameCommand.getWinnerID() < 0){
+            leftImage.setImage(null);
+            rightImage.setImage(null);
+
+            if(!idsGodsMap.isEmpty())
+                initializeGod(idsGodsMap.get(GuiManager.getInstance().getServerConnection().getClientID()));
+            initializeLabel();
+
+        }else {
+            initializeGod(idsGodsMap.get(endGameCommand.getWinnerID()));
+            initializeLabel();
+        }
+    }
+
+
+    //---------------------------------------Utility--------------------------------------------------------------------
+
+    /**
+     * Utility method - Gets an ImageView given the URL
+     * @param url URL of the ImageView
+     * @return ImageView in the given URL
+     */
+    private ImageView getImageImageViewByURL(URL url) {
+        ImageView imageView = new javafx.scene.image.ImageView();
+        try(InputStream inputStream = url.openStream()){
+            imageView.setImage(new Image(inputStream));
+        }catch (IOException e){
+            System.out.println("[GAME SCENE] Couldn't access buildings resources");
+            e.printStackTrace();
+        }
+        return imageView;
+    }
+
 }

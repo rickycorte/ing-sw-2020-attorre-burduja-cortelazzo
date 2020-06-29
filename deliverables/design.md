@@ -129,11 +129,11 @@ To handle those rare cases we start a background task that detects undo timeout 
 ## GUI
 
 #### GuiManager
-The view's `ICommandReceiver` is represented by the `GuiManager`. This class is constructed with the singleton pattern in mind. It is decorated with the various scene controllers as the game progresses. Those controllers can access it via the ` getInstance()` method.
+The gui's `ICommandReceiver` is represented by the `GuiManager`. This class is constructed with the singleton pattern in mind. It is decorated with the various scene controllers as the game progresses. Those controllers can access it via the ` getInstance()` method.
 
 #### Styling 
 To design the application a number of tools were used. SceneBuilder allowed us to easily create FXML files with the basic scene layout.
-To maintain the style consistent through the various scenes and to have reusable styled objects, a `.css` file was used. This file contains the characteristics of various buttons, labels and images used in the application, this also eases the work in case of a redesign as changes to this file will affect the whole application.
+To maintain the style consistent through the various scenes and to have reusable styled objects,  `.css` files were used. Those files contain the characteristics of various buttons, labels and images used in the application, this also eases the work in case of a redesign as changes to this file will affect the whole application.
 
 #### Resizable windows
 The whole UI is resizable. This was archived simply by maintaining a **16:9** aspect ratio (used in most modern displays as of 2020).
