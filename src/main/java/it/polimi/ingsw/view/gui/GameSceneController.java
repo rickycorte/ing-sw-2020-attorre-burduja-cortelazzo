@@ -304,7 +304,7 @@ public class GameSceneController implements Initializable {
             if (isUndoAvailable()) {
                 undoButton.setDisable(false);
                 Timeline timeline = new Timeline();
-                timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(5), new EventHandler<ActionEvent>() {
+                timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(4.9), new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent actionEvent) {
                         undoButton.setDisable(true);
@@ -456,8 +456,7 @@ public class GameSceneController implements Initializable {
     private void onUndoButtonClick(MouseEvent mouseEvent) {
         actionID = getActionID("Undo");
         List<Vector2> posToSend = posForUndo();
-        guiManager.send(ActionCommand.makeReply(myClientID, serverID, actionID, selectedWorker, posToSend.get(0)
-        ));
+        guiManager.send(ActionCommand.makeReply(myClientID, serverID, actionID, selectedWorker, posToSend.get(0)));
         endTurnButton.setDisable(true);
         undoButton.setDisable(true);
     }
@@ -468,65 +467,91 @@ public class GameSceneController implements Initializable {
      */
     private void onTileClick(javafx.scene.input.MouseEvent mouseEvent) {
         if (my_turn) {
-            if (state == 1) { // workers placement phase
-                Tile clickedTile = findTileByMouseEvent(mouseEvent);
-                if (clickedTile.workerId == -1) { //there is no worker on the tile
-                    workers_placement.add(clickedTile.pos);
-                    clickedTile.putWorker(workers_placement.size() - 1, myClientID);
-                    clickedTile.render();
-                    if (workers_placement.size() == 2) {
-                        my_workers = workers_placement.toArray(my_workers);
-                        sendMyWorkers(my_workers);
-                        disableAllButtons(true);
-                        unHighlightTiles();
-                        my_turn = false;
-                        state = 0;
-                    }
+            Tile clickedTile = findTileByMouseEvent(mouseEvent);
+            if (state == 1) { // workers placement state
+                handleWorkerPlacementInterraction(clickedTile);
+            } else if (state == 2) { // action state
+                if (selectedWorker == -1) {
+                    handleWokerSelection(clickedTile);
                 } else {
-                    gameLabel.setText("There's already a worker on this tile...");
-                }
-            } else if (state == 2) { // i'm in the move/build phase
-                Tile clickedTile = findTileByMouseEvent(mouseEvent);
-                if (selectedWorker == -1) { // if I haven't selected a worker yet
-                    if ((clickedTile.workerId != -1)
-                            && clickedTile.workerOwnerID == myClientID                                //the worker I just clicked is mine
-                            && getAvailableWorkers(receivedCommand).contains(clickedTile.workerId)) { // the worker is available to be chosen
-                        selectedWorker = clickedTile.workerId;
-                        unHighlightTiles();
-                        gameLabel.setText("Now choose a position");
-                        if (getAvailableWorkers(receivedCommand).size() > 1)
-                            cancellWorkerSelection.setDisable(false);
-                        NextAction[] availableActions = receivedCommand.getAvailableActions();  //all the actions
-                        List<NextAction> actionsForWorker = actionsForWorker(availableActions, selectedWorker); //all the actions for the selected worker
-                        bindButtonsActions();
-                        if (actionsForWorker.size() == 1) { // i have one possible action
-                            actionID = 0;
-                            List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
-                            Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
-                            cellsToHighlight = possibleCells.toArray(cellsToHighlight);
-                            highlightAvailableTiles(cellsToHighlight, colorsMap.get(myClientID));
-                        } else { // the worker has multiple possible actions
-                            List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
-                            Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
-                            cellsToHighlight = possibleCells.toArray(cellsToHighlight);
-                            if (!(availableActions[actionID].getActionName().startsWith("End Turn")) && !(availableActions[actionID].getActionName().startsWith("Undo"))) {
-                                highlightAvailableTiles(cellsToHighlight, colorsMap.get(myClientID));
-                            }
-                        }
-                    }
-                } else { // handle execution, I've already selected a worker
-                    if (getAvailableWorkers(receivedCommand).size() > 1)
-                        cancellWorkerSelection.setDisable(false);
-                    Vector2 posToSend = clickedTile.pos;
-                    guiManager.send(ActionCommand.makeReply(myClientID, serverID, actionID, selectedWorker, posToSend));
-                    unHighlightTiles();
-                    disableAllButtons(true);
-                    my_turn = false;
-                    state = 0;
+                    handleActionExecution(clickedTile);
                 }
             }
         } else {
             gameLabel.setText("Wait, it's " + idsUsernamesMap.get(currentPlayerID) + "'s turn");
+        }
+    }
+
+    /**
+     * Handles worker placement state interactions
+     * @param clickedTile tile user clicked on
+     */
+    private void handleWorkerPlacementInterraction(Tile clickedTile){
+        if(clickedTile.workerId == -1){ // there is no worker on this tile
+            workers_placement.add(clickedTile.pos);
+            clickedTile.putWorker(workers_placement.size() - 1, myClientID);
+            clickedTile.render();
+            if (workers_placement.size() == 2) {
+                my_workers = workers_placement.toArray(my_workers);
+                sendMyWorkers(my_workers);
+                disableAllButtons(true);
+                unHighlightTiles();
+                my_turn = false;
+                state = 0;
+            }
+        }else{
+            gameLabel.setText("There is already a worker on this tile\nChoose another one");
+        }
+    }
+
+    /**
+     * Handles the execution of an action
+     * @param clickedTile tile user clicked on
+     */
+    private void handleActionExecution(Tile clickedTile){
+        if (getAvailableWorkers(receivedCommand).size() > 1)
+            cancellWorkerSelection.setDisable(false);
+        if(actionsForWorker( receivedCommand.getAvailableActions(), selectedWorker).get(actionID).getAvailablePositions().contains(clickedTile.pos)) {
+            guiManager.send(ActionCommand.makeReply(myClientID, serverID, actionID, selectedWorker, clickedTile.pos));
+            unHighlightTiles();
+            disableAllButtons(true);
+            my_turn = false;
+            state = 0;
+        }else{
+            gameLabel.setText("Not a valid position\nChoose better");
+        }
+    }
+
+    /**
+     * Handles the worker selection
+     * @param clickedTile tile user clicked on
+     */
+    private void handleWokerSelection(Tile clickedTile){
+        if ((clickedTile.workerId != -1)
+                && clickedTile.workerOwnerID == myClientID                                //the worker I just clicked is mine
+                && getAvailableWorkers(receivedCommand).contains(clickedTile.workerId)) { // the worker is available to be chosen
+            selectedWorker = clickedTile.workerId;
+            unHighlightTiles();
+            gameLabel.setText("Now choose a position");
+            if (getAvailableWorkers(receivedCommand).size() > 1)
+                cancellWorkerSelection.setDisable(false);
+            NextAction[] availableActions = receivedCommand.getAvailableActions();  //all the actions
+            List<NextAction> actionsForWorker = actionsForWorker(availableActions, selectedWorker); //all the actions for the selected worker
+            bindButtonsActions();
+            if (actionsForWorker.size() == 1) { // i have one possible action
+                actionID = 0;
+                List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
+                Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
+                cellsToHighlight = possibleCells.toArray(cellsToHighlight);
+                highlightAvailableTiles(cellsToHighlight, colorsMap.get(myClientID));
+            } else { // the worker has multiple possible actions
+                List<Vector2> possibleCells = actionsForWorker.get(actionID).getAvailablePositions();
+                Vector2[] cellsToHighlight = new Vector2[possibleCells.size()];
+                cellsToHighlight = possibleCells.toArray(cellsToHighlight);
+                if (!(availableActions[actionID].getActionName().startsWith("End Turn")) && !(availableActions[actionID].getActionName().startsWith("Undo"))) {
+                    highlightAvailableTiles(cellsToHighlight, colorsMap.get(myClientID));
+                }
+            }
         }
     }
 
@@ -593,6 +618,7 @@ public class GameSceneController implements Initializable {
      * @param color representing the color of the highlight
      */
     private void highlightAvailableTiles(Vector2[] availablePositions, Colors color) {
+        unHighlightTiles();
         for (Vector2 availablePosition : availablePositions) {
             Tile tileToHighlight = tiles[availablePosition.getX()][availablePosition.getY()];
             tileToHighlight.highlightTile(color);
