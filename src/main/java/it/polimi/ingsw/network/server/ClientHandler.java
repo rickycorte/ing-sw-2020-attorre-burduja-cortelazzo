@@ -136,6 +136,21 @@ public class ClientHandler implements Runnable {
         disconnectTimer.schedule(new DisconnectTask(this), DISCONNECT_TIMER);
     }
 
+
+    /**
+     * Send a fake disconnect command to the upper layer to fake a player disconnection
+     */
+    protected void sendClientTimeout()
+    {
+        ICommandReceiver receiver = server.getReceiver();
+        if(receiver != null)
+        {
+            System.out.println("[CLIENT_HANDLER] Sending virtual leave due to timeout");
+            receiver.onDisconnect(LeaveCommand.makeRequest(id, Server.SERVER_ID));
+        }
+        disconnect();
+    }
+
     /**
      * This method closes the socket to the client, informs the server and stops the current thread
      */
