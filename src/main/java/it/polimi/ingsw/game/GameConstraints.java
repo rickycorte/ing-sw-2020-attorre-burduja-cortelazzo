@@ -80,11 +80,18 @@ public class GameConstraints
 
     private int constraints;
 
+    /**
+     * Create an empty constraints container
+     */
     public GameConstraints()
     {
         constraints = 0;
     }
 
+    /**
+     * Create a constraints container by copy
+     * @param other container to copy
+     */
     public GameConstraints(GameConstraints other)
     {
         constraints = other.constraints;

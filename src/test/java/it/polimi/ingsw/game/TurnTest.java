@@ -213,29 +213,6 @@ class TurnTest
     }
 
     @Test
-    void shouldNotUndoOlderActions() throws NotAllowedMoveException, OutOfGraphException
-    {
-        turn = new Turn(p, true);
-        w.setPosition(new Vector2(3, 3)); // move in a free space
-        turn.selectWorker(0);
-
-        turn.runAction(0, new Vector2(3, 2), map, gc); // move
-        turn.runAction(0, new Vector2(3, 3), map, gc); // build
-        turn.runAction(0, new Vector2(3, 3), map, gc); // build again
-
-        turn.runAction(0, new Vector2(3, 3), map, gc); // undo last build
-
-        // no undo for first build -> size 1
-        assertEquals(1, turn.getNextAction(map,gc).size());
-
-        //redo
-        turn.runAction(0, new Vector2(3, 3), map, gc); // build again
-        // fail attempt to undo on an already used node
-        assertThrows(NotAllowedMoveException.class, ()->{turn.runAction(0, new Vector2(3, 3), map, gc);});
-    }
-
-
-    @Test
     void shouldNotUndoAfterTimeout() throws NotAllowedMoveException, OutOfGraphException, InterruptedException
     {
         turn = new Turn(p, true);

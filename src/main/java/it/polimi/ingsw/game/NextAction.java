@@ -13,6 +13,13 @@ public class NextAction {
     private boolean isUndoAction;
 
 
+    /**
+     * Create a new next action to send to the play
+     * @param name action name displayed to the player
+     * @param w worker allowed to run this action
+     * @param position valid position where this action can be applied
+     * @param isUndo set to true if this action should be used as undo
+     */
     public NextAction(String name, Worker w, Vector2 position, boolean isUndo)
     {
         this.worker = w.getId();
@@ -22,6 +29,13 @@ public class NextAction {
         isUndoAction = isUndo;
     }
 
+    /**
+     * Generate a new next action to send to the play
+     * @param w worker allowed to run this action
+     * @param m map where this action should be calculated
+     * @param constraints extra constraints that should be applied to the generation of valid moves
+     * @param node bahaviour graph used to generate valid moves for this action
+     */
     public NextAction(Worker w, Map m, GameConstraints constraints,BehaviourNode node) {
         this.worker = w.getId();
         this.actionName = node.getAction().displayName();
@@ -59,5 +73,9 @@ public class NextAction {
         return isUndoAction;
     }
 
+    /**
+     * Check if this action is an end turn
+     * @return true if this action is an end turn for the player
+     */
     public boolean isEndTurnAction() { return this.actionName.equals(EndTurnAction.class.toString(  )); }
 }

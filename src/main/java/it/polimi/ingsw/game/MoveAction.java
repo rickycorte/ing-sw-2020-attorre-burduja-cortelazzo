@@ -11,6 +11,10 @@ public class MoveAction extends Action {
     protected GameConstraints localConstrains;
 
 
+    /**
+     * Create a move action with a constraint
+     * @param localConstrains constraint to apply
+     */
     MoveAction(GameConstraints.Constraint localConstrains) {
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
@@ -21,6 +25,9 @@ public class MoveAction extends Action {
             displayName = "Move";
     }
 
+    /**
+     * Create a base move action with no constraints
+     */
     public MoveAction() {
         this(GameConstraints.Constraint.NONE);
     }

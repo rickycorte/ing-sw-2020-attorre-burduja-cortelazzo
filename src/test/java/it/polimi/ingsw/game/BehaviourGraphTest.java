@@ -278,19 +278,4 @@ class BehaviourGraphTest
         assertEquals(testSeq.getCurrentNode().getRoot(), testSeq.getCurrentNode());
     }
 
-    @Test
-    void shouldRollbackOnlyOnce() throws OutOfGraphException
-    {
-        var startNode = testSeq.getCurrentNode();
-        testSeq.selectAction(0); // move forward
-        assertNotEquals(startNode, testSeq.getCurrentNode());
-
-        testSeq.rollback();
-        assertEquals(startNode, testSeq.getCurrentNode());
-        assertTrue(testSeq.isAtRoot());
-
-        //rollback once
-        testSeq.rollback();
-        assertEquals(startNode, testSeq.getCurrentNode());
-    }
 }

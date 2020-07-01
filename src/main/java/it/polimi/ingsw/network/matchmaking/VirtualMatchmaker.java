@@ -29,6 +29,11 @@ public class VirtualMatchmaker implements ICommandReceiver
     //
 
 
+    /**
+     * Create a new instance of the matchmaker that could be used to replace {@link it.polimi.ingsw.network.TPCNetwork} on server side
+     * to enable multiple matches
+     * This function does not start the matchmaking
+     */
     public VirtualMatchmaker()
     {
         server = null;
@@ -115,6 +120,7 @@ public class VirtualMatchmaker implements ICommandReceiver
     {
         // send data to clients
         var clients = vm.getPlayerIDs();
+
 
         for (Integer client : clients)
             server.send(client, cmd);

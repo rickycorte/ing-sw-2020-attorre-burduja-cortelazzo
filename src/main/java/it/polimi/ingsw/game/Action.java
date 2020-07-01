@@ -12,7 +12,10 @@ import java.util.ArrayList;
  */
 public abstract class Action
 {
-    protected  String displayName;
+    /**
+     * display name of the action
+     */
+    protected String displayName;
 
     /**
      * This function executes the action behaviour on the parameters passed
@@ -35,6 +38,7 @@ public abstract class Action
     public String displayName() { return displayName; }
 
     /**
+     * Generate a list of possible next actions that a player can run
      * @param w worker doing the job
      * @param m current map
      * @param gc list of constraints

@@ -173,6 +173,11 @@ public class TPCNetwork implements INetworkAdapter
     {
         return Server.DEFAULT_SERVER_PORT;
     }
+
+    /**
+     * Get the current client id if connected, -1 otherwise
+     * @return current client id
+     */
     @Override
     public int getClientID() {
         if(client != null){

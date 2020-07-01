@@ -117,7 +117,7 @@ public class Map
     }
 
     /**
-     *
+     * Return the height on a desired cell
      * @param pos selected cell
      * @return selected cell height, -1 if it is not in map
      */
@@ -154,6 +154,10 @@ public class Map
         workers.addAll(player.getWorkers());
     }
 
+    /**
+     * Get al the workers placed in the map
+     * @return placed workers list
+     */
     public ArrayList<Worker> getWorkers(){
         return workers;
     }

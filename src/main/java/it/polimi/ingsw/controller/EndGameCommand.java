@@ -24,6 +24,12 @@ public class EndGameCommand extends BaseCommand {
     public static final int INTERRUPTED_GAME = -1;
     public static final int TARGET_LOST = -666;
 
+    /**
+     * (Server) send a notification that someone won the game
+     * @param sender sender id
+     * @param target target id that should receive this message
+     * @param winnerID winner player (or null if interrupted game)
+     */
     public EndGameCommand(int sender, int target, int winnerID) {
         super(sender, target);
         this.winnerID = winnerID;

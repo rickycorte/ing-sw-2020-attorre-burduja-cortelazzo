@@ -31,6 +31,10 @@ public class Controller implements ICommandReceiver {
     private boolean alreadySentEndGame;
 
 
+    /**
+     * Create a new controller bound to a network adapter required to run its operations
+     * @param adapter network adapter used to send/receive commands
+     */
     public Controller (INetworkForwarder adapter){
         connectedPlayers = new ArrayList<>();
         network = adapter;
@@ -43,11 +47,11 @@ public class Controller implements ICommandReceiver {
     // Getter (for tests only)
     // **********************************************************************************************
 
-    public Game getMatch() { return match; }
+    protected Game getMatch() { return match; }
 
-    public CommandWrapper getLastSent() { return lastSent; }
+    protected CommandWrapper getLastSent() { return lastSent; }
 
-    public List<Player> getConnectedPlayers() { return connectedPlayers; }
+    protected List<Player> getConnectedPlayers() { return connectedPlayers; }
 
     // **********************************************************************************************
     // Operation

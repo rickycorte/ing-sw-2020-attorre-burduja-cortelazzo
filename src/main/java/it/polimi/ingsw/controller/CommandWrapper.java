@@ -12,6 +12,11 @@ public class CommandWrapper
     String data;
     transient BaseCommand cachedCommand; // this field must no be sent
 
+    /**
+     * Create a new command wrapper that encapsulates another command
+     * @param type encapsulated command type
+     * @param command command to encapsulate
+     */
     public CommandWrapper(CommandType type, BaseCommand command)
     {
         this.type = type;

@@ -8,7 +8,7 @@ import java.util.List;
  * This class should be instantiated for every new game to ensure isolation between cards
  */
 public class CardCollection {
-    private List<Card> cardCollection;
+    final private List<Card> cardCollection;
 
 
     /**

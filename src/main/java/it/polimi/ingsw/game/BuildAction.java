@@ -9,6 +9,9 @@ public class BuildAction extends Action
 {
     GameConstraints localConstrains;
 
+    /**
+     * Create a base build action with no constraints
+     */
     public BuildAction() {
 
         this.localConstrains = new GameConstraints();
@@ -43,11 +46,11 @@ public class BuildAction extends Action
 
         GameConstraints gcm = mergeConstraints(localConstrains, gc);
 
-        ArrayList<Vector2> allowed_cells = possibleCells(w, m, gcm);
-        if (allowed_cells.size() == 0)
+        ArrayList<Vector2> allowedCells = possibleCells(w, m, gcm);
+        if (allowedCells.size() == 0)
             return -1;
 
-        if (allowed_cells.contains(target))
+        if (allowedCells.contains(target))
             build(w, target, m, gc);
         else
             throw new NotAllowedMoveException();

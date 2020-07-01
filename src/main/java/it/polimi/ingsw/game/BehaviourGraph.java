@@ -1,6 +1,7 @@
 package it.polimi.ingsw.game;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 /**
  * Set of actions that describes a god action in the game.
@@ -9,15 +10,18 @@ import java.util.ArrayList;
  */
 public class BehaviourGraph
 {
-    private BehaviourNode rootNode;
+    final private BehaviourNode rootNode;
     private BehaviourNode currentNode;
-    private BehaviourNode previousNode;
-    private BehaviourNode undoNode;
     private boolean alreadyRun;
+    final private Stack<BehaviourNode> executionStack;
 
+    /**
+     * Create a empty graph
+     */
     public BehaviourGraph()
     {
         rootNode = BehaviourNode.makeRootNode(null);
+        executionStack = new Stack<>();
         resetExecutionStatus();
     }
 
@@ -27,9 +31,8 @@ public class BehaviourGraph
      */
     public void resetExecutionStatus() {
         currentNode = rootNode;
-        previousNode = rootNode;
         alreadyRun = true; // root node has no action
-        undoNode = rootNode;
+        executionStack.clear();
     }
 
     /**
@@ -48,6 +51,7 @@ public class BehaviourGraph
      */
     public void selectAction(int pos) throws OutOfGraphException
     {
+        executionStack.push(currentNode);
         currentNode = currentNode.getNextNode(pos);
         alreadyRun = false;
     }
@@ -69,14 +73,18 @@ public class BehaviourGraph
             {
                 int res = currentNode.getAction().run(w, target, m, globalConstrains);
                 alreadyRun = true;
-                undoNode = previousNode; // save undo node before moving forward
-                previousNode = currentNode;
                 return res;
             }
             return -1; //break the game if errors happens here
 
-        }catch (NotAllowedMoveException e){
-            currentNode = previousNode; // move back in case of a wrong move
+        }catch (NotAllowedMoveException e)
+        {
+            // move back in case of a wrong move
+            if(executionStack.isEmpty())
+                currentNode = rootNode;
+            else
+                currentNode = executionStack.pop();
+
             throw e; // notify caller of the error
         }
     }
@@ -126,11 +134,14 @@ public class BehaviourGraph
 
     /**
      * Move back to previous executed node
-     * You can move back only once, multiple call of this function will always move to the same node
+     * Yo can go back to the root node by call this function more times
      */
     public void rollback()
     {
-        currentNode = undoNode;
+        if(executionStack.isEmpty())
+            currentNode = rootNode;
+        else
+            currentNode = executionStack.pop();
         alreadyRun = false;
     }
 

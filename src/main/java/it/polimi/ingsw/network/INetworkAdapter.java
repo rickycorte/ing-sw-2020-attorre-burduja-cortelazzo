@@ -1,7 +1,8 @@
 package it.polimi.ingsw.network;
 
 /**
- * Interface for a network adapter
+ * Interface for a network adapter.
+ * This is the complete and full version of the adapter used in the application, for a reduces interface to only send/receive messages see parent interface {@link INetworkForwarder}
  */
 public interface INetworkAdapter extends INetworkForwarder
 {
@@ -21,7 +22,7 @@ public interface INetworkAdapter extends INetworkForwarder
      */
     void stopServer();
 
-    /* clientDELETE */
+    /* client */
 
     /**
      * Connect to a running server

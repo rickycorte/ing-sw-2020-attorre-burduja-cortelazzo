@@ -5,6 +5,9 @@ package it.polimi.ingsw.game;
  */
 public class BuildDomeAction extends BuildAction {
 
+    /**
+     * Create a build action that places domes at any level
+     */
     public BuildDomeAction() {
 
         this.localConstrains = new GameConstraints();

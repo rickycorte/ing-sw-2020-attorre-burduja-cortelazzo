@@ -13,6 +13,10 @@ public class CompactWorker
     int workerID;
     Vector2 position;
 
+    /**
+     * Create a new compact worker form a game worker with reduced data
+     * @param worker original game worker
+     */
     public CompactWorker(Worker worker)
     {
         ownerID = worker.getOwner().getId();

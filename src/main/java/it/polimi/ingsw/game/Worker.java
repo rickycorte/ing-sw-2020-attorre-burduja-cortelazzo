@@ -12,10 +12,20 @@ public class Worker
     private transient Vector2 lastLocation;
     private transient Vector2 lastBuildLocation;
 
+    /**
+     * Create a new worker in position (0,0) and with id -1
+     * @param owner player that owns this worker
+     */
     public Worker(Player owner){
         this(-1, owner, new Vector2(0,0));
     }
 
+    /**
+     * Create a new worker
+     * @param id worker id used (should be relative to the player and not global)
+     * @param owner player that owns the worker
+     * @param position worker position in the map
+     */
     public Worker(int id, Player owner, Vector2 position){
         this.id = id;
         this.owner = owner;

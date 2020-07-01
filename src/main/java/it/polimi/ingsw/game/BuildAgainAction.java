@@ -2,14 +2,24 @@ package it.polimi.ingsw.game;
 
 /**
  * Class that represents a second build action and offers several constraints to customize its behaviour
+ * This class is called "AGAIN" because should be used as not-first build of a turn
  */
 public class BuildAgainAction extends BuildAction {
 
+    /**
+     * Create a build action with one constraint
+     * @param localConstrains constraint to apply
+     */
     public BuildAgainAction(GameConstraints.Constraint localConstrains)
     {
         this(localConstrains, GameConstraints.Constraint.NONE);
     }
 
+    /**
+     * Create a build action with two constraint
+     * @param constraint1 first constraint to apply
+     * @param constraint2 second constraint to apply
+     */
     public BuildAgainAction(GameConstraints.Constraint constraint1, GameConstraints.Constraint constraint2){
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(constraint1);
@@ -31,7 +41,6 @@ public class BuildAgainAction extends BuildAction {
         }
 
     }
-
 
     @Override
     protected boolean isValidMove(Worker w, Vector2 target, Map m, GameConstraints gc)

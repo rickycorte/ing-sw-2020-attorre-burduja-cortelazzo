@@ -11,6 +11,11 @@ public class BaseCommand{
     private int sender;
     private int target;
 
+    /**
+     * Create a base command (ping)
+     * @param sender sender id of this command
+     * @param target target id that should receive this command
+     */
     public BaseCommand(int sender,int target){
         this.sender = sender;
         this.target = target;

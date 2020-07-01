@@ -23,6 +23,8 @@ public class Turn
     private List<Vector2> oldWorkerPositions;
     private java.util.Map<BehaviourNode, Instant> usedUndos;
 
+    private Vector2 lastBuildPos, lastLocation;
+
 
     /**
      * Make a turn and reset the graph status for player's graph (undo is disabled)
@@ -52,6 +54,8 @@ public class Turn
         usedUndos = new java.util.HashMap<>();
 
         graph.resetExecutionStatus();
+        lastBuildPos = null;
+        lastLocation = null;
     }
 
     /**
@@ -61,6 +65,9 @@ public class Turn
     public void selectWorker(int target)
     {
         this.worker = player.getWorkers().get(target);
+        //reset old locations
+        this.worker.setLastBuildLocation(null);
+        this.worker.setLastLocation(null);
     }
 
     /**
@@ -118,6 +125,14 @@ public class Turn
             usedUndos.put(graph.getCurrentNode(), Instant.now().minusMillis(MAX_UNDO_MILLI +1));
 
             graph.rollback();
+
+            var nodeName = graph.getCurrentNode().getAction();
+            System.out.println("[TURN] Rolling back "+ id + " to node "+( nodeName != null ? nodeName.displayName() : "root")+"@"+graph.getCurrentNode().hashCode());
+
+            //rollback last location & build pos
+            worker.setLastLocation(lastLocation);
+            worker.setLastBuildLocation(lastBuildPos);
+
             // reset worker if we went back to root
             if(graph.isAtRoot())
                 worker = null;
@@ -135,7 +150,19 @@ public class Turn
             }
 
             graph.selectAction(id);
+
+            // get positions before applying a move/build
+            var cPos = worker.getLastLocation();
+            var cBuild = worker.getLastBuildLocation();
+
             res = graph.runSelectedAction(worker,target,m,globalConstrains);
+
+            System.out.println("[TURN] Player "+id+" move to node: "+ graph.getCurrentNode().getAction().displayName() +"@"+ graph.getCurrentNode().hashCode());
+            if(res == 0) // action run correctly, apply pos to turn values
+            {
+                lastLocation = cPos;
+                lastBuildPos = cBuild;
+            }
         }
 
         return res;
@@ -154,6 +181,7 @@ public class Turn
     {
         var nextActions = graph.getNextActions(w,m,constraints);
         // append undo only if a worker is selected. Also check if already used for this action
+        // of if this is the termination node of a graph
         if(allowUndo && worker != null && !isUndoTimerExpired(graph.getCurrentNode()))
         {
             nextActions.add(new NextAction("Undo", worker, lastTargetPosition, true));

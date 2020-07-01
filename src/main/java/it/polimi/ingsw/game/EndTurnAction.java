@@ -13,6 +13,9 @@ import java.util.ArrayList;
 public class EndTurnAction extends Action {
 
 
+    /**
+     * Create a new end turn action to use as last node in a behaviour graph
+     */
     EndTurnAction()
     {
         displayName = "End Turn";

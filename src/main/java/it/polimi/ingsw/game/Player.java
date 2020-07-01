@@ -13,6 +13,11 @@ public class Player
     private Card god;
     private transient ArrayList<Worker> workers;
 
+    /**
+     * Create a new player
+     * @param id player id obtained from the network
+     * @param username username of the player
+     */
     public Player (int id, String username){
         this.id = id;
         this.username = username;

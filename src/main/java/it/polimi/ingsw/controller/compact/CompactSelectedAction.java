@@ -12,6 +12,12 @@ public class CompactSelectedAction
     private int workerID;
     private Vector2 position;
 
+    /**
+     * Create a new instance a of action pick
+     * @param actionID action id to run
+     * @param workerID worker id that should run the action
+     * @param position position where the action should take place
+     */
     public CompactSelectedAction(int actionID, int workerID, Vector2 position)
     {
         this.actionID = actionID;

@@ -4,8 +4,13 @@ package it.polimi.ingsw.game;
  * This class represents a position in the map
  */
 public class Vector2 {
-    protected int x, y;
+    private int x, y;
 
+    /**
+     * Create a new vector2 pointing to a map position
+     * @param x row index in the map
+     * @param y col index in the map
+     */
     public Vector2(int x, int y) {
         set(x, y);
     }

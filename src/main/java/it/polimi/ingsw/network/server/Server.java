@@ -18,8 +18,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class Server {
 
+    /**
+     * Default server id used as target by commands
+     */
     static final public int SERVER_ID = -1111;
+    /**
+     * Default broadcast id to identifies messages that should be handled by everyone
+     */
     static final public int BROADCAST_ID = -2222;
+    /**
+     * Default server port where we bound the acceptor socket
+     */
     static final public int DEFAULT_SERVER_PORT = 0xDED; // aka 3565
 
     ServerSocket listener;
@@ -36,7 +45,8 @@ public class Server {
 
 
     /**
-     * Server constructor
+     * Create a new serve instant and allocate its resources
+     * This WILL NOT start the server, just allocate required resources
      * @param port where the server should bind
      */
     public Server(int port)
@@ -127,7 +137,7 @@ public class Server {
     }
 
     /**
-     * Send a command to all clients, only command's target can handle it
+     * Send a command to all clients
      * @param cmd represents the message to send
      */
     public void send(CommandWrapper cmd) {
@@ -142,9 +152,14 @@ public class Server {
         }
     }
 
+    /**
+     * Send a command to the specified target and no to no other client
+     * @param target target that should receive the command
+     * @param cmd command to send
+     */
     public void send(int target, CommandWrapper cmd)
     {
-        System.out.println("[SERVER] Sending " + cmd.getType().name() + " command to " + target);
+        //System.out.println("[SERVER] Sending " + cmd.getType().name() + " command to " + target);
         syncClientHandlerMap.get(target).sendMessage(cmd);
     }
 

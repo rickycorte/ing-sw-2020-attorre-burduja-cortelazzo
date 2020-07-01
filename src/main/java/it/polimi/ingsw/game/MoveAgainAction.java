@@ -8,7 +8,13 @@ package it.polimi.ingsw.game;
 
 public class MoveAgainAction extends MoveAction {
 
-    MoveAgainAction(GameConstraints.Constraint localConstrains) {
+    /**
+     * Create a new move action (that should not be used as first move).
+     * By default this comes with BLOCK_SAME_CELL_MOVE enabled (prevent to move back to original position)
+     * @param localConstrains constraints to add
+     */
+    MoveAgainAction(GameConstraints.Constraint localConstrains)
+    {
         this.localConstrains = new GameConstraints();
         this.localConstrains.add(localConstrains);
         this.localConstrains.add(GameConstraints.Constraint.BLOCK_SAME_CELL_MOVE);
@@ -21,6 +27,10 @@ public class MoveAgainAction extends MoveAction {
         displayName+= ")";
     }
 
+    /**
+     * Create a new move action (that should not be used as first move).
+     * By default this comes with BLOCK_SAME_CELL_MOVE enabled (prevent to move back to original position)
+     */
     public MoveAgainAction() {
         this(GameConstraints.Constraint.NONE);
     }

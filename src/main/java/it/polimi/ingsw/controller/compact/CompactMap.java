@@ -12,6 +12,10 @@ public class CompactMap
     CompactWorker[] workers;
 
 
+    /**
+     * Create a compact map with reduced data from a game map
+     * @param gmap original game map to grab data from
+     */
     public CompactMap(Map gmap)
     {
         map = gmap.getMap().clone();

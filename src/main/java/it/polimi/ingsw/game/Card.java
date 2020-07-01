@@ -7,12 +7,18 @@ package it.polimi.ingsw.game;
  * it's guarantee that every card has its onw isolated graph (good for multi threading)
  */
 public class Card {
-    private int id;
-    private String name;
-    private BehaviourGraph graph;
+    final private int id;
+    final private String name;
+    final private BehaviourGraph graph;
     private GameConstraints.Constraint constraintToClear;
 
 
+    /**
+     * Create a new god card
+     * @param id god id used by this card, this is required to be unique to ensure correct god picks and power usages during gameplay
+     * @param name name of the god
+     * @param graph behaviour graph used to execute the god turn
+     */
     public Card(int id, String name, BehaviourGraph graph) {
         this.id = id;
         this.name = name;
