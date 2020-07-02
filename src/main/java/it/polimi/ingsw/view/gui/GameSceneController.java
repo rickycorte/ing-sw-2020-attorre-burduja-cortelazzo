@@ -33,7 +33,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 
-
+/**
+ * This class is the controller for the "Game" scene
+ */
 public class GameSceneController implements Initializable {
 
     private boolean my_turn;

@@ -93,7 +93,7 @@ public class MainSceneController implements Initializable {
      * @param event user's button click
      */
     @FXML
-    public void onSettingsButtonClick(ActionEvent event) {
+    private void onSettingsButtonClick(ActionEvent event) {
         GuiManager.setLayout("fxml/settingsScene.fxml");
     }
 

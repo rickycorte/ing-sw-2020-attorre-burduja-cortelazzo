@@ -296,7 +296,8 @@ public class GuiManager implements ICommandReceiver {
                             Platform.runLater(() -> endGameController.onEndGameCommand(cmd));
                         }
                     }else{
-                        setLayout("fxml/endGameScene.fxml");
+                        Platform.runLater(() -> setLayout("fxml/endGameScene.fxml"));
+                        //setLayout("fxml/endGameScene.fxml");
                         Platform.runLater(() -> endGameController.onEndGameCommand(cmd));
                     }
                 }
@@ -315,21 +316,11 @@ public class GuiManager implements ICommandReceiver {
      */
     private void mapPlayers(FirstPlayerPickCommand firstPlayerPickCommand){
         CompactPlayer[] connectedCompactPlayers = firstPlayerPickCommand.getPlayers();
-        int[] connectedIDs = new int[connectedCompactPlayers.length];
-        String[] connectedUsernames = new String[connectedCompactPlayers.length];
-        int[] connectedGods = new int[connectedCompactPlayers.length];
-        int index = 0;
-
+        idUsernameMap.clear();
+        idGodMap.clear();
         for(CompactPlayer aCompactPlayer : connectedCompactPlayers){
-            connectedIDs[index] = aCompactPlayer.getId();
-            connectedUsernames[index] = aCompactPlayer.getUsername();
-            connectedGods[index] = aCompactPlayer.getGodID();
-            index++;
-        }
-
-        for(int i = 0; i < connectedIDs.length; i++){
-            idUsernameMap.put(connectedIDs[i], connectedUsernames[i]);
-            idGodMap.put(connectedIDs[i], connectedGods[i]);
+            idUsernameMap.put(aCompactPlayer.getId(), aCompactPlayer.getUsername());
+            idGodMap.put(aCompactPlayer.getId(), aCompactPlayer.getGodID());
         }
     }
 

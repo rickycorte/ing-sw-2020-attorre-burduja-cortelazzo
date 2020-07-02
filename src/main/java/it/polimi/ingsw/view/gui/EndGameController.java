@@ -3,6 +3,7 @@ package it.polimi.ingsw.view.gui;
 import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.EndGameCommand;
 import it.polimi.ingsw.controller.JoinCommand;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;

@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.ResourceBundle;
 
 /**
- * This class is the controller of the "Game" scene
+ * This class is the controller of the "Gods" scene
  */
 public class GodsSceneController implements Initializable {
 
