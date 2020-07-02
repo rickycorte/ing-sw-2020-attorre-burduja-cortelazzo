@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+/**
+ * This class is the controller for the "Main" scene
+ */
 public class MainSceneController implements Initializable {
     private Settings settings;
 

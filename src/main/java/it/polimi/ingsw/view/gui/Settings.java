@@ -1,7 +1,7 @@
 package it.polimi.ingsw.view.gui;
 
 /**
- * This class holds the settings of the application, available to all the scene controllers
+ * This class holds the settings of the application, available to all the scene controllers thru the GuiManager
  */
 public class Settings {
 

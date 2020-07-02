@@ -3,13 +3,10 @@ package it.polimi.ingsw.view.gui;
 import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.EndGameCommand;
 import it.polimi.ingsw.controller.JoinCommand;
-import it.polimi.ingsw.game.Game;
-import javafx.animation.RotateTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -17,7 +14,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,10 +22,12 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+/**
+ * This class is the controller for the "End Game" scene
+ */
 public class EndGameController implements Initializable {
     private int winnerID;
     private EndGameCommand endGameCommand;
-    private CommandWrapper commandWrapper;
     private Settings settings;
     private Map<Integer, String> idsUsernamesMap;
     private Map<Integer, Integer> idsGodsMap;
@@ -114,7 +112,7 @@ public class EndGameController implements Initializable {
     }
 
     /**
-     * Initializes the label
+     * Initializes the label according to the end game message
      */
      private void initializeLabel(){
         if(winnerID > 0) {

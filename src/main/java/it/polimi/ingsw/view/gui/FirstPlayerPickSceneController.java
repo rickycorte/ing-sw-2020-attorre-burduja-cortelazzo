@@ -24,9 +24,10 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-
+/**
+ * This class is the controller for the "First Player Pick" scene
+ */
 public class FirstPlayerPickSceneController implements Initializable {
-
     private Settings settings;
     private Map<Integer, Integer> IDsGodIDsMap;
     private Map<Integer, String> idsUsernamesMap;

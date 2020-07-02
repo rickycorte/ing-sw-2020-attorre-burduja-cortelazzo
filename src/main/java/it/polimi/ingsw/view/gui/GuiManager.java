@@ -17,7 +17,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Handle the interactions between Client and Gui
+ * This class implements the ICommandReceiver on the Gui side
+ * It handles the incoming messages from the server by forwarding them to the specific scene controller
+ * Sends the messages coming from the client to the server
  */
 public class GuiManager implements ICommandReceiver {
     private Game.GameState state;                                               //Game state indicator, helps directing incoming commands
@@ -89,34 +91,70 @@ public class GuiManager implements ICommandReceiver {
 
     //----------------------------Scene Controller Setters--------------------------------------------------------------
 
+    /**
+     * Setts the Main Scene Controller
+     * @param mainSceneController main scene controller to set
+     */
     void setMainSceneController(MainSceneController mainSceneController){
         this.mainSceneController = mainSceneController;
     }
 
+    /**
+     * Setts the Log In Scene Controller
+     * @param logInSceneController log in scene controller to set
+     */
     void setLogInSceneController(LogInSceneController logInSceneController){
         this.logInSceneController = logInSceneController;
     }
 
+    /**
+     * Setts the Wait Scene Controller
+     * @param waitSceneController wait scene controller to set
+     */
     void setWaitSceneController(WaitSceneController waitSceneController){
         this.waitSceneController = waitSceneController;
     }
 
+    /**
+     * Setts the Choose Gods Scene Controller
+     * @param chooseGodsSceneController choose gods scene controller to set
+     */
     void setChooseGodsSceneController(ChooseGodsSceneController chooseGodsSceneController){
         this.chooseGodsSceneController = chooseGodsSceneController;
     }
 
+    /**
+     * Setts the First Player Pick Scene Controller
+     * @param firstPlayerPickSceneController first player pick scene controller to set
+     */
     void setFirstPlayerPickSceneController(FirstPlayerPickSceneController firstPlayerPickSceneController) {
         this.firstPlayerPickSceneController = firstPlayerPickSceneController;
     }
 
+    /**
+     * Setts the Game Scene Controller
+     * @param gameSceneController game scene controller to set
+     */
     void setGameSceneController(GameSceneController gameSceneController){ this.gameSceneController = gameSceneController; }
 
+    /**
+     * Setts the End Game Scene Controller
+     * @param endGameController end game scene controller to set
+     */
     void setEndGameController(EndGameController endGameController){
         this.endGameController = endGameController;
     }
 
+    /**
+     * Setts the Settings Scene Controller
+     * @param settingsSceneController settings scene controller to set
+     */
     void setSettingsController(SettingsSceneController settingsSceneController) { this.settingsSceneController = settingsSceneController; }
 
+    /**
+     * Setts the Gods Scene Controller
+     * @param godsSceneController gods scene controller to set
+     */
     void setGodsController(GodsSceneController godsSceneController) {
         this.godsSceneController = godsSceneController;
     }
@@ -125,7 +163,7 @@ public class GuiManager implements ICommandReceiver {
 
     /**
      * Setts the INetworkAdapter (connection to the server)
-     * @param serverConnection adapter representing the connection wo the server
+     * @param serverConnection adapter representing the connection to the server
      */
     void setServerConnection(INetworkAdapter serverConnection) {
         this.serverConnection = serverConnection;
@@ -304,25 +342,21 @@ public class GuiManager implements ICommandReceiver {
     }
 
     /**
-     * Method used to connect to a server with an username
+     * Method user to connect to a server with an username, a server IP and a port
+     * @param serverIP server's address
+     * @param port port to connect to
      * @param username username to connect with
-     * @return true / false according on how the connection went
      */
-    public boolean connect(String username) {
-        isConnected = getServerConnection().connect("127.0.0.1", getServerConnection().getDefaultPort(), username);
+    public boolean connect(String serverIP, int port, String username){
+        if(serverIP != null){
+            isConnected = serverConnection.connect(serverIP, port, username);
+
+        }else{
+            isConnected = serverConnection.connect("127.0.0.1", serverConnection.getDefaultPort(), username);
+        }
         return isConnected;
     }
 
-    /**
-     * Method user to connect to a server with an username, a server IP and a port
-     * @param serverIP server's address
-     * @param serverPort port to connect to
-     * @param username username to connect with
-     */
-    public boolean connect(String serverIP, int serverPort, String username) {
-        isConnected = getServerConnection().connect(serverIP, serverPort, username);
-        return isConnected;
-    }
     /**
      * Method used to disconnect from a server
      */
@@ -391,14 +425,6 @@ public class GuiManager implements ICommandReceiver {
     }
 
     /**
-     * Getter for the host client ID
-     * @return host client ID
-     */
-    int getHostID() {
-        return hostID;
-    }
-
-    /**
      * Method to know if i'm the host or not
      * @return true if i'm the host of the game, false otherwise
      */
@@ -406,11 +432,18 @@ public class GuiManager implements ICommandReceiver {
         return serverConnection.getClientID() == hostID;
     }
 
+    /**
+     * Getter for the settings class
+     * @return a reference to the settings class
+     */
     public Settings getSettings() {
         return this.settings;
     }
 
-
+    /**
+     * Getter for the game state
+     * @return game state i'm in
+     */
     public Game.GameState getState() {
         return state;
     }

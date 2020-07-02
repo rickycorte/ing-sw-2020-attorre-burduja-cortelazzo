@@ -14,6 +14,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
+/**
+ * This class is the controller for the "Settings" scene
+ */
 public class SettingsSceneController implements Initializable {
     private Settings settings;
 

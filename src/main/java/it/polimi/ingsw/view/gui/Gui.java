@@ -6,13 +6,18 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.io.InputStream;
 
+/**
+ * This class is the entry point for the Gui application
+ */
 public class Gui extends Application {
 
-
+    /**
+     * Method inherited from the application class, called when the Gui is started
+     * @param stage stage of the gui
+     */
     @Override
     public void start(Stage stage){
         stage.setTitle("Santorini");
@@ -37,16 +42,17 @@ public class Gui extends Application {
 
         GuiManager.getInstance().setScene(scene);
 
-        //GuiManager.setLayout(("fxml/endGameScene.fxml"));
         GuiManager.setLayout("fxml/mainScene.fxml");
         stage.show();
 
     }
 
+    /**
+     * Method inherited from the application class. Called when the Gui is closed
+     */
     @Override
     public void stop(){
         GuiManager.getInstance().disconnect();
         System.exit(0);
     }
-
 }

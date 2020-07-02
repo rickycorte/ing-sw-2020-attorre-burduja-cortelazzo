@@ -22,6 +22,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
+/**
+ * This class is the controller for the "Log In" scene
+ */
 public class LogInSceneController implements Initializable {
     private boolean connected;                              //flag to indicate if i'm connected to the server or not
     private boolean connectToCustomServer;                  //flag to know if i want to connect to a custom server or not
@@ -145,21 +148,26 @@ public class LogInSceneController implements Initializable {
         }
         backButton.setDisable(true);
         connectButton.setDisable(true);
+        infoLabel.setText("Connecting...");
         if (!connected) {
             if (connectToCustomServer) {
-                if(!serverPort.isBlank())
-                    GuiManager.getInstance().connect(serverIP, Integer.parseInt(serverPort), username);
-                else
-                    GuiManager.getInstance().connect(serverIP, GuiManager.getInstance().getServerConnection().getDefaultPort(), username);
+                if(!serverPort.isBlank()) {
+                    if(GuiManager.getInstance().connect(serverIP, Integer.parseInt(serverPort), username))
+                        handleReachedNetwork();
+                    else
+                        handleUnreachableNetwork();
+                }
+                else {
+                    if(GuiManager.getInstance().connect(serverIP, GuiManager.getInstance().getServerConnection().getDefaultPort(), username))
+                        handleReachedNetwork();
+                    else
+                        handleUnreachableNetwork();
+                }
             } else {
-                if (GuiManager.getInstance().connect(username)) {
-                    connected = true;
-                    infoLabel.setText("Connected to server");
+                if (GuiManager.getInstance().connect(null , GuiManager.getInstance().getServerConnection().getDefaultPort() ,username)){
+                    handleReachedNetwork();
                 } else {
-                    connected = false;
-                    connectButton.setDisable(false);
-                    backButton.setDisable(false);
-                    infoLabel.setText("Couldn't connect to server\nTry again later");
+                    handleUnreachableNetwork();
                 }
             }
         }else{ // retry with another username
@@ -169,7 +177,27 @@ public class LogInSceneController implements Initializable {
         }
     }
 
-    //---------------------------------------Command Handler Methods----------------------------------------------------
+    //-----------------------------------------------Handler Methods----------------------------------------------------
+
+    /**
+     * Handles the case when the network is unreachable
+     */
+    private void handleUnreachableNetwork(){
+        connected = false;
+        infoLabel.setText("Server is unreachable\nVerify the address");
+        connectButton.setDisable(false);
+        backButton.setDisable(false);
+    }
+
+    /**
+     * Handles the case when the network is successfully reached
+     */
+    private void handleReachedNetwork(){
+        connected = true;
+        infoLabel.setText("Connected!");
+        connectButton.setDisable(true);
+        backButton.setDisable(false);
+    }
 
     /**
      * Handles Join response

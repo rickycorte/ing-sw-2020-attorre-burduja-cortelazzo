@@ -901,30 +901,6 @@ public class GameSceneController implements Initializable {
         }
     }
 
-    /**
-     * Checks if End Turn is among the possible actions
-     * @return true / false accordingly
-     */
-    private boolean isEndTurnAvailable(){
-        NextAction[] availableActions = receivedCommand.getAvailableActions();
-        for(NextAction anAction : availableActions){
-            if(anAction.getActionName().startsWith("End Turn"))
-                return true;
-        }
-        return false;
-    }
-    /**
-     * Calls the unHighlightWorker method on each Tile
-     */
-    private void unHighlightWorkers() {
-        for (int col = 0; col < 5; col++) {
-            for (int row = 0; row < 5; row++) {
-                Tile tile = tiles[col][row];
-                //tile.unhighlight("highlight_worker");
-            }
-        }
-    }
-
     //------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -1079,14 +1055,6 @@ public class GameSceneController implements Initializable {
                 domeImage.fitWidthProperty().bind(this.widthProperty().multiply(0.9));
                 this.getChildren().add(domeImage);
             }
-        }
-
-        /**
-         * Highlights a worker by placing a highlight ImageView on the Tile
-         */
-        void highlightWorker(Colors color) {
-            ImageView workerHighlight = initializeHighlight(color);
-            this.getChildren().add(workerHighlight);
         }
 
         /**

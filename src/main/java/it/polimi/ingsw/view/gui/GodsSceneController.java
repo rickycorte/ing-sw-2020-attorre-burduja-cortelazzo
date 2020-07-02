@@ -17,13 +17,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
+/**
+ * This class is the controller of the "Game" scene
+ */
 public class GodsSceneController implements Initializable {
 
     private int currentGod;                                     //God viewed

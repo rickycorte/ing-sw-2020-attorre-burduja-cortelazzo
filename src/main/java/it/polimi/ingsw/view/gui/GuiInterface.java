@@ -5,6 +5,9 @@ import it.polimi.ingsw.network.INetworkAdapter;
 import it.polimi.ingsw.view.IHumanInterface;
 import javafx.application.Application;
 
+/**
+ * Class that implements the IHumanInterface on the Gui side
+ */
 public class GuiInterface implements IHumanInterface {
 
     private INetworkAdapter adapter;

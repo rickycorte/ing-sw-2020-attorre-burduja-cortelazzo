@@ -4,7 +4,6 @@ import it.polimi.ingsw.controller.CommandWrapper;
 import it.polimi.ingsw.controller.FilterGodCommand;
 import it.polimi.ingsw.controller.PickGodCommand;
 import it.polimi.ingsw.view.CardCollection;
-import javafx.animation.FadeTransition;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,12 +18,10 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
-import javafx.util.Duration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,8 +29,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.Set;
 
+/**
+ * This class is the controller for the "Choose Gods" scene
+ */
 
 public class ChooseGodsSceneController implements Initializable {
 
@@ -263,7 +262,8 @@ public class ChooseGodsSceneController implements Initializable {
     //----------------------------------------Utility Methods-----------------------------------------------------------
 
     /**
-     * This method enables/disables all the buttons
+     * This method enables / disables the buttons
+     * @param enable indicates whether to enable or disable
      */
     private void enableButtons(boolean enable){
         sendButton.setDisable(!enable);
