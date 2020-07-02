@@ -34,6 +34,8 @@ public class Client {
     private Timer pingTimer;                        //ping timer used to inform the server i'm still alive
     private ICommandReceiver commandReceiver;       //representing the cli/gui based on client's choice
 
+    boolean alreadyDisconnected;
+
     final AtomicBoolean shouldStop;
 
 
@@ -65,6 +67,7 @@ public class Client {
             s_socket = new Socket(ip, port);
             in = new BufferedReader(new InputStreamReader(s_socket.getInputStream()));
             out = new PrintWriter(s_socket.getOutputStream(), true);
+            alreadyDisconnected = false;
 
             id = Integer.parseInt(in.readLine()); //client_id given to me by the server
             setUPTimer();
@@ -108,7 +111,7 @@ public class Client {
                 serverResponse = in.readLine();
                 if (serverResponse == null) break;
 
-                System.out.println("[CLIENT] Got command "+ serverResponse);
+                //System.out.println("[CLIENT] Got command "+ serverResponse);
 
                 CommandWrapper cmd = deserialize(serverResponse);
                 if(commandReceiver == null)
@@ -133,6 +136,7 @@ public class Client {
             {
                 System.out.println("[CLIENT] Couldn't read from the socket, closing connection");
                 shutdownConnection();
+                alreadyDisconnected = true;
                 commandReceiver.onDisconnect(null);
             }
         }
@@ -180,7 +184,7 @@ public class Client {
             out.close();
             s_socket.close();
             pingTimer.cancel();
-            System.out.println("[CLIENT] Disconnected");
+            //System.out.println("[CLIENT] Disconnected");
         }
         catch (IOException e)
         {
@@ -195,8 +199,10 @@ public class Client {
      */
     public void disconnect()
     {
-        //send leave message
-        send(LeaveCommand.makeRequest(id, Server.SERVER_ID));
+        if(!alreadyDisconnected)
+            //send leave message
+            send(LeaveCommand.makeRequest(id, Server.SERVER_ID));
+
         // close everything
         shutdownConnection();
 
@@ -230,8 +236,8 @@ public class Client {
         synchronized (out)
         {
             String str = packet.Serialize();
-            if (packet.getType() != CommandType.BASE)
-                System.out.println("[CLIENT] Sending "+ str);
+            //if (packet.getType() != CommandType.BASE)
+                //System.out.println("[CLIENT] Sending "+ str);
 
             out.println(str);
             out.flush();

@@ -1,8 +1,5 @@
 package it.polimi.ingsw.view.cli;
 
-import java.util.List;
-import java.util.Random;
-
 public enum Color {
     LIME("\33[38;5;112m"),
     SUNSET("\33[38;5;210m"),

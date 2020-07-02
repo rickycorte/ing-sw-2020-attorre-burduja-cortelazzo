@@ -17,7 +17,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Old cli adapted to use some network changes
+ * Command Line Interface implements IHumanInterface and ICommandReceiver
+ * Every game phase is defined by a matchState value
+ * thread for input is main thread, that get input from line based on current state
+ * thread for command reception print and set value of Cli for current game phase
  */
 public class Cli implements IHumanInterface, ICommandReceiver {
     private static final int HEIGHT = it.polimi.ingsw.game.Map.HEIGHT;
@@ -65,6 +68,12 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         availableColors.addAll(Arrays.asList(Color.values()).subList(0,7));
     }
 
+    /**
+     * Callback method for connection phase (until username auth)
+     * check for correct joining of a player, otherwise demand Server with a new connection test
+     * set with command content local game settings (Players,colors)
+     * @param cmdWrapper wrapped JoinCommand
+     */
     @Override
     public void onConnect(CommandWrapper cmdWrapper) {
         int targetID = cmdWrapper.getCommand(BaseCommand.class).getTarget();
@@ -82,50 +91,29 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         } else if (cmdWrapper.getType() == CommandType.JOIN && targetID != idPlayer) {
             JoinCommand cmd = cmdWrapper.getCommand(JoinCommand.class);
             if (cmd.isJoin()){
+                if(availableColors.size() == 0) availableColors.addAll(Arrays.asList(Color.values()).subList(0,7));
                 players.add(new Player(cmd.getTarget(),cmd.getUsername(),availableColors.get(0)));
                 availableColors.remove(availableColors.get(0));
+                stream.println(getPlayer(cmd.getTarget()).escapePlayerColor() + getPlayer(cmd.getTarget()).getUsername() + Color.RESET + " joined the game");
             }
         }
     }
 
-    @Override
-    public void start() {
-        cmdNotify.lazySet(false);
-        stream.println("Type 'quit' to leave the game");
-
-        stream.println("Insert server ip: (press ENTER for local setup)");
-        String ip;
-        String ipInput = scanner.nextLine();
-        if(!ipInput.equals("")) ip = ipInput;
-        else ip = "127.0.0.1";
-
-        stream.println("Insert your username: ");
-        String user = scanner.nextLine();
-
-        color = getColor();
-        
-        if (virtualServer.connect(ip, virtualServer.getDefaultPort(), user)) {
-
-            do{
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ignored) { }
-            }while(!logged);
-
-            inputLoop();
-        } else {
-            stream.println("Connection refused");
-        }
-
-    }
-
+    /**
+     * Callback method for disconnection
+     * if NetworkHandler lose connection with server, Cli restarts
+     * handle player left game during matchmaking
+     * @param cmdWrapper null for server, LeaveCommand for player left
+     */
     @Override
     public void onDisconnect(CommandWrapper cmdWrapper) {
         if(cmdWrapper == null) {
-            stream.println("lost server connection.");
+            stream.println("lost server connection. [type something to restart]");
+            resetStatus();
             setCurrentState(MatchState.QUIT);
         }else{
             LeaveCommand leaveCommand = cmdWrapper.getCommand(LeaveCommand.class);
+            stream.println(getPlayer(leaveCommand.getLeftPlayerID()).escapePlayerColor() + getPlayer(leaveCommand.getLeftPlayerID()).getUsername() + Color.RESET + " left the game");
             players.remove(getPlayer(leaveCommand.getLeftPlayerID()));
             if(idHost == leaveCommand.getLeftPlayerID()){
                 idHost = leaveCommand.getNewHostPlayerID();
@@ -144,16 +132,26 @@ public class Cli implements IHumanInterface, ICommandReceiver {
 
     }
 
+    /**
+     * Callback method when game command is received
+     * throw command received if not direct to this player
+     * handle command type and invoke correct setUp method (method to display and set class attribute on which command is received from network)
+     * setUp methods set a CmdNotify bool, that means an interaction is required from the player
+     * show map if it's an update command
+     * @param cmdWrapper wrapped command received
+     */
     @Override
     public void onCommand(CommandWrapper cmdWrapper) {
         BaseCommand baseCommand = cmdWrapper.getCommand(BaseCommand.class);
         int targetId = baseCommand.getTarget();
-        if (targetId != idPlayer && targetId != virtualServer.getBroadCastID()) {
-            if(cmdWrapper.getType() != CommandType.END_GAME)
+
+        if (targetId != idPlayer && targetId != virtualServer.getBroadCastID())
+            if (cmdWrapper.getType() != CommandType.END_GAME) {
                 stream.println("Turn of " + getPlayer(targetId).escapePlayerColor() + getPlayer(targetId).getUsername() + Color.RESET + " wait until " + cmdWrapper.getType().toString());
-            setCurrentState(MatchState.WAIT_NEXT);
-            return;
-        }
+                setCurrentState(MatchState.WAIT_NEXT);
+                return;
+            }
+
         switch (cmdWrapper.getType()) {
             case START:
                 StartCommand startCommand = cmdWrapper.getCommand(StartCommand.class);
@@ -184,20 +182,66 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             case UPDATE:
                 UpdateCommand updateCommand = cmdWrapper.getCommand(UpdateCommand.class);
                 setLastCompactMap(updateCommand.getUpdatedMap());
-                showMap(updateCommand.getUpdatedMap(),null);
+                showMap(updateCommand.getUpdatedMap(), null);
                 break;
 
+        }
+    }
+
+    /**
+     * Cli init method (from IHumanInterface)
+     * Get ip for server and player username
+     * wait until player owner of Cli is logged (right game with correct username)
+     * then invoke inputLoop method
+     */
+    @Override
+    public void start() {
+        cmdNotify.lazySet(false);
+        stream.println("Type 'quit' to leave the game");
+
+        stream.println("Insert server ip: (press ENTER for local setup)");
+        String ip;
+        String ipInput = scanner.nextLine();
+        if(!ipInput.equals("")) ip = ipInput;
+        else ip = "127.0.0.1";
+
+        stream.println("Insert your username: ");
+        String user = scanner.nextLine();
+
+        color = getColor();
+
+        if (virtualServer.connect(ip, virtualServer.getDefaultPort(), user)) {
+
+            do{
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) { }
+            }while(!logged);
+
+            inputLoop();
+        } else {
+            stream.println("Connection refused");
         }
 
     }
 
-    // SETUP STATE METHODS
 
-    private void retryJoin(JoinCommand cmd) {
+    // SETUP STATE METHODS
+    // these methods print screen and set matchState to take from player the right input
+
+    /**
+     * Rebuild new joinCommand
+     * @param cmd JoinCommand received
+     */
+     private void retryJoin(JoinCommand cmd) {
         stream.println("Your username is not valid, choose another one (at least 3 char,only numbers and letters)");
         virtualServer.send(JoinCommand.makeRequest(cmd.getTarget(),virtualServer.getServerID(),scanner.nextLine()));
     }
 
+    /**
+     * Setup joining method for onConnect
+     * @param cmd JoinCommand received
+     */
     private void successfulJoin(JoinCommand cmd) {
         stream.println("Join successful");
 
@@ -217,6 +261,10 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         logged = true;
     }
 
+    /**
+     * Get a color for player
+     * @return color id of Color enum
+     */
     private int getColor() {
         String[] inputColor;
         int[] selectedColor = new int[1];
@@ -236,18 +284,26 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return selectedColor[0];
     }
 
+    /**
+     * handle actions to do on reception of an EndGameCommand
+     * inform player if someone lose
+     * end current game if someone quit
+     * set end cli status for requesting to play another game
+     * @param endGameCommand EndGameCommand received both if loser or other players
+     */
     private void endGameSetup(EndGameCommand endGameCommand) {
 
         if (endGameCommand.isMatchStillRunning()) {
             int playerLost = endGameCommand.getTarget();
-            //TODO: end game adn continue game fix --- don't print player lost and jump do update without waiting
+
             if(playerLost == idPlayer) {
                 stream.println(getPlayer(playerLost).escapePlayerColor() + "You LOST ..." + Color.RESET);
                 stream.println("\n\nWould you like to play another game ? y/n");
                 setCurrentState(MatchState.END);
             }else {
-                stream.println("Player " + getPlayer(playerLost).escapePlayerColor() + playerLost + Color.RESET + " lost");
-                players.remove(playerLost);
+                Player loser = getPlayer(playerLost);
+                stream.println("Player " + loser.escapePlayerColor() + loser.getUsername() + Color.RESET + " lost");
+                players.remove(loser);
                 if (players.size() >= MIN_PLAYER) {
                     //match continue
                     setCurrentState(MatchState.WAIT_NEXT);
@@ -256,7 +312,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                         if (endGameCommand.getWinnerID() == idPlayer)
                             stream.println("MATCH ENDED !!! \n" + getPlayer(endGameCommand.getWinnerID()).escapePlayerColor() + "YOU have conquered Santorini ☀ ⛴" + Color.RESET);
                         else
-                            stream.println("MATCH ENDED !!! \n" + getPlayer(endGameCommand.getWinnerID()).escapePlayerColor() + "PLAYER n." + endGameCommand.getWinnerID() + " has conquered Santorini ☀ ⛴" + Color.RESET);
+                            stream.println("MATCH ENDED !!! \n" + getPlayer(endGameCommand.getWinnerID()).escapePlayerColor() +
+                                    getPlayer(endGameCommand.getWinnerID()).escapePlayerColor() +
+                                    getPlayer(endGameCommand.getWinnerID()).getUsername()  + " has conquered Santorini ☀ ⛴" + Color.RESET);
                     stream.println("\n\nWould you like to play another game ? y/n");
                     setCurrentState(MatchState.END);
                 }
@@ -271,7 +329,8 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                 else
                     stream.println("MATCH ENDED !!! \n" +
                             getPlayer(endGameCommand.getWinnerID()).escapePlayerColor() +
-                            "PLAYER n." + endGameCommand.getWinnerID() + " has conquered Santorini ☀ ⛴" + Color.RESET);
+                            getPlayer(endGameCommand.getWinnerID()).escapePlayerColor() +
+                            getPlayer(endGameCommand.getWinnerID()).getUsername() + " has conquered Santorini ☀ ⛴" + Color.RESET);
             }else
                 stream.println("MATCH ENDED !!! interruption occurred.");
 
@@ -280,6 +339,10 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         }
     }
 
+    /**
+     * Setup for place worker
+     * @param workerPlaceCommand WorkerPlaceCommand received
+     */
     private void placeWorkerSetup(WorkerPlaceCommand workerPlaceCommand) {
         setAvailablePositions(workerPlaceCommand);
         showMap(getLastCompactMap(),getAvailablePositions());
@@ -291,6 +354,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         setCurrentState(MatchState.WORKER_PLACE);
     }
 
+    /**
+     * First player selection setup method for host player
+     */
     private void selectFirstPlayerSetup() {
         clearScreen();
         stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
@@ -306,6 +372,10 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         setCurrentState(MatchState.FIRST_PLAYER_SELECT);
     }
 
+    /**
+     * Setup method for picking a god from available ones
+     * @param pickGodCommand PickGodCommand received
+     */
     private void pickGodSetup(PickGodCommand pickGodCommand) {
         clearScreen();
         stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
@@ -317,6 +387,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         setCurrentState(MatchState.PICK_GOD);
     }
 
+    /**
+     * Filter gods for current match method for host player
+     */
     private void filterGodSetup() {
         clearScreen();
         stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
@@ -330,7 +403,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         setCurrentState(MatchState.GOD_SELECT);
     }
 
-
+    /**
+     * print to screen every god in CardCollection
+     */
     private void printGods() {
         List<Integer> availableIds = cardCollection.getAvailableIds();
 
@@ -343,6 +418,10 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         }
     }
 
+    /**
+     * print to screen every god from availableGods
+     * @param availableGods god selected for current game by host
+     */
     private void printGods(int[] availableGods){
         for(int id : availableGods){
             stream.print(id + "." + " " +
@@ -353,6 +432,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         }
     }
 
+    /**
+     * Get a player of game's players list identified by playerID
+     * @param playerID player identifier
+     * @return Player or null if can't find playerID
+     */
     private Player getPlayer(int playerID){
         for(Player player : players){
             if(player.getId() == playerID)
@@ -361,6 +445,10 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return null;
     }
 
+    /**
+     * Start setup of players and colors
+     * @param startCommand StartCommand received
+     */
     private void startSetup(StartCommand startCommand) {
         String[] username = startCommand.getUsername();
         int[] ids = startCommand.getPlayersID();
@@ -377,6 +465,13 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         stream.println("\nGAME IS NOW STARTED !!!\n");
     }
 
+    /**
+     * Action setup
+     * check auto-selection of worker,action and target position only to inform player
+     * every selection is matchState ACTION_TIME
+     * to get correct input, check auto-selection in input thread
+     * @param actionCommand ActionCommand received
+     */
     private void actionTimeSetup(ActionCommand actionCommand) {
         stream.println(getPlayer(idPlayer).escapePlayerColor() + "----------IT'S YOUR TURN----------\n" + Color.RESET);
 
@@ -452,20 +547,40 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         }
     }
 
+    /**
+     * Check if can auto-select worker
+     * @param nextActions array of available NextAction
+     * @return true if can auto-select
+     */
     private boolean canAutoSelectWorker(NextAction[] nextActions) {
         return getAvailableWorker(nextActions).size() <= 1;
     }
 
+    /**
+     * Check if can auto-select action
+     * @param actions list of available NextAction for selected worker
+     * @return true if can auto-select action
+     */
     private boolean canAutoSelectAction(List<NextAction> actions){
         if(actions == null) return false;
         return actions.size() == 1;
     }
 
+    /**
+     * Check if EndTurnAction is only available action
+     * @param actions list of available NextAction for selected worker
+     * @return
+     */
     private boolean canAutoSelectEndTurn(List<NextAction> actions){
         if(actions == null) return false;
         return actions.size() == 1 && actions.get(0).isEndTurnAction();
     }
 
+    /**
+     * check if can auto-select position
+     * @param possiblePositions List of available Vector2 for selected action
+     * @return true if can auto-select position
+     */
     private boolean canAutoSelectPosition(List<Vector2> possiblePositions){
         if(possiblePositions == null) return false;
         return possiblePositions.size() == 1;
@@ -473,7 +588,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
 
     //new for actionCommand
 
-    //return list of possible worker for this turn and its execution
+    /**
+     * Get available worker for this turn
+     * @param nextActions array of available NextActions
+     * @return list of possible workers for this turn
+     */
     private List<Integer> getAvailableWorker(NextAction[] nextActions){
         List<Integer> availableWorkers = new ArrayList<>();
 
@@ -487,6 +606,14 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     //remove actions made by the unselected worker(if available worker = 1 should remain the same)
+
+    /**
+     * Remove actions executed by the unselected worker
+     * Remain the same if there is only one available worker
+     * @param nextActions array of available NextAction
+     * @param selectedWorker identifier of selected worker
+     * @return list of NextAction executed by the selected worker
+     */
     private List<NextAction> clearNextActions(NextAction[] nextActions, int selectedWorker){
         List<NextAction> actions = new ArrayList<>();
 
@@ -498,57 +625,36 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return actions;
     }
 
-
+    /**
+     * Get NextAction selected
+     * @param nextActions list of available NextActions
+     * @param selectedAction index of selected action
+     * @return NextAction selected
+     */
     private NextAction getSelectedNextAction(List<NextAction> nextActions, int selectedAction){
         return nextActions.get(selectedAction);
     }
 
+    /**
+     * Get available position for selected action
+     * @param nextAction selected NextAction
+     * @return list of Vector2 available for next action
+     */
     private List<Vector2> getAvailablePosition(NextAction nextAction){
         return nextAction.getAvailablePositions();
     }
 
-
-    //safe information passing between the two threads
-
-    private synchronized void setLastCompactMap(CompactMap compactMap){
-        lastCompactMap = compactMap;
-    }
-
-    private synchronized CompactMap getLastCompactMap(){
-        return Objects.requireNonNullElseGet(lastCompactMap, () -> new CompactMap(new it.polimi.ingsw.game.Map()));
-    }
-
-    private synchronized void setAvailablePositions(WorkerPlaceCommand workerPlaceCommand){
-        availablePositions = workerPlaceCommand.getPositions();
-    }
-
-    private synchronized Vector2[] getAvailablePositions(){
-        if(availablePositions != null)
-            return availablePositions.clone();
-        else return null;
-    }
-
-    private synchronized void setNextActions(ActionCommand actionCommand) {
-        nextActions = actionCommand.getAvailableActions();
-    }
-
-    private synchronized NextAction[] getNextActions() {
-        if(nextActions!=null)
-            return nextActions;
-        else
-            return null;
-    }
-
-    private synchronized void setCurrentState(MatchState newState) {
-        currentState = newState;
-    }
-
-    private synchronized MatchState getCurrentState() {
-        return currentState;
-    }
-
     ////////     MAIN THREAD METHODS
 
+    /**
+     * Input thread method
+     * get input from line until a quit is detected
+     * a command is a one line string(space split) on which are performed checks that include :
+     * stateless commands(quit,start), end of the game and interaction command for a game phase;
+     * an interaction command is required only after CmdNotify refresh (synchronized boolean with network receiver thread)
+     * if interaction is needed, an inner loop starts, it gets input until this is well formatted and contains possibly correct values
+     * internal communication (with methods underlying) to check the input correctness is made by ExecutionResponse enum
+     */
     private void inputLoop() {
         String input;
         boolean endGame;
@@ -595,13 +701,29 @@ public class Cli implements IHumanInterface, ICommandReceiver {
 
         } while (!shouldStop);
 
+        if(getCurrentState() == MatchState.QUIT) {
+            clearScreen();
+            virtualServer.disconnect();
+            start();
+        }
     }
 
+    /**
+     * Display a fail message if an input is received in the wrong moment
+     * @param inputArray input string
+     */
     private void printFail(String[] inputArray){
         if(inputArray.length > 0 && !inputArray[0].equals(""))
             stream.println("Oak's words echoed... There's a time and a place for everything, but not now.");
     }
 
+    /**
+     * Check if the input typed is a stateless command
+     * 'start' and 'quit' are commands that can be used in every moment, regardless current game state
+     * @param inputArray input string
+     * @param currentState MatchState current state of game
+     * @return true if should stop, false if a start or meaningless input is typed
+     */
     private boolean checkStatelessInput(String[] inputArray,MatchState currentState) {
         if (currentState == MatchState.WAIT) {
             if (canStartGame(inputArray))
@@ -618,6 +740,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return false;
     }
 
+    /**
+     * check if 'quit' is typed
+     * @param inputArray input string
+     * @return true if should quit Cli
+     */
     private boolean quitCheck(String[] inputArray) {
         if (inputArray.length == 1 && inputArray[0].equals("quit")) {
             virtualServer.send(LeaveCommand.makeRequest(idPlayer, virtualServer.getServerID()));
@@ -626,6 +753,21 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             return getCurrentState() == MatchState.QUIT;
     }
 
+    /**
+     * To every MatchState state correspond a set of available input (full check is made server side)
+     * input is an int or input is inside a range, are some client side checks
+     * every state display to screen a message dependent on the success (send Command to Server) or fail of input typed
+     * if a fail occur a Fail ExecutionResponse is returned and the overlying method get another input for the same State,
+     * in fact if matchState is invoked a correct input is required to continue Game
+     * in particular in ACTION_TIME the auto-selection method are invoked despite of their first call in network thread
+     * for END state a new game can be started
+     * @param inputArray input string
+     * @param state current state of game
+     * @param nextActions array of available NextActions
+     * @param availablePositions available position for actions
+     * @param canGoBack true if it's first time user try to select a worker for this turn (can go back and re-select worker)
+     * @return ExecutionResponse to set behaviour of overlying method (inputLoop)
+     */
     private ExecutionResponse matchState(String[] inputArray, MatchState state, NextAction[] nextActions, Vector2[] availablePositions, boolean canGoBack) {
         switch (state) {
 
@@ -749,10 +891,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                 if (inputArray[0].equals("y") && inputArray.length == 1){
                     int currentID = idPlayer;
                     String currentUsername = getPlayer(idPlayer).getUsername();
-                    players.clear();
-                    availableColors.clear();
-                    availableColors.addAll(Arrays.asList(Color.values()));
-                    idPlayer = -1;
+                    resetStatus();
                     virtualServer.send(JoinCommand.makeRequest(currentID, virtualServer.getServerID(), currentUsername));
                     return  ExecutionResponse.SUCCESS;
                 }else {
@@ -767,8 +906,14 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     /**
-     *
+     * User can type an input to select action identifier who wants to execute
+     * if EndTurn is only possible action, it's automatically picked
+     * a valid input is required to go ahead in turn (identifier is one of actions indexes)
+     * Back is a pseudo action, if selected a BACK ExecutionResponse is returned (can select worker again, only one time)
+     * @param nextActions array of possible NextActions
      * @param actions already cleared NextActions List, avery element has the same (selected) worker
+     * @param canGoBack true if it's first time user try to select a worker for this turn (can go back and re-select worker)
+     * @return ExecutionResponse to set behaviour of overlying method (inputLoop) if can't call positionSelection()
      */
     private ExecutionResponse actionSelection(NextAction[] nextActions, List<NextAction> actions, boolean canGoBack) {
         if((canAutoSelectEndTurn(actions)) || (!canGoBack && canAutoSelectAction(actions))){
@@ -827,6 +972,17 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         }
     }
 
+    /**
+     * User can type an input to select position identifier who wants to execute (selected) action on
+     * if possible auto-select position
+     * display Map to screen with available position(so these stand out with an identifier)
+     * user have to select one of identifiers to continue
+     * an ActionCommand is send to Server
+     * @param actions already cleared possible NextActions
+     * @param possiblePositions available positions
+     * @param actionID index of selected action
+     * @return ExecutionResponse to set behaviour of overlying method (inputLoop)
+     */
     private ExecutionResponse positionSelection(List<NextAction> actions, List<Vector2> possiblePositions, int actionID) {
         if(canAutoSelectPosition(possiblePositions)){
             int workerID = actions.get(0).getWorkerID();
@@ -873,6 +1029,14 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         }
     }
 
+    /**
+     * Check if currentState is END
+     * if so, user have to type y/n to choose if wants to play another game
+     * first input is passed by inputLoop method
+     * a re-initialization of players and availableColors is done
+     * @param inputArray input string
+     * @return true if currentState is END
+     */
     private boolean endGameCheck(String[] inputArray) {
         if(getCurrentState() == MatchState.END){
             boolean retry = false;
@@ -885,11 +1049,7 @@ public class Cli implements IHumanInterface, ICommandReceiver {
                 if(inputArray[0].equals("y") && inputArray.length == 1){
                     int currentID = idPlayer;
                     String currentUsername = getPlayer(idPlayer).getUsername();
-                    players.clear();
-                    availableColors.clear();
-                    availableColors.addAll(Arrays.asList(Color.values()));
-                    idPlayer = -1;
-                    lastCompactMap = new CompactMap(new Map());
+                    resetStatus();
                     virtualServer.send(JoinCommand.makeRequest(currentID,virtualServer.getServerID(),currentUsername));
                     break;
                 }else if(inputArray[0].equals("n") && inputArray.length == 1){
@@ -909,6 +1069,11 @@ public class Cli implements IHumanInterface, ICommandReceiver {
             return false;
     }
 
+    /**
+     * Check if can convert string input to int array
+     * @param inputArray input string
+     * @return true if can convert to int
+     */
     private boolean canConvertInputToInt(String[] inputArray) {
         try {
             for (String s : inputArray) {
@@ -920,6 +1085,12 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         }
     }
 
+    /**
+     * Convert input string to int array
+     * it must contains int values
+     * @param inputArray input string
+     * @return int array of input typed
+     */
     private int[] inputToInt(String[] inputArray) {
         int[] intInput = new int[inputArray.length];
         for (int i = 0; i < inputArray.length; i++) {
@@ -928,11 +1099,98 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return intInput;
     }
 
+    /**
+     * Check if a start input can start a new Game (auto-start if player is max player n.)
+     * @param inputArray input string
+     * @return true if can start a game
+     */
     private boolean canStartGame(String[] inputArray) {
         return inputArray.length == 1 && inputArray[0].equals("start") && idHost == idPlayer && players.size()>=MIN_PLAYER && players.size()<MAX_PLAYER;
     }
 
 
+    //safe information passing between the two threads
+
+    /**
+     * synchronized set compactMap as lastCompactMap
+     * lastCompactMap will be printed to screen
+     * @param compactMap last CompactMap received
+     */
+    private synchronized void setLastCompactMap(CompactMap compactMap){
+        lastCompactMap = compactMap;
+    }
+
+    /**
+     * synchronized get NextActions
+     * @return NextActions
+     */
+    private synchronized NextAction[] getNextActions() {
+        if(nextActions!=null)
+            return nextActions;
+        else
+            return null;
+    }
+
+    /**
+     * synchronized get lastCompactMap received
+     * @return last CompactMap
+     */
+    private synchronized CompactMap getLastCompactMap(){
+        return Objects.requireNonNullElseGet(lastCompactMap, () -> new CompactMap(new it.polimi.ingsw.game.Map()));
+    }
+
+    /**
+     * synchronized set availablePosition
+     * availablePosition are Vector2 available for input selection during WorkerPlace phase
+     * @param workerPlaceCommand WorkerPlaceCommand received
+     */
+    private synchronized void setAvailablePositions(WorkerPlaceCommand workerPlaceCommand){
+        availablePositions = workerPlaceCommand.getPositions();
+    }
+
+    /**
+     * synchronized get availablePosition
+     * @return availablePosition
+     */
+    private synchronized Vector2[] getAvailablePositions(){
+        if(availablePositions != null)
+            return availablePositions.clone();
+        else return null;
+    }
+
+    /**
+     * synchronized set NextAction available for last actionCommand
+     * @param actionCommand actionCommand received
+     */
+    private synchronized void setNextActions(ActionCommand actionCommand) {
+        nextActions = actionCommand.getAvailableActions();
+    }
+
+    /**
+     * synchronized set currentState
+     * @param newState last MatchState set
+     */
+    private synchronized void setCurrentState(MatchState newState) {
+        currentState = newState;
+    }
+
+    /**
+     * synchronized get currentState
+     * @return MatchState currentState
+     */
+    private synchronized MatchState getCurrentState() {
+        return currentState;
+    }
+
+
+    /**
+     * Display map to screen
+     * Map is printed by level (4 : upper frame, 2 information level, lower frame)
+     * first information level contains buildings height and worker
+     * second information level contains identifier of position if it's an available position to print
+     * @param compactMap last CompactMap received
+     * @param availablePositions null if it's a static map printing, else contains all available positions to be selected
+     */
     private void showMap(CompactMap compactMap, Vector2[] availablePositions){
         CompactWorker[] compactWorkers = compactMap.getWorkers();
 
@@ -1052,6 +1310,13 @@ public class Cli implements IHumanInterface, ICommandReceiver {
 
     }
 
+    /**
+     * Get identifier of position corresponding to matrix indexes i,j
+     * @param availablePositions array of available positions
+     * @param i row index
+     * @param j column index
+     * @return identifier of position
+     */
     private int getPositionIdentifier(Vector2[] availablePositions, int i, int j) {
         for(int x = 0; x < availablePositions.length; x++){
             if(availablePositions[x].getX() == i && availablePositions[x].getY() == j){
@@ -1062,6 +1327,13 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return -1; //method called without checking if position have a correspondent in available ones
     }
 
+    /**
+     * Check if position i,j is an available position
+     * @param availablePositions array of available positions
+     * @param i row index
+     * @param j column index
+     * @return true if it's available position
+     */
     private boolean isAvailablePosition(Vector2[] availablePositions, int i, int j) {
         for(Vector2 pos : availablePositions){
             if(pos.getX() == i && pos.getY() == j){
@@ -1071,6 +1343,13 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return false;
     }
 
+    /**
+     * Get worker id from compactWorkers corresponding to position i,j
+     * @param compactWorkers CompactWorker array, every worker in map
+     * @param i row index
+     * @param j column index
+     * @return identifier of worker in i,j position
+     */
     private int getWorkerID(CompactWorker[] compactWorkers, int i, int j) {
         for(CompactWorker worker : compactWorkers){
             if(worker.getPosition().getX() == i && worker.getPosition().getY() == j){
@@ -1081,6 +1360,13 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return -1; //method called without checking if a worker is inside the current pos
     }
 
+    /**
+     * Get owner identifier for worker in position i,j
+     * @param compactWorkers CompactWorkers array, every worker in map
+     * @param i row index
+     * @param j column index
+     * @return identifier of player owner of worker in i,j position
+     */
     private int getOwnerForWorker(CompactWorker[] compactWorkers, int i, int j) {
         for(CompactWorker worker : compactWorkers){
             if(worker.getPosition().getX() == i && worker.getPosition().getY() == j){
@@ -1091,6 +1377,13 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return -1; //method called without checking if a worker is inside the current pos
     }
 
+    /**
+     * Check if a worker is placed in position i,j
+     * @param i row index
+     * @param j column index
+     * @param compactWorker CompactWorker array, every worker in map
+     * @return true if a worker is placed in i,j position
+     */
     private boolean canPrintWorker(int i, int j,CompactWorker[] compactWorker) {
         for(CompactWorker worker : compactWorker){
             if(worker.getPosition().getX() == i && worker.getPosition().getY() == j){
@@ -1101,10 +1394,24 @@ public class Cli implements IHumanInterface, ICommandReceiver {
         return false;
     }
 
+    /**
+     * Method to clear screen, remove older prints
+     */
     private void clearScreen() {
         stream.println("TIME TO CLEAR SCREEN --------------------------------------------");
         System.out.print("\033[2J");
         System.out.flush();
+    }
+
+    /**
+     * reset class attribute to start a new game
+     */
+    private void resetStatus(){
+        players.clear();
+        availableColors.clear();
+        availableColors.addAll(Arrays.asList(Color.values()).subList(0,7));
+        idPlayer = -1;
+        lastCompactMap = new CompactMap(new Map());
     }
 
 }
