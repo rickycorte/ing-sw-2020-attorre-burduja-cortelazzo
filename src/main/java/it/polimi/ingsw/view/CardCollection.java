@@ -3,6 +3,9 @@ package it.polimi.ingsw.view;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Contains a collection of God Card
+ */
 public class CardCollection {
     private List<Card> cardCollection;
 

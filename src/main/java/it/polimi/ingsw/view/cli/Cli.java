@@ -17,10 +17,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Command Line Interface implements IHumanInterface and ICommandReceiver
- * Every game phase is defined by a matchState value
- * thread for input is main thread, that get input from line based on current state
- * thread for command reception print and set value of Cli for current game phase
+ * Command Line Interface implements IHumanInterface and ICommandReceiver.
+ * Every game phase is defined by a MatchState value;
+ * thread for input is main thread, that get input from line based on current state;
+ * thread for command reception print and set value of Cli for current game phase;
  */
 public class Cli implements IHumanInterface, ICommandReceiver {
     private static final int HEIGHT = it.polimi.ingsw.game.Map.HEIGHT;
@@ -34,22 +34,24 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     private int idHost;
     private PrintStream stream;
     private Scanner scanner;
-    private boolean logged;
     private CardCollection cardCollection;
+    private boolean logged;                         //occurred connection of player (for threads interfacing)
 
     private List<Player> players;
-    private List<Color> availableColors;
+    private List<Color> availableColors;            //available color in this game
 
     private NextAction[] nextActions;
-    private AtomicBoolean cmdNotify;
-    private Vector2[] availablePositions;
-    private CompactMap lastCompactMap;
-    private int color;
+    private AtomicBoolean cmdNotify;                //notification for interaction needed by player
+    private CompactMap lastCompactMap;              //last map received to be displayed
+    private Vector2[] availablePositions;           //available position to be selected in action execution
+    private int color;                              //player selected color
 
+    //MatchState is a game phase for a player
     private enum MatchState {WAIT, WAIT_NEXT, GOD_SELECT, PICK_GOD, FIRST_PLAYER_SELECT, WORKER_PLACE,ACTION_TIME, END, QUIT}
     private MatchState currentState;
 
     private boolean shouldStop;
+    //ExecutionResponse is used to handle lower level method after input typing
     private enum ExecutionResponse {SUCCESS, FAIL, QUIT, ENDED_GAME, BACK}
 
 
@@ -69,9 +71,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     /**
-     * Callback method for connection phase (until username auth)
-     * check for correct joining of a player, otherwise demand Server with a new connection test
-     * set with command content local game settings (Players,colors)
+     * Callback method for connection phase (until username auth) :
+     * check for correct joining of a player, otherwise demand Server with a new connection test ;
+     * set with command content local game settings (Players,colors) ;
      * @param cmdWrapper wrapped JoinCommand
      */
     @Override
@@ -100,9 +102,9 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     /**
-     * Callback method for disconnection
-     * if NetworkHandler lose connection with server, Cli restarts
-     * handle player left game during matchmaking
+     * Callback method for disconnection :
+     * if NetworkHandler lose connection with server, Cli restarts ;
+     * handle player left game during matchmaking ;
      * @param cmdWrapper null for server, LeaveCommand for player left
      */
     @Override
@@ -133,11 +135,12 @@ public class Cli implements IHumanInterface, ICommandReceiver {
     }
 
     /**
-     * Callback method when game command is received
-     * throw command received if not direct to this player
-     * handle command type and invoke correct setUp method (method to display and set class attribute on which command is received from network)
-     * setUp methods set a CmdNotify bool, that means an interaction is required from the player
-     * show map if it's an update command
+     * Callback method when game command is received :
+     * throw command received if not direct to this player;
+     * handle command type and invoke correct setUp method
+     * (method to display and set class attribute on which command is received from network);
+     * setUp methods set a CmdNotify bool, that means an interaction is required from the player;
+     * show map if it's an update command;
      * @param cmdWrapper wrapped command received
      */
     @Override

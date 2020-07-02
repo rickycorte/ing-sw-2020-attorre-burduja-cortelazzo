@@ -1,5 +1,8 @@
 package it.polimi.ingsw.view.cli;
 
+/**
+ * Colors enum, escape ANSI sequences
+ */
 public enum Color {
     LIME("\33[38;5;112m"),
     SUNSET("\33[38;5;210m"),

@@ -1,7 +1,8 @@
 package it.polimi.ingsw.view.cli;
 
-import java.util.Objects;
-
+/**
+ * This class represents a player
+ */
 public class Player {
     private int id;
     private String username;

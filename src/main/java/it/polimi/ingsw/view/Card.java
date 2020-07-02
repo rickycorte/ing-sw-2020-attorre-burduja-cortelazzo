@@ -1,5 +1,8 @@
 package it.polimi.ingsw.view;
 
+/**
+ * This class represent a God Card  with description and identifier(unique with server)
+ */
 public class Card {
     private int id;
     private String name;
