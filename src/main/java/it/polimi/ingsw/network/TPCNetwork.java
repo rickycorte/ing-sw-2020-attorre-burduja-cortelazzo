@@ -74,16 +74,17 @@ public class TPCNetwork implements INetworkAdapter
     {
         if(isRunning) return false;
 
-        isRunning = true;
         if(client == null)
-        {
             client = new Client();
-            if(receiver != null)
-                client.setReceiver(receiver);
-            return client.connect(ip, port, username);
+        if(receiver != null)
+            client.setReceiver(receiver);
+        if(client.connect(ip, port, username)){
+            isRunning = true;
+            return true;
+        }else{
+            isRunning = false;
+            return false;
         }
-
-        return false;
     }
 
     /**

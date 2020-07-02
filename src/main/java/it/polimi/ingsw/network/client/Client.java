@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,7 +65,9 @@ public class Client {
         System.out.println("Connecting...");
 
         try {
-            s_socket = new Socket(ip, port);
+            //s_socket = new Socket(ip, port);
+            s_socket = new Socket();
+            s_socket.connect(new InetSocketAddress(ip, port), 5000);
             in = new BufferedReader(new InputStreamReader(s_socket.getInputStream()));
             out = new PrintWriter(s_socket.getOutputStream(), true);
             alreadyDisconnected = false;

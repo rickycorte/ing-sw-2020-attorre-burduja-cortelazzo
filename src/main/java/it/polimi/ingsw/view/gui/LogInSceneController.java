@@ -184,7 +184,7 @@ public class LogInSceneController implements Initializable {
      */
     private void handleUnreachableNetwork(){
         connected = false;
-        infoLabel.setText("Server is unreachable\nVerify the address");
+        infoLabel.setText("Server is unreachable\nVerify the address ");
         connectButton.setDisable(false);
         backButton.setDisable(false);
     }

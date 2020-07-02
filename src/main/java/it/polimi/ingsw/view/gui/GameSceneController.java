@@ -278,7 +278,7 @@ public class GameSceneController implements Initializable {
                 tile.workerImages = workerImages;
                 mapGrid.add(tile, col, row);
                 tile.setMapGrid(mapGrid);
-                tile.minWidthProperty().bind(map.fitWidthProperty().multiply(0.165));
+                tile.minWidthProperty().bind(map.fitWidthProperty().multiply(0.155));
                 tile.minHeightProperty().bind(map.fitHeightProperty().multiply(0.198));
                 tile.settings = settings;
                 tiles[row][col] = tile;
@@ -457,6 +457,7 @@ public class GameSceneController implements Initializable {
         actionID = getActionID("Undo");
         List<Vector2> posToSend = posForUndo();
         guiManager.send(ActionCommand.makeReply(myClientID, serverID, actionID, selectedWorker, posToSend.get(0)));
+        godPowerButton.setDisable(true);
         endTurnButton.setDisable(true);
         undoButton.setDisable(true);
     }
