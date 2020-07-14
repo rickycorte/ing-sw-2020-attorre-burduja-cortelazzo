@@ -39,26 +39,3 @@ jobs:
 
     - name: Generate Docs 
       run: mvn javadoc:javadoc
-    
-    - name: Release Generation
-      run: | 
-        mv target/AM44-jar-with-dependencies.jar deliverables/AM44.jar
-        mkdir apidocs
-        mv target/site/apidocs apidocs
-        tar cvfz apidocs.tar.gz apidocs
-        mv apidocs.tar.gz deliverables/
-        mkdir release
-        mv src release/src
-        mv README.md release/
-        mv deliverables release/deliverables
-        mv pom.xml release/pom.xml
-
-
-    - name: Push Release 
-      uses: s0/git-publish-subdir-action@master
-      env:
-        REPO: self
-        BRANCH: release
-        FOLDER : release
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    

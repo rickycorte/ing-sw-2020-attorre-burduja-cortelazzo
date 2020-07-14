@@ -6,13 +6,11 @@
 # ing-sw-2020-attorre-burduja-cortelazzo
 Software engineering project AA2019-2020 Politecnico di Milano
 
+Final grade: 30 cum Laude / 30
+
 ## Group AM44
 
-- ### 10618456 Francesco Attorre ([@FrancescoAttorre](https://github.com/FrancescoAttorre)) <br> francesco.attorre@mail.polimi.it
-
-- ### 10604480 Vladislav Burduja ([@Burduja](https://github.com/Burduja)) <br> vladislav.burduja@mail.polimi.it
-
-- ### 10530551 Riccardo Erminio Filippo  Cortelazzo ([@rickycorte](https://github.com/rickycorte)) <br> riccardoerminio.cortelazzo@mail.polimi.it
+**DISCLAIMER:** this is a university project, we do not own any right on Santorini game and all the visual assets. Game and assets are owned by [Roxley Games](https://roxley.com/). For any copyright issues send me a message and I'll remove this repo as soon as possible.
 
 
 | Functionality | State |
@@ -33,7 +31,7 @@ Software engineering project AA2019-2020 Politecnico di Milano
 [![GREEN](https://placehold.it/15/44bb44/44bb44)](#)
 -->
 
-## Getting started
+# Getting started
 
 To build and run this project you need to install Java 13 or later.
 
@@ -41,15 +39,10 @@ After cloning this repo you can:
 - Build and run tests with `mvn package`
 - Build docs with `mvn javadoc:javadoc`
 
-You can also download the latest build with up-to-date docs from branch `release`. That branch is automatically updated by Github Actions and should not be changed manually.
-
 Notice: Codecov badge shows only Controller and Model coverage.
 Network and view tests are not required by specification thus the packages are skipped.
 
-In the following section we use `AM44.jar` as file name but it could be different. 
-If you download the jar form `Release` branch the name will match.
-
-### Starting the server
+## Starting the server
 
 First you need to create a server instance to host the matches with:
 
